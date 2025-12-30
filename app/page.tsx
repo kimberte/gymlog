@@ -1,45 +1,25 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import WorkoutCalendar from "@/components/WorkoutCalendar"
-import WorkoutEditor from "@/components/WorkoutEditor"
-import {
-  loadWorkouts,
-  saveWorkouts,
-  WorkoutMap,
-  WorkoutEntry
-} from "@/lib/storage"
+import { useState } from "react";
+import WorkoutCalendar from "@/app/components/WorkoutCalendar";
+import WorkoutEditor from "@/app/components/WorkoutEditor";
+import { WorkoutEntry } from "@/app/lib/storage";
 
-export default function Home() {
-  const [workouts, setWorkouts] = useState<WorkoutMap>({})
-  const [selectedDate, setSelectedDate] = useState<string | null>(null)
-
-  useEffect(() => {
-    setWorkouts(loadWorkouts())
-  }, [])
-
-  function handleSave(date: string, entry: WorkoutEntry) {
-    const updated = { ...workouts, [date]: entry }
-    setWorkouts(updated)
-    saveWorkouts(updated)
-    setSelectedDate(null)
-  }
+export default function HomePage() {
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   return (
-    <main className="p-4">
-      <WorkoutCalendar
-        workouts={workouts}
-        onDateClick={setSelectedDate}
-      />
+    <main style={{ padding: "16px" }}>
+      <h1>Gym Log</h1>
+
+      <WorkoutCalendar onSelectDate={setSelectedDate} />
 
       {selectedDate && (
         <WorkoutEditor
           date={selectedDate}
-          workout={workouts[selectedDate]}
-          onSave={handleSave}
           onClose={() => setSelectedDate(null)}
         />
       )}
     </main>
-  )
+  );
 }

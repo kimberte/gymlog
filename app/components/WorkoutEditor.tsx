@@ -1,69 +1,71 @@
-"use client"
+"use client";
 
-import { WorkoutEntry } from "@/lib/storage"
-import { useState } from "react"
+import { useEffect, useState } from "react";
+import {
+  loadWorkout,
+  saveWorkout,
+  WorkoutEntry,
+} from "@/app/lib/storage";
 
-type Props = {
-  date: string
-  workout?: WorkoutEntry
-  onSave: (date: string, entry: WorkoutEntry) => void
-  onClose: () => void
+interface Props {
+  date: string;
+  onClose: () => void;
 }
 
-export default function WorkoutEditor({
-  date,
-  workout,
-  onSave,
-  onClose
-}: Props) {
-  const [title, setTitle] = useState(workout?.title || "")
-  const [description, setDescription] = useState(workout?.description || "")
+export default function WorkoutEditor({ date, onClose }: Props) {
+  const [title, setTitle] = useState("");
+  const [notes, setNotes] = useState("");
+
+  useEffect(() => {
+    const existing = loadWorkout(date);
+    if (existing) {
+      setTitle(existing.title);
+      setNotes(existing.notes);
+    }
+  }, [date]);
 
   function handleSave() {
-    onSave(date, {
+    const entry: WorkoutEntry = {
+      date,
       title,
-      description,
-      updatedAt: Date.now()
-    })
+      notes,
+    };
+
+    saveWorkout(entry);
+    onClose();
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex justify-end">
-      <div
-        className="w-full max-w-md h-full p-4 bg-[url('/notebook.png')] bg-cover"
-      >
-        <h2 className="text-xl font-bold mb-2">{date}</h2>
+    <div
+      style={{
+        marginTop: "16px",
+        padding: "16px",
+        border: "1px solid #ccc",
+        background: "#fafafa",
+      }}
+    >
+      <h2>{date}</h2>
 
-        <input
-          className="w-full mb-2 p-2 border"
-          placeholder="Workout title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
+      <input
+        placeholder="Workout title"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        style={{ width: "100%", marginBottom: "8px" }}
+      />
 
-        <textarea
-          className="w-full h-40 p-2 border"
-          placeholder="Workout description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
+      <textarea
+        placeholder="Workout details"
+        value={notes}
+        onChange={(e) => setNotes(e.target.value)}
+        style={{ width: "100%", height: "120px" }}
+      />
 
-        <div className="flex gap-2 mt-4">
-          <button
-            className="px-4 py-2 bg-black text-white"
-            onClick={handleSave}
-          >
-            Save
-          </button>
-
-          <button
-            className="px-4 py-2 border"
-            onClick={onClose}
-          >
-            Cancel
-          </button>
-        </div>
+      <div style={{ marginTop: "8px" }}>
+        <button onClick={handleSave}>Save</button>
+        <button onClick={onClose} style={{ marginLeft: "8px" }}>
+          Cancel
+        </button>
       </div>
     </div>
-  )
+  );
 }

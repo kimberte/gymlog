@@ -1,35 +1,59 @@
-"use client"
+"use client";
 
-import FullCalendar from "@fullcalendar/react"
-import dayGridPlugin from "@fullcalendar/daygrid"
-import timeGridPlugin from "@fullcalendar/timegrid"
-import { WorkoutMap } from "@/lib/storage"
+import { useEffect, useState } from "react";
+import { getWorkoutMap } from "@/app/lib/storage";
 
-type Props = {
-  workouts: WorkoutMap
-  onDateClick: (date: string) => void
+interface Props {
+  onSelectDate: (date: string) => void;
 }
 
-export default function WorkoutCalendar({ workouts, onDateClick }: Props) {
-  const events = Object.entries(workouts).map(([date, workout]) => ({
-    id: date,
-    title: workout.title,
-    start: date
-  }))
+export default function WorkoutCalendar({ onSelectDate }: Props) {
+  const [workouts, setWorkouts] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    setWorkouts(getWorkoutMap());
+  }, []);
+
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth();
+
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
 
   return (
-    <FullCalendar
-      plugins={[dayGridPlugin, timeGridPlugin]}
-      initialView="dayGridMonth"
-      headerToolbar={{
-        left: "prev,next today",
-        center: "title",
-        right: "dayGridMonth,timeGridWeek"
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(7, 1fr)",
+        gap: "8px",
+        marginTop: "16px",
       }}
-      events={events}
-      dateClick={(info) => onDateClick(info.dateStr)}
-      height="auto"
-    />
-  )
+    >
+      {Array.from({ length: daysInMonth }).map((_, i) => {
+        const date = new Date(year, month, i + 1)
+          .toISOString()
+          .split("T")[0];
+
+        return (
+          <div
+            key={date}
+            onClick={() => onSelectDate(date)}
+            style={{
+              border: "1px solid #ccc",
+              padding: "8px",
+              cursor: "pointer",
+              minHeight: "60px",
+            }}
+          >
+            <strong>{i + 1}</strong>
+            {workouts[date] && (
+              <div style={{ fontSize: "12px", marginTop: "4px" }}>
+                {workouts[date]}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
 }
-	

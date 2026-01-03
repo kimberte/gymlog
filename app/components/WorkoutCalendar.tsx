@@ -1,59 +1,89 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getWorkoutMap } from "@/app/lib/storage";
+import { useState } from "react";
+import { toDateKey } from "@/app/lib/date";
+import { WorkoutMap } from "@/app/lib/storage";
 
-interface Props {
-  onSelectDate: (date: string) => void;
-}
+const DAY_LABELS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
-export default function WorkoutCalendar({ onSelectDate }: Props) {
-  const [workouts, setWorkouts] = useState<Record<string, string>>({});
+export default function WorkoutCalendar({
+  workouts,
+  onSelectDate,
+}: {
+  workouts: WorkoutMap;
+  onSelectDate: (d: string) => void;
+}) {
+  const [cursor, setCursor] = useState(
+    new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+  );
 
-  useEffect(() => {
-    setWorkouts(getWorkoutMap());
-  }, []);
+  const todayKey = toDateKey(new Date());
 
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = today.getMonth();
+  function moveMonth(dir: number) {
+    const d = new Date(cursor);
+    d.setMonth(d.getMonth() + dir);
+    setCursor(d);
+  }
 
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const monthStart = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
+  const monthEnd = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0);
+
+  const gridStart = new Date(monthStart);
+  gridStart.setDate(monthStart.getDate() - monthStart.getDay());
+
+  const days: Date[] = [];
+  for (let i = 0; i < 42; i++) {
+    const d = new Date(gridStart);
+    d.setDate(gridStart.getDate() + i);
+    days.push(d);
+  }
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(7, 1fr)",
-        gap: "8px",
-        marginTop: "16px",
-      }}
-    >
-      {Array.from({ length: daysInMonth }).map((_, i) => {
-        const date = new Date(year, month, i + 1)
-          .toISOString()
-          .split("T")[0];
+    <div className="calendar">
+      <header>
+        <button onClick={() => moveMonth(-1)}>◀</button>
+        <h2>
+          {cursor.toLocaleDateString("en-US", {
+            month: "long",
+            year: "numeric",
+          })}
+        </h2>
+        <button onClick={() => moveMonth(1)}>▶</button>
+      </header>
 
-        return (
-          <div
-            key={date}
-            onClick={() => onSelectDate(date)}
-            style={{
-              border: "1px solid #ccc",
-              padding: "8px",
-              cursor: "pointer",
-              minHeight: "60px",
-            }}
-          >
-            <strong>{i + 1}</strong>
-            {workouts[date] && (
-              <div style={{ fontSize: "12px", marginTop: "4px" }}>
-                {workouts[date]}
-              </div>
-            )}
+      {/* DAY HEADERS */}
+      <div className="grid">
+        {DAY_LABELS.map((d) => (
+          <div key={d} style={{ opacity: 0.7, fontSize: 13 }}>
+            {d}
           </div>
-        );
-      })}
+        ))}
+      </div>
+
+      {/* DAYS */}
+      <div className="grid">
+        {days.map((d) => {
+          const key = toDateKey(d);
+          const workout = workouts[key];
+          const isCurrentMonth = d.getMonth() === cursor.getMonth();
+
+          return (
+            <div
+              key={key}
+              className={`cell ${
+                key === todayKey ? "today" : ""
+              }`}
+              style={{ opacity: isCurrentMonth ? 1 : 0.35 }}
+              onClick={() => onSelectDate(key)}
+            >
+              <div className="cell-date">{d.getDate()}</div>
+              {workout?.title && (
+                <div className="cell-title">{workout.title}</div>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

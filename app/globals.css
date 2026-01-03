@@ -1,26 +1,321 @@
-@import "tailwindcss";
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap");
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #373C4B;
+  --surface: #2B2F3A;
+  --accent: #FF5721;
+  --text: #FAFAFA;
+  --muted: #B0B3C0;
+  --border: rgba(255,255,255,0.15);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  font-family: "Poppins", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ---------------- HEADER ---------------- */
+
+.top-bar {
+  padding: 14px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.top-bar h1 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 20px;
+  cursor: pointer;
+}
+
+/* ---------------- CALENDAR ---------------- */
+
+.calendar {
+  padding: 16px;
+}
+
+.calendar header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.calendar header h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.calendar header button {
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+}
+
+/* ---------------- CALENDAR CELL ---------------- */
+
+.cell {
+  background: var(--surface);
+  border-radius: 14px;
+  padding: 8px;
+  height: 90px;
+  cursor: pointer;
+  position: relative;
+  border: 1px solid rgba(255,255,255,0.08);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.cell:hover {
+  transform: translateY(-3px);
+  border-color: var(--accent);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+}
+
+.cell.today {
+  border: 2px solid var(--accent);
+}
+
+.cell-date {
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+.cell-title {
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------------- OVERLAY ---------------- */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.18s ease;
+}
+
+/* ---------------- WORKOUT EDITOR ---------------- */
+
+.editor {
+  width: 420px;
+  max-width: calc(100% - 24px);
+  background: var(--surface);
+  border-radius: 18px;
+  padding: 20px;
+  position: relative;
+  animation: scaleIn 0.18s ease;
+}
+
+.editor h2 {
+  margin: 0 0 12px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.editor button.close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.editor input,
+.editor textarea {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 10px;
+  font-family: inherit;
+  margin-bottom: 12px;
+}
+
+.editor textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.editor .row {
+  display: flex;
+  gap: 10px;
+}
+
+.editor button.primary {
+  flex: 1;
+  background: var(--accent);
+  border: none;
+  color: white;
+  border-radius: 10px;
+  padding: 10px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.editor button.secondary {
+  flex: 1;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 10px;
+  cursor: pointer;
+}
+
+.editor button:active {
+  transform: scale(0.97);
+}
+
+/* ---------------- SETTINGS ---------------- */
+
+.settings {
+  width: 380px;
+  background: var(--surface);
+  border-radius: 18px;
+  padding: 20px;
+  position: relative;
+  animation: scaleIn 0.18s ease;
+}
+
+.settings h3 {
+  margin-top: 0;
+}
+
+.settings button {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  background: var(--accent);
+  color: white;
+  cursor: pointer;
+}
+
+.settings input[type="file"] {
+  margin-top: 12px;
+  color: var(--text);
+}
+
+.settings .close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+/* ---------------- TOAST ---------------- */
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface);
+  color: var(--text);
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-size: 14px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+  z-index: 2000;
+  animation: toastIn 0.2s ease;
+}
+
+/* ---------------- ANIMATIONS ---------------- */
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.96);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes toastIn {
+  from {
+    transform: translate(-50%, 10px);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
+
+/* ---------------- MOBILE REFINEMENTS ---------------- */
+
+@media (max-width: 640px) {
+  .grid {
+    gap: 6px;
+  }
+
+  .cell {
+    height: 72px;
+    padding: 6px;
+  }
+
+  .editor,
+  .settings {
+    width: 100%;
+    max-width: none;
+    border-radius: 18px 18px 0 0;
+    position: absolute;
+    bottom: 0;
+  }
+
+  .overlay {
+    align-items: flex-end;
+  }
 }

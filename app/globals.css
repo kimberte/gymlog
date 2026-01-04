@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Roboto+Serif:wght@500;600&display=swap");
 
 :root {
   --bg: #373C4B;
@@ -71,9 +71,10 @@ body {
   cursor: pointer;
 }
 
+/* 🔒 Equal-width columns guaranteed */
 .grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -87,6 +88,7 @@ body {
   cursor: pointer;
   position: relative;
   border: 1px solid rgba(255,255,255,0.08);
+  min-width: 0;
   transition:
     transform 0.15s ease,
     box-shadow 0.15s ease,
@@ -116,6 +118,8 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  max-width: 100%;
+  min-width: 0;
 }
 
 /* ---------------- OVERLAY ---------------- */
@@ -143,10 +147,71 @@ body {
   animation: scaleIn 0.18s ease;
 }
 
-.editor h2 {
-  margin: 0 0 12px;
-  font-size: 18px;
+/* full-height editor layout */
+.editor-full {
+  height: min(90vh, 720px);
+  display: flex;
+  flex-direction: column;
+}
+
+/* header area */
+.editor-header {
+  flex-shrink: 0;
+}
+
+.editor-date {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+/* 🔥 Roboto Serif title */
+.editor-title {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-family: "Roboto Serif", serif;
+  font-size: 26px;
   font-weight: 600;
+  padding: 6px 0 12px;
+  outline: none;
+}
+
+.editor-title::placeholder {
+  color: rgba(255,255,255,0.35);
+}
+
+/* notes fill space */
+.editor-notes {
+  flex: 1;
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 12px;
+  padding: 12px;
+  font-family: inherit;
+  resize: none;
+  margin-top: 10px;
+}
+
+/* bottom action bar */
+.editor-actions {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  gap: 10px;
+  padding-top: 12px;
+  background: linear-gradient(
+    to top,
+    var(--surface) 85%,
+    rgba(43,47,58,0)
+  );
+}
+
+.editor-actions button {
+  flex: 1;
 }
 
 .editor button.close {
@@ -160,30 +225,7 @@ body {
   cursor: pointer;
 }
 
-.editor input,
-.editor textarea {
-  width: 100%;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  color: var(--text);
-  border-radius: 10px;
-  padding: 10px;
-  font-family: inherit;
-  margin-bottom: 12px;
-}
-
-.editor textarea {
-  min-height: 120px;
-  resize: vertical;
-}
-
-.editor .row {
-  display: flex;
-  gap: 10px;
-}
-
-.editor button.primary {
-  flex: 1;
+button.primary {
   background: var(--accent);
   border: none;
   color: white;
@@ -193,8 +235,7 @@ body {
   cursor: pointer;
 }
 
-.editor button.secondary {
-  flex: 1;
+button.secondary {
   background: transparent;
   border: 1px solid var(--border);
   color: var(--text);
@@ -203,7 +244,7 @@ body {
   cursor: pointer;
 }
 
-.editor button:active {
+button:active {
   transform: scale(0.97);
 }
 
@@ -294,7 +335,7 @@ body {
   }
 }
 
-/* ---------------- MOBILE REFINEMENTS ---------------- */
+/* ---------------- MOBILE ---------------- */
 
 @media (max-width: 640px) {
   .grid {
@@ -303,7 +344,11 @@ body {
 
   .cell {
     height: 72px;
-    padding: 6px;
+    padding: 5px;
+  }
+
+  .cell-title {
+    font-size: 12px;
   }
 
   .editor,
@@ -315,7 +360,62 @@ body {
     bottom: 0;
   }
 
+  .editor-full {
+    height: 100%;
+  }
+
   .overlay {
     align-items: flex-end;
+  }
+}
+
+/* ---------------- STACKED MONTH VIEW ---------------- */
+
+.stacked-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 16px 16px;
+}
+
+.stacked-row {
+  background: var(--surface);
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid rgba(255,255,255,0.08);
+  cursor: pointer;
+  transition: transform 0.12s ease, border-color 0.12s ease;
+}
+
+.stacked-row:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+}
+
+.stacked-row.today {
+  border: 2px solid var(--accent);
+}
+
+.stacked-date {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.stacked-title {
+  font-size: 14px;
+  color: var(--muted);
+  max-width: 60%;
+  text-align: right;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 640px) {
+  .stacked-title {
+    max-width: 50%;
   }
 }

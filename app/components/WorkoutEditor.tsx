@@ -20,6 +20,7 @@ export default function WorkoutEditor({
 
   const [title, setTitle] = useState(existing?.title || "");
   const [notes, setNotes] = useState(existing?.notes || "");
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const formattedDate = new Date(date + "T00:00:00").toLocaleDateString(
     "en-US",
@@ -36,9 +37,7 @@ export default function WorkoutEditor({
   }
 
   function copy() {
-    navigator.clipboard.writeText(
-      JSON.stringify({ title, notes })
-    );
+    navigator.clipboard.writeText(JSON.stringify({ title, notes }));
     toast("Workout copied");
   }
 
@@ -52,31 +51,53 @@ export default function WorkoutEditor({
     } catch {}
   }
 
+  function deleteWorkout() {
+    if (!confirmDelete) {
+      setConfirmDelete(true);
+      return;
+    }
+
+    const updated = { ...workouts };
+    delete updated[date];
+
+    setWorkouts(updated);
+    toast("Workout deleted");
+    onClose();
+  }
+
   return (
     <div className="overlay">
-      <div className="editor">
+      <div className="editor editor-full">
         <button className="close" onClick={onClose}>✕</button>
-        <h2>{formattedDate}</h2>
 
-        <input
-          placeholder="Workout title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
+        <div className="editor-header">
+          <div className="editor-date">{formattedDate}</div>
+
+          <input
+            className="editor-title"
+            placeholder="Workout title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+        </div>
 
         <textarea
+          className="editor-notes"
           placeholder="Workout notes"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
         />
 
-        <div className="row">
+        <div className="editor-actions">
           <button className="secondary" onClick={copy}>Copy</button>
           <button className="secondary" onClick={paste}>Paste</button>
-        </div>
-
-        <div className="row" style={{ marginTop: 10 }}>
-          <button className="primary" onClick={save}>Save Workout</button>
+          <button
+            className={`secondary danger`}
+            onClick={deleteWorkout}
+          >
+            {confirmDelete ? "Confirm Delete" : "Delete"}
+          </button>
+          <button className="primary" onClick={save}>Save</button>
         </div>
       </div>
     </div>

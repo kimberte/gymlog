@@ -10,6 +10,7 @@ export default function HomePage() {
   const [workouts, setWorkouts] = useState({});
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [stacked, setStacked] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
@@ -27,16 +28,32 @@ export default function HomePage() {
 
   return (
     <>
-      <header className="top-bar" style={{ display: "flex", justifyContent: "space-between" }}>
+      <header className="top-bar">
         <h1>Gym Log</h1>
-        <button className="icon-btn" onClick={() => setShowSettings(true)}>
-          ⚙︎
-        </button>
+
+        <div style={{ display: "flex", gap: 6 }}>
+          <button
+            className="icon-btn"
+            title="Toggle stacked month view"
+            onClick={() => setStacked((s) => !s)}
+          >
+            📅
+          </button>
+
+          <button
+            className="icon-btn"
+            title="Settings"
+            onClick={() => setShowSettings(true)}
+          >
+            ⚙︎
+          </button>
+        </div>
       </header>
 
       <WorkoutCalendar
         workouts={workouts}
         onSelectDate={setSelectedDate}
+        stacked={stacked}
       />
 
       {selectedDate && (
@@ -57,9 +74,7 @@ export default function HomePage() {
         />
       )}
 
-      {toast && (
-        <div className="toast">{toast}</div>
-      )}
+      {toast && <div className="toast">{toast}</div>}
     </>
   );
 }

@@ -1,47 +1,93 @@
-import { saveWorkouts } from "./storage";
-
-function clean(v: string) {
-  return v?.replace(/^"|"$/g, "").trim();
-}
-
-export function exportCSV(workouts: any) {
+export function exportCSV(workouts: Record<string, any>) {
   const rows = ["date,title,notes"];
+
   Object.entries(workouts).forEach(([date, w]: any) => {
-    rows.push(`${date},"${w.title || ""}","${w.notes || ""}"`);
+    rows.push(
+      `${date},"${(w.title || "").replace(/"/g, "")}","${(w.notes || "").replace(
+        /"/g,
+        ""
+      )}"`
+    );
   });
-  download(rows.join("\n"), "workouts.csv");
+
+  download(rows.join("\n"), "gym-log.csv");
 }
 
-export function exportTemplateCSV() {
-  download(
-    "date,title,notes\n2025-01-01,Leg Day,Squats & lunges",
-    "template.csv"
-  );
+/* ---------- NEW: TEMPLATE DOWNLOAD ---------- */
+
+export function downloadTemplateCSV() {
+  const rows = [
+    "date,title,notes",
+    "2026-01-01,Leg Day,Squats, lunges, calf raises"
+  ];
+
+  download(rows.join("\n"), "gym-log-template.csv");
 }
 
-export async function importCSV(file: File) {
+/* ---------- IMPORT (UNCHANGED) ---------- */
+
+export async function importCSV(
+  existing: Record<string, any>,
+  file: File
+): Promise<Record<string, any>> {
   const text = await file.text();
   const lines = text.split("\n").slice(1);
 
-  const data: any = {};
-  lines.forEach((l) => {
-    const [date, title, notes] = l.split(",");
-    if (date) {
-      data[clean(date)] = {
-        title: clean(title),
-        notes: clean(notes),
-      };
-    }
+  const updates: Record<string, any> = {};
+
+  lines.forEach((line) => {
+    if (!line.trim()) return;
+
+    const [date, title, notes] = parseCSVLine(line);
+    if (!date) return;
+
+    updates[date] = {
+      title: title || "",
+      notes: notes || "",
+    };
   });
 
-  saveWorkouts(data);
-  location.reload();
+  return {
+    ...existing,
+    ...updates, // overwrite only dates present in CSV
+  };
 }
 
-function download(content: string, name: string) {
+/* ---------- HELPERS ---------- */
+
+function parseCSVLine(line: string): string[] {
+  const result: string[] = [];
+  let current = "";
+  let insideQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+
+    if (char === '"' && line[i + 1] === '"') {
+      current += '"';
+      i++;
+    } else if (char === '"') {
+      insideQuotes = !insideQuotes;
+    } else if (char === "," && !insideQuotes) {
+      result.push(current);
+      current = "";
+    } else {
+      current += char;
+    }
+  }
+
+  result.push(current);
+  return result.map((v) => v.replace(/^"|"$/g, ""));
+}
+
+function download(content: string, filename: string) {
   const blob = new Blob([content], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = name;
+  a.href = url;
+  a.download = filename;
   a.click();
+
+  URL.revokeObjectURL(url);
 }

@@ -40,8 +40,32 @@ body {
   background: none;
   border: none;
   color: var(--text);
-  font-size: 20px;
   cursor: pointer;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  padding: 0;
+  line-height: 0;
+
+  transition: background 0.15s ease, transform 0.08s ease;
+}
+
+.icon-btn:hover {
+  background: rgba(255,255,255,0.06);
+}
+
+.icon-btn:active {
+  transform: scale(0.96);
+}
+
+.icon-btn:focus-visible {
+  outline: 2px solid rgba(255,255,255,0.35);
+  outline-offset: 2px;
 }
 
 /* ---------------- CALENDAR ---------------- */
@@ -63,12 +87,41 @@ body {
   font-weight: 500;
 }
 
+.month-title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.15;
+}
+
+.month-subtitle {
+  margin-top: 3px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.72);
+  letter-spacing: 0.2px;
+}
+
 .calendar header button {
   background: none;
   border: none;
   color: var(--text);
   font-size: 20px;
   cursor: pointer;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, transform 0.08s ease;
+}
+
+.calendar header button:hover {
+  background: rgba(255,255,255,0.06);
+}
+
+.calendar header button:active {
+  transform: scale(0.96);
 }
 
 /* ✅ weekday labels row */
@@ -104,10 +157,13 @@ body {
   position: relative;
   border: 1px solid rgba(255,255,255,0.08);
   min-width: 0;
+  -webkit-user-select: none;
+  user-select: none;
   transition:
     transform 0.15s ease,
     box-shadow 0.15s ease,
-    border-color 0.15s ease;
+    border-color 0.15s ease,
+    background 0.15s ease;
 }
 
 .cell:hover {
@@ -116,8 +172,17 @@ body {
   box-shadow: 0 6px 16px rgba(0,0,0,0.25);
 }
 
+.cell:focus-visible {
+  outline: 2px solid rgba(255,255,255,0.35);
+  outline-offset: 2px;
+}
+
 .cell.today {
   border: 2px solid var(--accent);
+}
+
+.cell.selected {
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,0.22);
 }
 
 .cell.blank {
@@ -134,7 +199,8 @@ body {
 
 .cell-date {
   font-size: 13px;
-  opacity: 0.85;
+  font-weight: 500;
+  opacity: 0.9;
 }
 
 .cell-title {
@@ -142,11 +208,35 @@ body {
   font-size: 13px;
   font-weight: 500;
   color: var(--text);
+  opacity: 0.85;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 100%;
   min-width: 0;
+}
+
+/* Small marker for days with a workout */
+.workout-dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--accent);
+  box-shadow: 0 0 0 2px rgba(43,47,58,0.65);
+  pointer-events: none;
+}
+
+.workout-dot-inline {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--accent);
+  margin-right: 8px;
+  vertical-align: middle;
 }
 
 /* ---------------- OVERLAY ---------------- */
@@ -162,6 +252,16 @@ body {
   animation: fadeIn 0.18s ease;
 }
 
+/* Close animation */
+.overlay.closing {
+  animation: fadeOut 0.16s ease forwards;
+}
+
+.overlay.closing .editor,
+.overlay.closing .settings {
+  animation: scaleOut 0.16s ease forwards;
+}
+
 /* ---------------- WORKOUT EDITOR ---------------- */
 
 .editor {
@@ -172,6 +272,7 @@ body {
   padding: 20px;
   position: relative;
   animation: scaleIn 0.18s ease;
+  box-shadow: 0 18px 50px rgba(0,0,0,0.45);
 }
 
 .editor-full {
@@ -206,6 +307,12 @@ body {
   color: rgba(255,255,255,0.35);
 }
 
+.editor-title:focus-visible {
+  outline: 2px solid rgba(255,255,255,0.18);
+  outline-offset: 4px;
+  border-radius: 10px;
+}
+
 .editor-notes {
   flex: 1;
   width: 100%;
@@ -217,6 +324,12 @@ body {
   font-family: inherit;
   resize: none;
   margin-top: 10px;
+  outline: none;
+}
+
+.editor-notes:focus-visible {
+  outline: 2px solid rgba(255,255,255,0.18);
+  outline-offset: 2px;
 }
 
 .editor-actions {
@@ -240,12 +353,24 @@ body {
   position: absolute;
   top: 12px;
   right: 14px;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: none;
   border: none;
   color: var(--muted);
   font-size: 18px;
   cursor: pointer;
 }
+
+.editor button.close:hover {
+  background: rgba(255,255,255,0.06);
+}
+
+/* ---------------- BUTTONS ---------------- */
 
 button.primary {
   background: var(--accent);
@@ -255,6 +380,11 @@ button.primary {
   padding: 10px;
   font-weight: 500;
   cursor: pointer;
+  transition: filter 0.15s ease, transform 0.08s ease;
+}
+
+button.primary:hover {
+  filter: brightness(1.03);
 }
 
 button.secondary {
@@ -264,10 +394,21 @@ button.secondary {
   border-radius: 10px;
   padding: 10px;
   cursor: pointer;
+  transition: background 0.15s ease, transform 0.08s ease;
+}
+
+button.secondary:hover {
+  background: rgba(255,255,255,0.05);
 }
 
 button:active {
   transform: scale(0.97);
+}
+
+button.primary:disabled,
+button.secondary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 /* ---------------- SETTINGS ---------------- */
@@ -279,6 +420,7 @@ button:active {
   padding: 20px;
   position: relative;
   animation: scaleIn 0.18s ease;
+  box-shadow: 0 18px 50px rgba(0,0,0,0.45);
 }
 
 /* ✅ makes settings scrollable */
@@ -292,31 +434,25 @@ button:active {
   margin-top: 0;
 }
 
-.settings button {
-  width: 100%;
-  margin-top: 10px;
-  padding: 10px;
-  border-radius: 10px;
-  border: none;
-  background: var(--accent);
-  color: white;
-  cursor: pointer;
-}
-
-.settings input[type="file"] {
-  margin-top: 12px;
-  color: var(--text);
-}
-
 .settings .close {
   position: absolute;
   top: 12px;
-  right: 14px; /* ✅ top-right */
+  right: 14px;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   z-index: 2;
   background: none;
   border: none;
   color: var(--muted);
   cursor: pointer;
+}
+
+.settings .close:hover {
+  background: rgba(255,255,255,0.06);
 }
 
 /* ---------------- TOAST ---------------- */
@@ -326,11 +462,13 @@ button:active {
   bottom: 24px;
   left: 50%;
   transform: translateX(-50%);
-  background: var(--surface);
+  background: rgba(43,47,58,0.9);
   color: var(--text);
   padding: 10px 16px;
   border-radius: 999px;
   font-size: 14px;
+  border: 1px solid rgba(255,255,255,0.10);
+  backdrop-filter: blur(8px);
   box-shadow: 0 8px 24px rgba(0,0,0,0.35);
   z-index: 2000;
   animation: toastIn 0.2s ease;
@@ -341,6 +479,11 @@ button:active {
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
 
 @keyframes scaleIn {
@@ -354,6 +497,11 @@ button:active {
   }
 }
 
+@keyframes scaleOut {
+  from { transform: scale(1); opacity: 1; }
+  to { transform: scale(0.98); opacity: 0; }
+}
+
 @keyframes toastIn {
   from {
     transform: translate(-50%, 10px);
@@ -365,6 +513,49 @@ button:active {
   }
 }
 
+@keyframes todayPulse {
+  0% { opacity: 0.35; }
+  50% { opacity: 0.85; }
+  100% { opacity: 0.35; }
+}
+
+.workout-half-dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(to left, var(--accent) 50%, transparent 50%);
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+.workout-half-dot-inline {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(to left, var(--accent) 50%, transparent 50%);
+  margin-right: 6px;
+  vertical-align: middle;
+  opacity: 0.8;
+}
+
+
+
+/* Half dot marker for notes-only days */
+.workout-half-dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(to left, var(--accent) 50%, transparent 50%);
+  pointer-events: none;
+}
+
 /* ---------------- MOBILE REFINEMENTS ---------------- */
 
 @media (max-width: 640px) {
@@ -373,12 +564,17 @@ button:active {
     padding: 8px;
   }
 
+  .month-subtitle {
+    font-size: 11px;
+    margin-top: 2px;
+  }
+
   .grid {
     gap: 0;
     border: 1px solid rgba(255,255,255,0.08);
     border-radius: 12px;
     max-height: calc(100vh - 110px); /* leaves room for header + weekday row */
-  overflow: hidden;
+    overflow: hidden;
   }
 
   .dow {
@@ -399,6 +595,18 @@ button:active {
     border-bottom: 1px solid rgba(255,255,255,0.08);
   }
 
+  .cell:active {
+    background: rgba(255,255,255,0.06);
+    transform: scale(0.99);
+  }
+
+  .workout-dot {
+    top: 6px;
+    right: 6px;
+    width: 5px;
+    height: 5px;
+  }
+
   /* Avoid double borders on the grid edges */
   .grid .cell:nth-child(7n) {
     border-right: none;
@@ -411,6 +619,22 @@ button:active {
   .cell.today {
     border: none;
     box-shadow: inset 0 0 0 2px var(--accent);
+  }
+
+  /* subtle pulse ring for today */
+  .cell.today::after {
+    content: "";
+    position: absolute;
+    inset: 2px;
+    border-radius: 10px;
+    box-shadow: inset 0 0 0 2px var(--accent);
+    opacity: 0.35;
+    animation: todayPulse 2.4s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  .cell.selected {
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,0.18);
   }
 
   .cell.blank {
@@ -449,6 +673,10 @@ button:active {
   .overlay {
     align-items: flex-end;
   }
+
+  .month-title h2 {
+    margin-bottom: 2px; /* keeps centered when subtitle is hidden */
+  }
 }
 
 /* ---------------- STACKED MONTH VIEW ---------------- */
@@ -465,12 +693,12 @@ button:active {
   border-radius: 14px;
   padding: 12px 14px;
   display: flex;
-  flex-direction: column; /* ✅ title left-aligned under date */
+  flex-direction: column;
   align-items: flex-start;
-  gap: 4px;
+  gap: 6px;
   border: 1px solid rgba(255,255,255,0.08);
   cursor: pointer;
-  transition: transform 0.12s ease, border-color 0.12s ease;
+  transition: transform 0.12s ease, border-color 0.12s ease, background 0.15s ease;
 }
 
 .stacked-row:hover {
@@ -478,20 +706,31 @@ button:active {
   border-color: var(--accent);
 }
 
+.stacked-row:active {
+  background: rgba(255,255,255,0.06);
+  transform: scale(0.99);
+}
+
 .stacked-row.today {
   border: 2px solid var(--accent);
+}
+
+.stacked-row.selected {
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,0.18);
 }
 
 .stacked-date {
   font-size: 14px;
   font-weight: 500;
+  opacity: 0.95;
 }
 
 .stacked-title {
   font-size: 14px;
   color: var(--muted);
   max-width: 100%;
-  text-align: left; /* ✅ left align */
+  text-align: left;
+  opacity: 0.85;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;

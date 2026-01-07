@@ -5,6 +5,9 @@ import { exportCSV, importCSV } from "../lib/csv";
 import { supabase } from "../lib/supabaseClient";
 import { fetchLatestBackup, formatBackupDate } from "../lib/backup";
 
+// ✅ IMPORT STREAK HELPER
+import { calculateStreaks, formatDisplayDate } from "../lib/stats";
+
 type WeekStart = "sunday" | "monday";
 
 type Props = {
@@ -67,6 +70,13 @@ export default function SettingsModal({
     () => Object.keys(workouts ?? {}).length,
     [workouts]
   );
+
+  // ---- STREAK LOGIC (executed once and memoized) ----
+  const { bestStreak, totalDays, lastWorkout } = useMemo(() => {
+    return calculateStreaks(workouts ?? {});
+  }, [workouts]);
+
+  const lastWorkoutDisplay = formatDisplayDate(lastWorkout);
 
   // ---- AUTH: load session + listen for changes ----
   useEffect(() => {
@@ -236,8 +246,6 @@ export default function SettingsModal({
 
     try {
       const updated = await importCSV(workouts, pendingFile);
-
-      // IMPORTANT: update state so it persists and triggers local save + auto-backup
       setWorkouts(updated);
 
       toast("Workouts imported");
@@ -267,7 +275,6 @@ export default function SettingsModal({
       return;
     }
 
-    // Only show confirm UI if we have a backup
     const iso = serverBackupAt ?? lastBackupAt;
     if (!iso) {
       toast("No backup available yet");
@@ -293,9 +300,7 @@ export default function SettingsModal({
         return;
       }
 
-      // Overwrite entire calendar
       setWorkouts(row.data);
-
       toast("Restored from auto-backup");
       setRestoreBusy(false);
       setShowRestoreConfirm(false);
@@ -319,7 +324,6 @@ export default function SettingsModal({
       localStorage.removeItem("gym-log-settings");
       localStorage.removeItem("gym-log-week-start");
 
-      // Supabase stores session under sb-*-auth-token keys
       const keys: string[] = [];
       for (let i = 0; i < localStorage.length; i++) {
         const k = localStorage.key(i);
@@ -360,7 +364,6 @@ export default function SettingsModal({
         return;
       }
 
-      // Sign out + clear
       try {
         await supabase.auth.signOut();
       } catch {}
@@ -378,7 +381,6 @@ export default function SettingsModal({
     }
   }
 
-  // ---- UI helpers ----
   const proDisabledStyle: React.CSSProperties = {
     opacity: 0.45,
     pointerEvents: "none",
@@ -402,10 +404,30 @@ export default function SettingsModal({
 
         <h3>Settings</h3>
 
+        {/* --- STATS UI BLOCK (UPDATED PER YOUR REQUEST) --- */}
+        {totalDays > 0 && (
+          <div
+            style={{
+              marginTop: 12,
+              padding: 12,
+              borderRadius: 12,
+              border: "1px solid var(--border)",
+              background: "rgba(0,0,0,0.12)",
+              fontSize: 13,
+              opacity: 0.95,
+            }}
+          >
+            <strong>Progress</strong>
+            <div style={{ marginTop: 6 }}>🏆 Best streak: {bestStreak} days</div>
+            <div>📆 Total workouts logged (all-time): {totalDays}</div>
+            <div>⏱ Last workout: {lastWorkoutDisplay}</div>
+          </div>
+        )}
+
         {/* GENERAL (NON-PRO) */}
         <div
           style={{
-            marginTop: 10,
+            marginTop: 14,
             padding: 12,
             borderRadius: 12,
             border: "1px solid rgba(255,255,255,0.12)",
@@ -497,7 +519,9 @@ export default function SettingsModal({
                 opacity: backupIso ? 1 : 0.6,
               }}
               disabled={!backupIso}
-              title={!backupIso ? "No backup available yet" : "Restore from auto-backup"}
+              title={
+                !backupIso ? "No backup available yet" : "Restore from auto-backup"
+              }
             >
               Restore from auto-backup
             </button>
@@ -515,7 +539,6 @@ export default function SettingsModal({
             )}
           </div>
 
-          {/* RESTORE CONFIRM */}
           {showRestoreConfirm && (
             <div
               style={{
@@ -529,7 +552,8 @@ export default function SettingsModal({
             >
               <strong>Restore from backup?</strong>
               <p style={{ margin: "6px 0" }}>
-                This will overwrite your entire calendar with the latest cloud backup{" "}
+                This will overwrite your entire calendar with the latest cloud
+                backup{" "}
                 {prettyBackup ? (
                   <>
                     from <strong>{prettyBackup}</strong>
@@ -683,7 +707,7 @@ export default function SettingsModal({
           </div>
 
           <div style={!isPro ? proDisabledStyle : undefined}>
-            <button onClick={handleExport}>Export workouts (CSV)</button>
+            <button onClick={handleExport}>Export workouts</button>
             <button onClick={downloadTemplate}>Download CSV template</button>
 
             <label style={{ display: "block", marginTop: 14, fontSize: 13 }}>
@@ -733,6 +757,7 @@ export default function SettingsModal({
                 padding: 10,
                 borderRadius: 10,
                 cursor: "pointer",
+                opacity: 1,
               }}
               onClick={handleConfirmImport}
             >
@@ -833,7 +858,7 @@ export default function SettingsModal({
                     padding: 10,
                     borderRadius: 10,
                     cursor: "pointer",
-                    opacity: deleteBusy ? 0.8 : 1,
+                    opacity: 1,
                   }}
                 >
                   {deleteBusy ? "Deleting…" : "Confirm delete"}

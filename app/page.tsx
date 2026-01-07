@@ -10,7 +10,7 @@ import { upsertBackup } from "./lib/backup";
 
 type WeekStart = "sunday" | "monday";
 
-const WEEKSTART_KEY = "gym-log-week-start";
+const WEEKSTART_KEY = "gym-log-week-start"; // ✅ separate + safe
 
 function loadWeekStart(): WeekStart {
   if (typeof window === "undefined") return "sunday";
@@ -90,7 +90,7 @@ function ListIcon({ size = 20 }: { size?: number }) {
 }
 
 function SettingsIcon({ size = 20 }: { size?: number }) {
-  // Clean flat nut/cog icon
+  // clean flat "nut/cog" icon
   return (
     <svg
       width={size}
@@ -150,20 +150,21 @@ export default function HomePage() {
   const [stacked, setStacked] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
-  // week start (non-pro)
+  // ✅ week start (non-pro)
   const [weekStart, setWeekStart] = useState<WeekStart>("sunday");
 
-  // backup state
+  // ---- backup state ----
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [lastBackupAt, setLastBackupAt] = useState<string | null>(null);
 
   const lastBackupHashRef = useRef<string>("");
   const backupTimerRef = useRef<number | null>(null);
 
-  // prevents wipe on first mount
+  // ✅ prevents "wipe workouts on first mount"
   const didLoadRef = useRef(false);
 
   useEffect(() => {
+    // LOAD ONCE
     const loaded = loadWorkouts();
     setWorkouts(loaded);
 
@@ -174,11 +175,13 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
+    // ✅ do not save until initial load happened
     if (!didLoadRef.current) return;
     saveWorkouts(workouts);
   }, [workouts]);
 
   useEffect(() => {
+    // ✅ persist weekStart
     if (!didLoadRef.current) return;
     saveWeekStart(weekStart);
   }, [weekStart]);
@@ -225,6 +228,8 @@ export default function HomePage() {
 
         const updatedAt = await upsertBackup(workouts);
         lastBackupHashRef.current = hash;
+
+        // ✅ keep UI updated (Settings will display it)
         setLastBackupAt(updatedAt);
       } catch {
         // keep quiet
@@ -239,41 +244,49 @@ export default function HomePage() {
   return (
     <>
       <header className="top-bar">
-        <h1>Gym Log</h1>
+  {/* ✅ Logo + App Title */}
+  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+    <img
+      src="/icons/gym-app-logo-color-40x40.png"
+      alt="Gym app logo"
+      width={32}
+      height={32}
+      style={{ borderRadius: 6 }}
+    />
+    <h1 style={{ margin: 0 }}>Gym Log</h1>
+  </div>
 
-        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-          {/* Toggle view icon: calendar <-> list */}
-          <button
-            className="icon-btn"
-            title={stacked ? "Stacked view" : "Calendar view"}
-            onClick={() => setStacked((s) => !s)}
-            aria-label="Toggle view"
-            style={{ display: "flex", alignItems: "center", justifyContent: "center" }}
-          >
-            {stacked ? <ListIcon /> : <CalendarIcon />}
-          </button>
+  {/* Icon controls remain on the right */}
+  <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+    <button
+      className="icon-btn"
+      title="Toggle view"
+      aria-label="Toggle view"
+      onClick={() => setStacked((s) => !s)}
+    >
+      {stacked ? <ListIcon /> : <CalendarIcon />}
+    </button>
 
-          {/* Flat nut/cog settings icon */}
-          <button
-            className="icon-btn"
-            title="Settings"
-            onClick={() => setShowSettings(true)}
-            aria-label="Open settings"
-            style={{ display: "flex", alignItems: "center", justifyContent: "center" }}
-          >
-            <SettingsIcon />
-          </button>
-        </div>
-      </header>
+    <button
+      className="icon-btn"
+      title="Settings"
+      aria-label="Open settings"
+      onClick={() => setShowSettings(true)}
+    >
+      <SettingsIcon />
+    </button>
+  </div>
+</header>
+
 
       <WorkoutCalendar
         workouts={workouts}
         onSelectDate={setSelectedDate}
         stacked={stacked}
         weekStart={weekStart}
+        selectedDate={selectedDate}
       />
 
-      {/* ✅ FIX: WorkoutEditor expects `date` prop */}
       {selectedDate && (
         <WorkoutEditor
           date={selectedDate}

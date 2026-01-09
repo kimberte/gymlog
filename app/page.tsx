@@ -158,7 +158,7 @@ export default function HomePage() {
   const [lastBackupAt, setLastBackupAt] = useState<string | null>(null);
 
   const lastBackupHashRef = useRef<string>("");
-  const backupTimerRef = useRef<number | null>(null);
+  const backupBusyRef = useRef(false);
 
   // ✅ prevents "wipe workouts on first mount"
   const didLoadRef = useRef(false);
@@ -214,70 +214,60 @@ export default function HomePage() {
     };
   }, []);
 
-  // Auto-backup (debounced) when workouts change AND user is signed in
-  useEffect(() => {
+  async function requestBackup(nextWorkouts: Record<string, any>) {
+    // 🔒 Only back up on explicit saves (not every keystroke)
     if (!isSignedIn) return;
     if (!didLoadRef.current) return;
+    if (backupBusyRef.current) return;
 
-    if (backupTimerRef.current) window.clearTimeout(backupTimerRef.current);
+    try {
+      const hash = JSON.stringify(nextWorkouts ?? {});
+      if (hash === lastBackupHashRef.current) return;
+      backupBusyRef.current = true;
 
-    backupTimerRef.current = window.setTimeout(async () => {
-      try {
-        const hash = JSON.stringify(workouts ?? {});
-        if (hash === lastBackupHashRef.current) return;
-
-        const updatedAt = await upsertBackup(workouts);
-        lastBackupHashRef.current = hash;
-
-        // ✅ keep UI updated (Settings will display it)
-        setLastBackupAt(updatedAt);
-      } catch {
-        // keep quiet
-      }
-    }, 1200);
-
-    return () => {
-      if (backupTimerRef.current) window.clearTimeout(backupTimerRef.current);
-    };
-  }, [workouts, isSignedIn]);
+      const updatedAt = await upsertBackup(nextWorkouts);
+      lastBackupHashRef.current = hash;
+      setLastBackupAt(updatedAt);
+    } catch {
+      // keep quiet
+    } finally {
+      backupBusyRef.current = false;
+    }
+  }
 
   return (
     <>
       <header className="top-bar">
-  {/* ✅ Logo + App Title */}
-  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-    <img
-      src="/icons/gym-app-logo-color-40x40.png"
-      alt="Gym app logo"
-      width={32}
-      height={32}
-      style={{ borderRadius: 6 }}
-    />
-    <h1 style={{ margin: 0 }}>Gym Log</h1>
-  </div>
+        <div className="brand">
+          <img
+            src="/icons/gym-app-logo-color-40x40.png"
+            alt="Gym Log"
+            className="brand-logo"
+            width={20}
+            height={20}
+          />
+          <h1>Gym Log</h1>
+        </div>
+        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          <button
+            className="icon-btn"
+            title="Toggle view"
+            aria-label="Toggle view"
+            onClick={() => setStacked((s) => !s)}
+          >
+            {stacked ? <ListIcon /> : <CalendarIcon />}
+          </button>
 
-  {/* Icon controls remain on the right */}
-  <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-    <button
-      className="icon-btn"
-      title="Toggle view"
-      aria-label="Toggle view"
-      onClick={() => setStacked((s) => !s)}
-    >
-      {stacked ? <ListIcon /> : <CalendarIcon />}
-    </button>
-
-    <button
-      className="icon-btn"
-      title="Settings"
-      aria-label="Open settings"
-      onClick={() => setShowSettings(true)}
-    >
-      <SettingsIcon />
-    </button>
-  </div>
-</header>
-
+          <button
+            className="icon-btn"
+            title="Settings"
+            aria-label="Open settings"
+            onClick={() => setShowSettings(true)}
+          >
+            <SettingsIcon />
+          </button>
+        </div>
+      </header>
 
       <WorkoutCalendar
         workouts={workouts}
@@ -292,6 +282,7 @@ export default function HomePage() {
           date={selectedDate}
           workouts={workouts}
           setWorkouts={setWorkouts}
+          onSaved={(next) => requestBackup(next)}
           onClose={() => setSelectedDate(null)}
           toast={showToast}
         />
@@ -301,6 +292,7 @@ export default function HomePage() {
         <SettingsModal
           workouts={workouts}
           setWorkouts={setWorkouts}
+          onDataSaved={(next) => requestBackup(next)}
           onClose={() => setShowSettings(false)}
           toast={showToast}
           weekStart={weekStart}

@@ -5,14 +5,36 @@ import { exportCSV, importCSV } from "../lib/csv";
 import { supabase } from "../lib/supabaseClient";
 import { fetchLatestBackup, formatBackupDate } from "../lib/backup";
 
-// ✅ IMPORT STREAK HELPER
-import { calculateStreaks, formatDisplayDate } from "../lib/stats";
-
 type WeekStart = "sunday" | "monday";
+
+function parseDateKey(key: string) {
+  // key: YYYY-MM-DD
+  const m = /^([0-9]{4})-([0-9]{2})-([0-9]{2})$/.exec(key);
+  if (!m) return null;
+  const y = Number(m[1]);
+  const mo = Number(m[2]);
+  const d = Number(m[3]);
+  if (!y || !mo || !d) return null;
+  // Use a fixed noon time to avoid timezone DST shifts
+  return new Date(y, mo - 1, d, 12, 0, 0, 0);
+}
+
+function formatKeyForDisplay(key: string | null) {
+  if (!key) return "—";
+  const dt = parseDateKey(key);
+  if (!dt) return "—";
+  return dt.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
 
 type Props = {
   workouts: Record<string, any>;
   setWorkouts: (w: Record<string, any>) => void;
+  // Called after explicit data changes (import/restore/delete) so parent can back up once
+  onDataSaved?: (nextWorkouts: Record<string, any>) => void;
   onClose: () => void;
   toast: (msg: string) => void;
 
@@ -27,6 +49,7 @@ type Props = {
 export default function SettingsModal({
   workouts,
   setWorkouts,
+  onDataSaved,
   onClose,
   toast,
   weekStart,
@@ -34,6 +57,8 @@ export default function SettingsModal({
   lastBackupAt,
 }: Props) {
   const fileRef = useRef<HTMLInputElement | null>(null);
+
+  const [closing, setClosing] = useState(false);
 
   const [sessionEmail, setSessionEmail] = useState<string | null>(null);
   const [sessionToken, setSessionToken] = useState<string | null>(null);
@@ -66,17 +91,66 @@ export default function SettingsModal({
   }, []);
 
   const isPro = Boolean(sessionEmail);
-  const workoutCount = useMemo(
-    () => Object.keys(workouts ?? {}).length,
-    [workouts]
-  );
-
-  // ---- STREAK LOGIC (executed once and memoized) ----
-  const { bestStreak, totalDays, lastWorkout } = useMemo(() => {
-    return calculateStreaks(workouts ?? {});
+  const workoutCount = useMemo(() => {
+    let total = 0;
+    Object.values(workouts ?? {}).forEach((day: any) => {
+      const entries = Array.isArray(day?.entries) ? day.entries : day ? [day] : [];
+      entries.forEach((e: any) => {
+        const has = Boolean(String(e?.title ?? "").trim() || String(e?.notes ?? "").trim());
+        if (has) total += 1;
+      });
+    });
+    return total;
   }, [workouts]);
 
-  const lastWorkoutDisplay = formatDisplayDate(lastWorkout);
+  // ---- PROGRESS STATS (all-time) ----
+  const { bestStreak, totalWorkoutDays, lastWorkoutKey } = useMemo(() => {
+    // We count a "workout day" if any entry has title or notes.
+    const activeKeys = Object.keys(workouts ?? {}).filter((key) => {
+      const day: any = (workouts as any)[key];
+      const entries = Array.isArray(day?.entries) ? day.entries : day ? [day] : [];
+      return entries.some((e: any) =>
+        Boolean(String(e?.title ?? "").trim() || String(e?.notes ?? "").trim())
+      );
+    });
+
+    activeKeys.sort(); // YYYY-MM-DD lex sort works
+
+    let best = 0;
+    let run = 0;
+    let prev: Date | null = null;
+
+    for (const k of activeKeys) {
+      const dt = parseDateKey(k);
+      if (!dt) continue;
+
+      if (!prev) {
+        run = 1;
+      } else {
+        const diffDays = Math.round((dt.getTime() - prev.getTime()) / 86400000);
+        if (diffDays === 1) {
+          run += 1;
+        } else {
+          best = Math.max(best, run);
+          run = 1;
+        }
+      }
+
+      prev = dt;
+    }
+
+    best = Math.max(best, run);
+
+    const lastKey = activeKeys.length ? activeKeys[activeKeys.length - 1] : null;
+
+    return {
+      bestStreak: best,
+      totalWorkoutDays: activeKeys.length,
+      lastWorkoutKey: lastKey,
+    };
+  }, [workouts]);
+
+  const lastWorkoutDisplay = formatKeyForDisplay(lastWorkoutKey);
 
   // ---- AUTH: load session + listen for changes ----
   useEffect(() => {
@@ -206,8 +280,8 @@ export default function SettingsModal({
     }
 
     const template = [
-      "date,title,notes",
-      "2026-01-05,Leg Day,Squats 5x5; RDL 3x8",
+      "date,entry_index,title,notes",
+      "2026-01-05,1,Leg Day,Squats 5x5; RDL 3x8",
     ].join("\n");
 
     const blob = new Blob([template], { type: "text/csv" });
@@ -246,13 +320,16 @@ export default function SettingsModal({
 
     try {
       const updated = await importCSV(workouts, pendingFile);
+
+      // IMPORTANT: update state so it persists and triggers local save + auto-backup
       setWorkouts(updated);
+      onDataSaved?.(updated);
 
       toast("Workouts imported");
       setConfirming(false);
       setPendingFile(null);
       if (fileRef.current) fileRef.current.value = "";
-      onClose();
+      requestClose();
     } catch {
       toast("Import failed");
       setConfirming(false);
@@ -275,6 +352,7 @@ export default function SettingsModal({
       return;
     }
 
+    // Only show confirm UI if we have a backup
     const iso = serverBackupAt ?? lastBackupAt;
     if (!iso) {
       toast("No backup available yet");
@@ -300,11 +378,14 @@ export default function SettingsModal({
         return;
       }
 
+      // Overwrite entire calendar
       setWorkouts(row.data);
+      onDataSaved?.(row.data);
+
       toast("Restored from auto-backup");
       setRestoreBusy(false);
       setShowRestoreConfirm(false);
-      onClose();
+      requestClose();
     } catch {
       toast("Restore failed");
       setRestoreBusy(false);
@@ -324,6 +405,7 @@ export default function SettingsModal({
       localStorage.removeItem("gym-log-settings");
       localStorage.removeItem("gym-log-week-start");
 
+      // Supabase stores session under sb-*-auth-token keys
       const keys: string[] = [];
       for (let i = 0; i < localStorage.length; i++) {
         const k = localStorage.key(i);
@@ -364,6 +446,7 @@ export default function SettingsModal({
         return;
       }
 
+      // Sign out + clear
       try {
         await supabase.auth.signOut();
       } catch {}
@@ -374,13 +457,14 @@ export default function SettingsModal({
       setDeleteBusy(false);
       setShowDeleteConfirm(false);
       setDeleteText("");
-      onClose();
+      requestClose();
     } catch {
       toast("Delete failed");
       setDeleteBusy(false);
     }
   }
 
+  // ---- UI helpers ----
   const proDisabledStyle: React.CSSProperties = {
     opacity: 0.45,
     pointerEvents: "none",
@@ -395,23 +479,29 @@ export default function SettingsModal({
 
   const backupIso = serverBackupAt ?? lastBackupAt;
 
+  function requestClose() {
+    if (closing) return;
+    setClosing(true);
+    window.setTimeout(() => onClose(), 170);
+  }
+
   return (
-    <div className="overlay">
-      <div className="settings settings-scroll">
-        <button className="close" onClick={onClose} aria-label="Close settings">
+    <div className={`overlay ${closing ? "closing" : ""}`}>
+      <div className={`settings settings-scroll ${closing ? "closing" : ""}`}>
+        <button className="close" onClick={requestClose} aria-label="Close settings">
           ✕
         </button>
 
         <h3>Settings</h3>
 
-        {/* --- STATS UI BLOCK (UPDATED PER YOUR REQUEST) --- */}
-        {totalDays > 0 && (
+        {/* PROGRESS (all-time) */}
+        {(workoutCount > 0 || totalWorkoutDays > 0) && (
           <div
             style={{
               marginTop: 12,
               padding: 12,
               borderRadius: 12,
-              border: "1px solid var(--border)",
+              border: "1px solid rgba(255,255,255,0.12)",
               background: "rgba(0,0,0,0.12)",
               fontSize: 13,
               opacity: 0.95,
@@ -419,7 +509,8 @@ export default function SettingsModal({
           >
             <strong>Progress</strong>
             <div style={{ marginTop: 6 }}>🏆 Best streak: {bestStreak} days</div>
-            <div>📆 Total workouts logged (all-time): {totalDays}</div>
+            <div>📌 Total workouts: {workoutCount}</div>
+            <div>📆 Total workout days: {totalWorkoutDays}</div>
             <div>⏱ Last workout: {lastWorkoutDisplay}</div>
           </div>
         )}
@@ -427,7 +518,7 @@ export default function SettingsModal({
         {/* GENERAL (NON-PRO) */}
         <div
           style={{
-            marginTop: 14,
+            marginTop: 10,
             padding: 12,
             borderRadius: 12,
             border: "1px solid rgba(255,255,255,0.12)",
@@ -519,9 +610,7 @@ export default function SettingsModal({
                 opacity: backupIso ? 1 : 0.6,
               }}
               disabled={!backupIso}
-              title={
-                !backupIso ? "No backup available yet" : "Restore from auto-backup"
-              }
+              title={!backupIso ? "No backup available yet" : "Restore from auto-backup"}
             >
               Restore from auto-backup
             </button>
@@ -539,6 +628,7 @@ export default function SettingsModal({
             )}
           </div>
 
+          {/* RESTORE CONFIRM */}
           {showRestoreConfirm && (
             <div
               style={{
@@ -552,8 +642,7 @@ export default function SettingsModal({
             >
               <strong>Restore from backup?</strong>
               <p style={{ margin: "6px 0" }}>
-                This will overwrite your entire calendar with the latest cloud
-                backup{" "}
+                This will overwrite your entire calendar with the latest cloud backup{" "}
                 {prettyBackup ? (
                   <>
                     from <strong>{prettyBackup}</strong>
@@ -707,7 +796,7 @@ export default function SettingsModal({
           </div>
 
           <div style={!isPro ? proDisabledStyle : undefined}>
-            <button onClick={handleExport}>Export workouts</button>
+            <button onClick={handleExport}>Export workouts (CSV)</button>
             <button onClick={downloadTemplate}>Download CSV template</button>
 
             <label style={{ display: "block", marginTop: 14, fontSize: 13 }}>
@@ -757,7 +846,6 @@ export default function SettingsModal({
                 padding: 10,
                 borderRadius: 10,
                 cursor: "pointer",
-                opacity: 1,
               }}
               onClick={handleConfirmImport}
             >
@@ -858,7 +946,7 @@ export default function SettingsModal({
                     padding: 10,
                     borderRadius: 10,
                     cursor: "pointer",
-                    opacity: 1,
+                    opacity: deleteBusy ? 0.8 : 1,
                   }}
                 >
                   {deleteBusy ? "Deleting…" : "Confirm delete"}

@@ -216,18 +216,51 @@ body {
   min-width: 0;
 }
 
+.cell-notes-preview {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+  min-width: 0;
+}
+
 /* Small marker for days with a workout */
-.workout-dot {
+.workout-dots {
   position: absolute;
   top: 8px;
   right: 8px;
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-  background: var(--accent);
-  box-shadow: 0 0 0 2px rgba(43,47,58,0.65);
-  pointer-events: none;
+  display: flex;
+  gap: 4px;
+  align-items: center;
 }
+
+.workout-dots-inline {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  margin-right: 8px;
+}
+
+.workout-dot,
+.workout-half-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  box-shadow: 0 0 0 2px rgba(43,47,58,0.65);
+  flex: 0 0 auto;
+}
+
+.workout-dot {
+  background: var(--accent);
+}
+
+.workout-half-dot {
+  background: linear-gradient(90deg, var(--accent) 50%, rgba(255,255,255,0.22) 50%);
+}
+
 
 .workout-dot-inline {
   display: inline-block;
@@ -252,7 +285,7 @@ body {
   animation: fadeIn 0.18s ease;
 }
 
-/* Close animation */
+/* Close animation (used by modals) */
 .overlay.closing {
   animation: fadeOut 0.16s ease forwards;
 }
@@ -277,6 +310,14 @@ body {
 
 .editor-full {
   height: min(90vh, 720px);
+  display: flex;
+  flex-direction: column;
+}
+
+.editor-content {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
   display: flex;
   flex-direction: column;
 }
@@ -332,6 +373,141 @@ body {
   outline-offset: 2px;
 }
 
+/* Editor mode tabs */
+.editor-tabs {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.editor-tab {
+  flex: 1;
+  background: rgba(0,0,0,0.14);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.88);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.editor-tab.active {
+  border-color: rgba(255,255,255,0.22);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.06);
+  color: var(--text);
+}
+
+.structured {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.structured-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.structured-title {
+  font-size: 13px;
+  color: rgba(255,255,255,0.85);
+  font-weight: 500;
+}
+
+.structured-add {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.15);
+  color: var(--text);
+  border-radius: 12px;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+
+.structured-table {
+  margin-top: 10px;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(0,0,0,0.10);
+}
+
+.structured-head,
+.structured-row {
+  display: grid;
+  grid-template-columns: 1.6fr 0.7fr 0.7fr 0.8fr 0.8fr 1.1fr 42px;
+  gap: 0;
+  align-items: center;
+}
+
+.structured-head {
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.65);
+  background: rgba(255,255,255,0.04);
+}
+
+.structured-head .col,
+.structured-row .cell {
+  padding: 10px;
+  border-right: 1px solid rgba(255,255,255,0.10);
+}
+
+.structured-head .col.action,
+.structured-row .structured-delete {
+  border-right: none;
+}
+
+.structured-row {
+  border-top: 1px solid rgba(255,255,255,0.10);
+}
+
+.structured-row .cell {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+}
+
+.structured-row .cell::placeholder {
+  color: rgba(255,255,255,0.35);
+}
+
+.structured-delete {
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.8);
+  cursor: pointer;
+  width: 42px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.structured-empty {
+  padding: 12px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.75);
+}
+
+.structured-notes {
+  margin-top: 10px;
+}
+
+.structured-hint {
+  margin-top: 8px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.65);
+}
+
 .editor-actions {
   position: sticky;
   bottom: 0;
@@ -369,8 +545,6 @@ body {
 .editor button.close:hover {
   background: rgba(255,255,255,0.06);
 }
-
-/* ---------------- BUTTONS ---------------- */
 
 button.primary {
   background: var(--accent);
@@ -432,6 +606,22 @@ button.secondary:disabled {
 
 .settings h3 {
   margin-top: 0;
+}
+
+.settings button {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  background: var(--accent);
+  color: white;
+  cursor: pointer;
+}
+
+.settings input[type="file"] {
+  margin-top: 12px;
+  color: var(--text);
 }
 
 .settings .close {
@@ -498,8 +688,14 @@ button.secondary:disabled {
 }
 
 @keyframes scaleOut {
-  from { transform: scale(1); opacity: 1; }
-  to { transform: scale(0.98); opacity: 0; }
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(0.98);
+    opacity: 0;
+  }
 }
 
 @keyframes toastIn {
@@ -517,43 +713,6 @@ button.secondary:disabled {
   0% { opacity: 0.35; }
   50% { opacity: 0.85; }
   100% { opacity: 0.35; }
-}
-
-.workout-half-dot {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: linear-gradient(to left, var(--accent) 50%, transparent 50%);
-  pointer-events: none;
-  opacity: 0.8;
-}
-
-.workout-half-dot-inline {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: linear-gradient(to left, var(--accent) 50%, transparent 50%);
-  margin-right: 6px;
-  vertical-align: middle;
-  opacity: 0.8;
-}
-
-
-
-/* Half dot marker for notes-only days */
-.workout-half-dot {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-  background: linear-gradient(to left, var(--accent) 50%, transparent 50%);
-  pointer-events: none;
 }
 
 /* ---------------- MOBILE REFINEMENTS ---------------- */
@@ -595,16 +754,43 @@ button.secondary:disabled {
     border-bottom: 1px solid rgba(255,255,255,0.08);
   }
 
+  .workout-dots {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.workout-dots-inline {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  margin-right: 8px;
+}
+
+.workout-dot,
+.workout-half-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  box-shadow: 0 0 0 2px rgba(43,47,58,0.65);
+  flex: 0 0 auto;
+}
+
+.workout-dot {
+  background: var(--accent);
+}
+
+.workout-half-dot {
+  background: linear-gradient(90deg, var(--accent) 50%, rgba(255,255,255,0.22) 50%);
+}
+
+
   .cell:active {
     background: rgba(255,255,255,0.06);
     transform: scale(0.99);
-  }
-
-  .workout-dot {
-    top: 6px;
-    right: 6px;
-    width: 5px;
-    height: 5px;
   }
 
   /* Avoid double borders on the grid edges */
@@ -674,10 +860,21 @@ button.secondary:disabled {
     align-items: flex-end;
   }
 
-  .month-title h2 {
-    margin-bottom: 2px; /* keeps centered when subtitle is hidden */
+  /* Structured table: allow horizontal scroll on small screens */
+  .structured-table {
+    overflow-x: auto;
+  }
+
+  .structured-head,
+  .structured-row {
+    min-width: 740px;
+  }
+
+  .cell-notes-preview {
+    font-size: 11px;
   }
 }
+
 
 /* ---------------- STACKED MONTH VIEW ---------------- */
 
@@ -740,4 +937,201 @@ button.secondary:disabled {
   .stacked-title {
     max-width: 100%;
   }
+}
+
+
+/* Structured editor meta + preview (notes is source of truth) */
+.structured-meta {
+  margin-top: 10px;
+}
+
+.structured-label {
+  display: block;
+  font-size: 12px;
+  color: rgba(255,255,255,0.75);
+  margin-bottom: 6px;
+}
+
+.structured-meta-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.structured-meta-2col {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.structured-input {
+  width: 100%;
+  background: rgba(0,0,0,0.18);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: white;
+  border-radius: 10px;
+  padding: 10px;
+  font-family: inherit;
+  outline: none;
+}
+
+.structured-small-btn {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.15);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.structured-divider {
+  margin-top: 12px;
+  height: 1px;
+  background: rgba(255,255,255,0.10);
+}
+
+.structured-preview {
+  margin-top: 12px;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(0,0,0,0.10);
+}
+
+.structured-preview-title {
+  font-size: 12px;
+  padding: 10px 12px;
+  color: rgba(255,255,255,0.72);
+  border-bottom: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.04);
+}
+
+.structured-preview-box {
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 12px;
+  line-height: 1.35;
+  color: rgba(255,255,255,0.85);
+  white-space: pre-wrap;
+}
+
+@media (max-width: 640px) {
+  .structured-meta-2col {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Structured editor columns */
+.structured-table .col.small,
+.structured-table .cell.small {
+  width: 64px;
+}
+
+@media (max-width: 640px) {
+  .structured-table .col.small,
+  .structured-table .cell.small {
+    width: 54px;
+  }
+}
+
+
+/* ---------------- EXERCISE HELPER (EDITOR) ---------------- */
+
+.editor-content {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding-right: 2px;
+  display: flex;
+  flex-direction: column;
+}
+
+.exercise-helper {
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(0,0,0,0.10);
+  border-radius: 14px;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+
+.exercise-helper-title {
+  font-size: 12px;
+  color: rgba(255,255,255,0.78);
+  margin-bottom: 10px;
+}
+
+.exercise-helper-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.exercise-field label {
+  display: block;
+  font-size: 12px;
+  color: rgba(255,255,255,0.72);
+  margin-bottom: 6px;
+}
+
+.exercise-input {
+  width: 100%;
+  background: rgba(0,0,0,0.18);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: white;
+  border-radius: 10px;
+  padding: 10px;
+  font-family: inherit;
+}
+
+.exercise-field.span-2 {
+  grid-column: span 2;
+}
+
+button.secondary.danger {
+  border-color: rgba(255,87,33,0.35);
+  background: rgba(255,87,33,0.10);
+}
+
+@media (max-width: 640px) {
+  .exercise-helper-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .exercise-input {
+    padding: 9px;
+  }
+}
+
+
+.cell-more {
+  font-size: 12px;
+  opacity: 0.72;
+  margin-top: 2px;
+}
+
+/* --- Header brand (logo + title) --- */
+.top-bar .brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.top-bar .brand-logo {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  flex: 0 0 auto;
+}
+
+.top-bar .brand h1 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
 }

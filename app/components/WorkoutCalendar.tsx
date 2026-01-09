@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { toDateKey } from "../lib/date";
+import { getDayEntries, WorkoutEntry, WorkoutMap } from "../lib/storage";
 
 function isToday(d: Date) {
   const t = new Date();
@@ -12,10 +14,7 @@ function isToday(d: Date) {
 }
 
 function formatMonthYear(d: Date) {
-  return d.toLocaleDateString("en-US", {
-    month: "long",
-    year: "numeric",
-  });
+  return d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
 }
 
 function formatStackedDate(d: Date) {
@@ -26,8 +25,36 @@ function formatStackedDate(d: Date) {
   });
 }
 
+function hasWorkoutContent(e: WorkoutEntry) {
+  return Boolean(String(e?.title ?? "").trim() || String(e?.notes ?? "").trim());
+}
+
+function markerType(e: WorkoutEntry): "full" | "half" | null {
+  const hasTitle = Boolean(String(e?.title ?? "").trim());
+  const hasNotes = Boolean(String(e?.notes ?? "").trim());
+  if (hasTitle) return "full";
+  if (!hasTitle && hasNotes) return "half";
+  return null;
+}
+
+function summarizeTitles(entries: WorkoutEntry[]) {
+  const active = entries.filter(hasWorkoutContent);
+  const titles = active.map((e) => String(e.title ?? "").trim()).filter(Boolean);
+
+  // If no titles but there are note-only entries, show a friendly placeholder.
+  const displayTitles = titles.length
+    ? titles
+    : active.length
+      ? ["Notes"]
+      : [];
+
+  const first = displayTitles[0] ?? "";
+  const extra = Math.max(0, active.length - 1);
+  return { first, extra, activeCount: active.length, titles: displayTitles };
+}
+
 type Props = {
-  workouts: any;
+  workouts: WorkoutMap;
   onSelectDate: (d: string) => void;
   stacked: boolean;
   weekStart: "sunday" | "monday";
@@ -43,6 +70,53 @@ export default function WorkoutCalendar({
 }: Props) {
   const [cursor, setCursor] = useState(new Date());
 
+  const labels = useMemo(() => {
+    return weekStart === "monday"
+      ? ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]
+      : ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+  }, [weekStart]);
+
+  const monthDays = useMemo(() => {
+    const start = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
+    const end = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0);
+
+    const days: Date[] = [];
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      days.push(new Date(d));
+    }
+    return days;
+  }, [cursor]);
+
+  const gridCells = useMemo(() => {
+    const first = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
+    const firstDow = first.getDay(); // 0 Sun .. 6 Sat
+    const offset = weekStart === "monday" ? (firstDow + 6) % 7 : firstDow;
+
+    const blanks = Array.from({ length: offset }, () => null as Date | null);
+
+    const total = blanks.length + monthDays.length;
+    const tail = (7 - (total % 7)) % 7;
+    const trailing = Array.from({ length: tail }, () => null as Date | null);
+
+    return [...blanks, ...monthDays, ...trailing];
+  }, [cursor, monthDays, weekStart]);
+
+  const monthWorkoutCount = useMemo(() => {
+    let count = 0;
+    for (const d of monthDays) {
+      const key = toDateKey(d);
+      const entries = getDayEntries(workouts, key);
+      count += entries.filter(hasWorkoutContent).length;
+    }
+    return count;
+  }, [monthDays, workouts]);
+
+  const monthWorkoutLabel =
+    monthWorkoutCount === 1
+      ? "1 workout this month"
+      : `${monthWorkoutCount} workouts this month`;
+
+  // Jump-to-today (month) button
   const today = useMemo(() => new Date(), []);
   const isCurrentMonth =
     cursor.getFullYear() === today.getFullYear() &&
@@ -52,58 +126,6 @@ export default function WorkoutCalendar({
     const t = new Date();
     setCursor(new Date(t.getFullYear(), t.getMonth(), 1));
   }
-
-  // ---- WEEKDAY LABELS ----
-  const labels = useMemo(() => {
-    return weekStart === "monday"
-      ? ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]
-      : ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
-  }, [weekStart]);
-
-  // ---- DAYS IN MONTH ----
-  const monthDays = useMemo(() => {
-    const start = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
-    const end = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0);
-    const days: Date[] = [];
-    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-      days.push(new Date(d));
-    }
-    return days;
-  }, [cursor]);
-
-  // ---- GRID WITH LEADING/TRAILING BLANKS ----
-  const gridCells = useMemo(() => {
-    const first = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
-    const firstDow = first.getDay();
-    const offset = weekStart === "monday" ? (firstDow + 6) % 7 : firstDow;
-
-    const blanks = Array.from({ length: offset }, () => null as Date | null);
-    const total = blanks.length + monthDays.length;
-    const tail = (7 - (total % 7)) % 7;
-    const trailing = Array.from({ length: tail }, () => null as Date | null);
-
-    return [...blanks, ...monthDays, ...trailing];
-  }, [cursor, monthDays, weekStart]);
-
-  // ---- MONTH WORKOUT COUNT (title or notes) ----
-  const monthWorkoutCount = useMemo(() => {
-    let count = 0;
-    for (const d of monthDays) {
-      const key = d.toISOString().slice(0, 10);
-      const w = workouts?.[key] ?? {};
-      const hasWorkout = Boolean(
-        (w?.title && String(w.title).trim()) ||
-          (w?.notes && String(w.notes).trim())
-      );
-      if (hasWorkout) count += 1;
-    }
-    return count;
-  }, [monthDays, workouts]);
-
-  const monthWorkoutLabel =
-    monthWorkoutCount === 1
-      ? "1 workout this month"
-      : `${monthWorkoutCount} workouts this month`;
 
   return (
     <div className="calendar">
@@ -117,43 +139,30 @@ export default function WorkoutCalendar({
           ‹
         </button>
 
-        <div className="month-title" style={{ textAlign: "center" }}>
-          <h2 style={{ margin: 0 }}>{formatMonthYear(cursor)}</h2>
+        <div className="month-title">
+          <h2>{formatMonthYear(cursor)}</h2>
 
           {monthWorkoutCount > 0 && (
             <div className="month-subtitle">{monthWorkoutLabel}</div>
           )}
-
-          {/* ✅ Jump to Today */}
-          <button
-            onClick={jumpToToday}
-            disabled={isCurrentMonth}
-            aria-label="Jump to current month"
-            style={{
-              marginTop: 8,
-              padding: "6px 10px",
-              borderRadius: 10,
-              border: "1px solid rgba(255,255,255,0.18)",
-              background: "rgba(0,0,0,0.12)",
-              color: "var(--text)",
-              cursor: isCurrentMonth ? "default" : "pointer",
-              opacity: isCurrentMonth ? 0.5 : 1,
-              fontSize: 12,
-              lineHeight: "12px",
-            }}
-          >
-            Today
-          </button>
         </div>
 
-        <button
-          onClick={() =>
-            setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))
-          }
-          aria-label="Next month"
-        >
-          ›
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          {!isCurrentMonth && (
+            <button onClick={jumpToToday} aria-label="Jump to current month" title="Jump to current month">
+              Today
+            </button>
+          )}
+
+          <button
+            onClick={() =>
+              setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))
+            }
+            aria-label="Next month"
+          >
+            ›
+          </button>
+        </div>
       </header>
 
       {!stacked && (
@@ -172,12 +181,11 @@ export default function WorkoutCalendar({
                 return <div key={`blank-${idx}`} className="cell blank" />;
               }
 
-              const key = d.toISOString().slice(0, 10);
-              const w = workouts[key] ?? {};
-              const hasTitle = Boolean(w?.title && String(w.title).trim());
-              const hasNotesOnly = Boolean(
-                !hasTitle && w?.notes && String(w.notes).trim()
-              );
+              const key = toDateKey(d);
+              const entries = getDayEntries(workouts, key).slice(0, 3);
+              const markers = entries.map(markerType).filter(Boolean) as Array<"full" | "half">;
+
+              const { first, extra, activeCount } = summarizeTitles(entries);
               const isSelected = Boolean(selectedDate && key === selectedDate);
 
               return (
@@ -193,24 +201,25 @@ export default function WorkoutCalendar({
                     if (e.key === "Enter" || e.key === " ") onSelectDate(key);
                   }}
                 >
-                  {/* ● full dot for workout title days */}
-                  {hasTitle && (
-                    <div className="workout-dot" aria-hidden="true" />
-                  )}
-
-                  {/* ◐ half dot for notes-only days */}
-                  {hasNotesOnly && (
-                    <div className="workout-half-dot" aria-hidden="true" />
+                  {markers.length > 0 && (
+                    <div className="workout-dots" aria-hidden="true">
+                      {markers.slice(0, 3).map((m, i) =>
+                        m === "half" ? (
+                          <span key={i} className="workout-half-dot" />
+                        ) : (
+                          <span key={i} className="workout-dot" />
+                        )
+                      )}
+                    </div>
                   )}
 
                   <div className="cell-date">{d.getDate()}</div>
-                  {w?.title && <div className="cell-title">{w.title}</div>}
 
-                  {/* optional 1-line notes preview */}
-                  {!hasNotesOnly && w?.notes && (
-                    <div className="cell-notes-preview">
-                      {String(w.notes).split("\n")[0]}
-                    </div>
+                  {activeCount > 0 && (
+                    <>
+                      <div className="cell-title">{first}</div>
+                      {extra > 0 && <div className="cell-more">+{extra}</div>}
+                    </>
                   )}
                 </div>
               );
@@ -222,12 +231,18 @@ export default function WorkoutCalendar({
       {stacked && (
         <div className="stacked-list">
           {monthDays.map((d) => {
-            const key = d.toISOString().slice(0, 10);
-            const w = workouts[key] ?? {};
-            const hasTitle = Boolean(w?.title && String(w.title).trim());
-            const hasNotesOnly = Boolean(
-              !hasTitle && w?.notes && String(w.notes).trim()
-            );
+            const key = toDateKey(d);
+            const entries = getDayEntries(workouts, key).slice(0, 3);
+            const markers = entries.map(markerType).filter(Boolean) as Array<"full" | "half">;
+
+            const titles = entries.filter(hasWorkoutContent).map((e) => String(e.title ?? "").trim()).filter(Boolean);
+            const displayTitles =
+              titles.length ? titles : entries.some((e) => Boolean(String(e.notes ?? "").trim())) ? ["Notes"] : [];
+
+            const first = displayTitles[0] ?? "—";
+            const extra = Math.max(0, displayTitles.length - 1);
+            const rightLabel = extra > 0 ? `${first} +${extra}` : first;
+
             const isSelected = Boolean(selectedDate && key === selectedDate);
 
             return (
@@ -244,25 +259,27 @@ export default function WorkoutCalendar({
                 }}
               >
                 <div className="stacked-date">
-                  {hasTitle && (
-                    <span className="workout-dot-inline" aria-hidden="true" />
-                  )}
-                  {hasNotesOnly && (
-                    <span
-                      className="workout-half-dot-inline"
-                      aria-hidden="true"
-                    />
+                  {markers.length > 0 && (
+                    <span className="workout-dots-inline" aria-hidden="true">
+                      {markers.slice(0, 3).map((m, i) =>
+                        m === "half" ? (
+                          <span key={i} className="workout-half-dot" />
+                        ) : (
+                          <span key={i} className="workout-dot" />
+                        )
+                      )}
+                    </span>
                   )}
                   {formatStackedDate(d)}
                 </div>
-                <div className="stacked-title">{w?.title || "—"}</div>
+
+                <div className="stacked-title">{rightLabel}</div>
               </div>
             );
           })}
         </div>
       )}
 
-      {/* Footer links */}
       <div
         style={{
           padding: "14px 16px 18px",

@@ -13,11 +13,6 @@ export default function SettingsPanel({
     const next = { ...settings, ...partial };
     saveSettings(next);
     onChange(next);
-    const theme = (next as any).theme;
-    if (typeof theme === "string") {
-      document.body.dataset.theme = theme;
-    }
-
   }
 
   return (

@@ -283,7 +283,6 @@ body {
   align-items: center;
   z-index: 1000;
   animation: fadeIn 0.18s ease;
-  overscroll-behavior: contain;
 }
 
 /* Close animation (used by modals) */
@@ -321,9 +320,6 @@ body {
   overflow: auto;
   display: flex;
   flex-direction: column;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-  scroll-padding-bottom: 140px; /* helps keep focused inputs visible above keyboard */
 }
 
 .editor-header {
@@ -946,9 +942,17 @@ button.secondary:disabled {
   max-width: 100%;
   text-align: left;
   opacity: 0.85;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-start;
+}
+
+.stacked-title-line {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+  line-height: 1.2;
 }
 
 @media (max-width: 640px) {

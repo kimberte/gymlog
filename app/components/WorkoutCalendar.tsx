@@ -294,11 +294,7 @@ export default function WorkoutCalendar({
 
             const titles = entries.filter(hasWorkoutContent).map((e) => String(e.title ?? "").trim()).filter(Boolean);
             const displayTitles =
-              titles.length ? titles : entries.some((e) => Boolean(String(e.notes ?? "").trim())) ? ["Notes"] : [];
-
-            const first = displayTitles[0] ?? "—";
-            const extra = Math.max(0, displayTitles.length - 1);
-            const rightLabel = extra > 0 ? `${first} +${extra}` : first;
+              titles.length ? titles : entries.some((e) => Boolean(String(e.notes ?? "").trim())) ? ["Notes"] : [];            const titleLines = displayTitles.length ? displayTitles : ["—"];
 
             const isSelected = Boolean(selectedDate && key === selectedDate);
 
@@ -330,7 +326,13 @@ export default function WorkoutCalendar({
                   {formatStackedDate(d)}
                 </div>
 
-                <div className="stacked-title">{rightLabel}</div>
+                                <div className="stacked-title">
+                  {titleLines.slice(0, 3).map((t, i) => (
+                    <div key={i} className="stacked-title-line">
+                      {t}
+                    </div>
+                  ))}
+                </div>
               </div>
             );
           })}

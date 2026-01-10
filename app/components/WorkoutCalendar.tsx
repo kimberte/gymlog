@@ -4,6 +4,21 @@ import { useMemo, useState } from "react";
 import { toDateKey } from "../lib/date";
 import { getDayEntries, WorkoutEntry, WorkoutMap } from "../lib/storage";
 
+function fromDateKey(key: string) {
+  const [y, m, d] = key.split("-").map((n) => Number(n));
+  return new Date(y, (m || 1) - 1, d || 1);
+}
+
+function startOfWeek(d: Date, weekStart: "sunday" | "monday") {
+  const copy = new Date(d);
+  copy.setHours(0, 0, 0, 0);
+  const dow = copy.getDay(); // 0 Sun..6 Sat
+  const offset = weekStart === "monday" ? (dow + 6) % 7 : dow;
+  copy.setDate(copy.getDate() - offset);
+  return copy;
+}
+
+
 function isToday(d: Date) {
   const t = new Date();
   return (
@@ -69,6 +84,8 @@ export default function WorkoutCalendar({
   selectedDate,
 }: Props) {
   const [cursor, setCursor] = useState(new Date());
+  const [stackedScope, setStackedScope] = useState<"week" | "month">("week");
+
 
   const labels = useMemo(() => {
     return weekStart === "monday"
@@ -86,6 +103,35 @@ export default function WorkoutCalendar({
     }
     return days;
   }, [cursor]);
+
+  // Stacked view: default to current week, with toggle to show full month
+  const stackedAnchor = useMemo(() => {
+    // Prefer selectedDate if it's within the visible month; otherwise use today if month matches; else first of month.
+    if (selectedDate) {
+      const d = fromDateKey(selectedDate);
+      if (d.getFullYear() === cursor.getFullYear() && d.getMonth() === cursor.getMonth()) return d;
+    }
+    const t = new Date();
+    if (t.getFullYear() === cursor.getFullYear() && t.getMonth() === cursor.getMonth()) return t;
+    return new Date(cursor.getFullYear(), cursor.getMonth(), 1);
+  }, [selectedDate, cursor]);
+
+  const weekStartDate = useMemo(() => startOfWeek(stackedAnchor, weekStart), [stackedAnchor, weekStart]);
+  const weekEndDate = useMemo(() => {
+    const e = new Date(weekStartDate);
+    e.setDate(e.getDate() + 6);
+    e.setHours(23, 59, 59, 999);
+    return e;
+  }, [weekStartDate]);
+
+  const stackedDays = useMemo(() => {
+    if (stackedScope === "month") return monthDays;
+    return monthDays.filter((d) => d >= weekStartDate && d <= weekEndDate);
+  }, [monthDays, stackedScope, weekStartDate, weekEndDate]);
+
+  function toggleStackedScope() {
+    setStackedScope((s) => (s === "week" ? "month" : "week"));
+  }
 
   const gridCells = useMemo(() => {
     const first = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
@@ -229,8 +275,19 @@ export default function WorkoutCalendar({
       )}
 
       {stacked && (
-        <div className="stacked-list">
-          {monthDays.map((d) => {
+        <div className="stacked-wrap">
+          <div className="stacked-scope-toggle">
+            <button
+              type="button"
+              className="stacked-toggle-btn"
+              onClick={toggleStackedScope}
+            >
+              {stackedScope === "week" ? "View full month" : "View current week"}
+            </button>
+          </div>
+
+          <div className="stacked-list">
+          {stackedDays.map((d) => {
             const key = toDateKey(d);
             const entries = getDayEntries(workouts, key).slice(0, 3);
             const markers = entries.map(markerType).filter(Boolean) as Array<"full" | "half">;
@@ -277,9 +334,20 @@ export default function WorkoutCalendar({
               </div>
             );
           })}
+          </div>
+        
+
+          <div className="stacked-scope-toggle bottom">
+            <button
+              type="button"
+              className="stacked-toggle-btn"
+              onClick={toggleStackedScope}
+            >
+              {stackedScope === "week" ? "View full month" : "View current week"}
+            </button>
+          </div>
         </div>
       )}
-
       <div
         style={{
           padding: "14px 16px 18px",

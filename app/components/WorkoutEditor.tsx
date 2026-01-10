@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type RefObject } from "react";
 import { EXERCISES } from "../lib/exercises";
 import { WorkoutEntry, WorkoutMap, getDayEntries } from "../lib/storage";
 
@@ -64,6 +64,88 @@ export default function WorkoutEditor({
   const exRef = useRef<HTMLInputElement | null>(null);
 
   const notesRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const setsRef = useRef<HTMLInputElement | null>(null);
+  const repsRef = useRef<HTMLInputElement | null>(null);
+  const weightRef = useRef<HTMLInputElement | null>(null);
+  const timeRef = useRef<HTMLInputElement | null>(null);
+  const quickRef = useRef<HTMLInputElement | null>(null);
+
+  const editorContentRef = useRef<HTMLDivElement | null>(null);
+
+  // Keyboard-safe bottom padding (mobile)
+  const [keyboardPad, setKeyboardPad] = useState(0);
+
+  useEffect(() => {
+    // Lock background scroll while editor is open (prevents the calendar behind from moving)
+    const scrollY = window.scrollY || 0;
+
+    const prevOverflow = document.body.style.overflow;
+    const prevPosition = document.body.style.position;
+    const prevTop = document.body.style.top;
+    const prevWidth = document.body.style.width;
+    const prevOverscroll = (document.body.style as any).overscrollBehaviorY;
+
+    document.body.style.overflow = "hidden";
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = "100%";
+    (document.body.style as any).overscrollBehaviorY = "contain";
+
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.body.style.position = prevPosition;
+      document.body.style.top = prevTop;
+      document.body.style.width = prevWidth;
+      (document.body.style as any).overscrollBehaviorY = prevOverscroll;
+      window.scrollTo(0, scrollY);
+    };
+  }, []);
+
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+
+    const update = () => {
+      // How much of the layout viewport is covered by the keyboard / browser UI.
+      const covered = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      setKeyboardPad(covered);
+    };
+
+    update();
+    vv.addEventListener("resize", update);
+    vv.addEventListener("scroll", update);
+    return () => {
+      vv.removeEventListener("resize", update);
+      vv.removeEventListener("scroll", update);
+    };
+  }, []);
+
+  function focusNext(ref: RefObject<HTMLInputElement | null>) {
+    const el = ref.current;
+    if (!el) return;
+    el.focus({ preventScroll: true } as any);
+    // Scroll the input into view within the modal (keyboard-safe)
+    requestAnimationFrame(() => {
+      try {
+        el.scrollIntoView({ block: "center", behavior: "smooth" });
+      } catch {}
+    });
+  }
+
+  function handleHelperKeyDown(
+    e: KeyboardEvent<HTMLInputElement>,
+    next?: RefObject<HTMLInputElement | null>,
+    submit?: boolean
+  ) {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    if (submit) {
+      addExerciseToNotes();
+      return;
+    }
+    if (next) focusNext(next);
+  }
 
   // Keep in sync when date changes (close/reopen)
   useEffect(() => {
@@ -301,7 +383,7 @@ export default function WorkoutEditor({
           </div>
         </div>
 
-        <div className="editor-content">
+        <div className="editor-content" ref={editorContentRef} style={{ paddingBottom: keyboardPad ? keyboardPad + 12 : 0 }}>
           {/* Main notes area */}
           <textarea
             ref={notesRef}
@@ -333,6 +415,8 @@ export default function WorkoutEditor({
                   onChange={(e) => setExName(e.target.value)}
                   list="exercise-list"
                   placeholder="Exercise name…"
+                  enterKeyHint="next"
+                  onKeyDown={(e) => handleHelperKeyDown(e, setsRef)}
                   style={{
                     flex: 1,
                     minWidth: 0,
@@ -384,6 +468,10 @@ export default function WorkoutEditor({
                   value={sets}
                   onChange={(e) => setSets(e.target.value)}
                   placeholder="Sets"
+                  ref={setsRef}
+                  inputMode="numeric"
+                  enterKeyHint="next"
+                  onKeyDown={(e) => handleHelperKeyDown(e, repsRef)}
                   style={{
                     width: "100%",
                     background: "rgba(0,0,0,0.18)",
@@ -399,6 +487,10 @@ export default function WorkoutEditor({
                   value={reps}
                   onChange={(e) => setReps(e.target.value)}
                   placeholder="Reps"
+                  ref={repsRef}
+                  inputMode="numeric"
+                  enterKeyHint="next"
+                  onKeyDown={(e) => handleHelperKeyDown(e, weightRef)}
                   style={{
                     width: "100%",
                     background: "rgba(0,0,0,0.18)",
@@ -414,6 +506,10 @@ export default function WorkoutEditor({
                   value={weight}
                   onChange={(e) => setWeight(e.target.value)}
                   placeholder="Weight"
+                  ref={weightRef}
+                  inputMode="decimal"
+                  enterKeyHint="next"
+                  onKeyDown={(e) => handleHelperKeyDown(e, timeRef)}
                   style={{
                     width: "100%",
                     background: "rgba(0,0,0,0.18)",
@@ -429,6 +525,9 @@ export default function WorkoutEditor({
                   value={time}
                   onChange={(e) => setTime(e.target.value)}
                   placeholder="Time"
+                  ref={timeRef}
+                  enterKeyHint="next"
+                  onKeyDown={(e) => handleHelperKeyDown(e, quickRef)}
                   style={{
                     width: "100%",
                     background: "rgba(0,0,0,0.18)",
@@ -446,7 +545,10 @@ export default function WorkoutEditor({
                 value={quick}
                 onChange={(e) => setQuick(e.target.value)}
                 placeholder="Quick note (optional)"
-                style={{
+                  ref={quickRef}
+                  enterKeyHint="done"
+                  onKeyDown={(e) => handleHelperKeyDown(e, undefined, true)}
+                  style={{
                   width: "100%",
                   marginTop: 8,
                   background: "rgba(0,0,0,0.18)",

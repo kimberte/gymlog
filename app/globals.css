@@ -283,6 +283,7 @@ body {
   align-items: center;
   z-index: 1000;
   animation: fadeIn 0.18s ease;
+  overscroll-behavior: contain;
 }
 
 /* Close animation (used by modals) */
@@ -320,6 +321,9 @@ body {
   overflow: auto;
   display: flex;
   flex-direction: column;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scroll-padding-bottom: 140px; /* helps keep focused inputs visible above keyboard */
 }
 
 .editor-header {
@@ -708,12 +712,7 @@ button.secondary:disabled {
     opacity: 1;
   }
 }
-
-@keyframes todayPulse {
-  0% { opacity: 0.35; }
-  50% { opacity: 0.85; }
-  100% { opacity: 0.35; }
-}
+ 
 
 /* ---------------- MOBILE REFINEMENTS ---------------- */
 
@@ -805,19 +804,7 @@ button.secondary:disabled {
   .cell.today {
     border: none;
     box-shadow: inset 0 0 0 2px var(--accent);
-  }
-
-  /* subtle pulse ring for today */
-  .cell.today::after {
-    content: "";
-    position: absolute;
-    inset: 2px;
-    border-radius: 10px;
-    box-shadow: inset 0 0 0 2px var(--accent);
-    opacity: 0.35;
-    animation: todayPulse 2.4s ease-in-out infinite;
-    pointer-events: none;
-  }
+  } 
 
   .cell.selected {
     box-shadow: inset 0 0 0 2px rgba(255,255,255,0.18);
@@ -875,6 +862,37 @@ button.secondary:disabled {
   }
 }
 
+
+
+.stacked-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.stacked-scope-toggle {
+  padding: 0 16px 10px;
+  display: flex;
+  justify-content: center;
+}
+
+.stacked-scope-toggle.bottom {
+  padding: 10px 16px 16px;
+}
+
+.stacked-toggle-btn {
+  background: rgba(0,0,0,0.18);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.stacked-toggle-btn:active {
+  transform: scale(0.98);
+}
 
 /* ---------------- STACKED MONTH VIEW ---------------- */
 
@@ -1135,3 +1153,4 @@ button.secondary.danger {
   line-height: 1;
   white-space: nowrap;
 }
+ 

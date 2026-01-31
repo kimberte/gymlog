@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toDateKey } from "../lib/date";
 import { getDayEntries, WorkoutEntry, WorkoutMap } from "../lib/storage";
 
@@ -84,6 +84,32 @@ export default function WorkoutCalendar({
   selectedDate,
 }: Props) {
   const [cursor, setCursor] = useState(new Date());
+
+// Forces a re-render at midnight (and on long-open sessions) so the "today" highlight stays accurate.
+const [, forceTodayRerender] = useState(0);
+
+useEffect(() => {
+  let timeout: ReturnType<typeof setTimeout> | null = null;
+
+  const schedule = () => {
+    const now = new Date();
+    // Next local midnight (+ a tiny buffer)
+    const next = new Date(now);
+    next.setHours(24, 0, 5, 0);
+    const ms = Math.max(1000, next.getTime() - now.getTime());
+
+    timeout = setTimeout(() => {
+      forceTodayRerender((x) => x + 1);
+      schedule();
+    }, ms);
+  };
+
+  schedule();
+
+  return () => {
+    if (timeout) clearTimeout(timeout);
+  };
+}, []);
   const [stackedScope, setStackedScope] = useState<"week" | "month">("week");
 
 

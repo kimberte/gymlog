@@ -65,7 +65,11 @@ export default function SettingsModal({
 
   const [authLoading, setAuthLoading] = useState(false);
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [authMode, setAuthMode] = useState<"signin" | "signup" | "reset" | "updatepw">("signin");
   const [authError, setAuthError] = useState<string | null>(null);
+  const [authMessage, setAuthMessage] = useState<string | null>(null);
 
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [confirming, setConfirming] = useState(false);
@@ -173,9 +177,13 @@ export default function SettingsModal({
         setSessionEmail(userEmail);
         setSessionToken(token);
 
-        unsub = supabase.auth.onAuthStateChange((_event, newSession) => {
+        unsub = supabase.auth.onAuthStateChange((event, newSession) => {
           setSessionEmail(newSession?.user?.email ?? null);
           setSessionToken(newSession?.access_token ?? null);
+          if (event === "PASSWORD_RECOVERY") {
+            setAuthMode("updatepw");
+            setAuthMessage("Set a new password to finish resetting your account.");
+          }
         });
       } catch {
         setSessionEmail(null);
@@ -215,40 +223,164 @@ export default function SettingsModal({
     loadBackup();
   }, [isPro, lastBackupAt]);
 
-  async function sendMagicLink() {
-    setAuthError(null);
+  
+async function signInPassword() {
+  setAuthError(null);
+  setAuthMessage(null);
 
-    if (!supabaseConfigured) {
-      setAuthError(
-        "Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY."
-      );
-      return;
-    }
-
-    const trimmed = email.trim().toLowerCase();
-    if (!trimmed || !trimmed.includes("@")) {
-      setAuthError("Enter a valid email.");
-      return;
-    }
-
-    setAuthLoading(true);
-    try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email: trimmed,
-      });
-
-      if (error) {
-        setAuthError(error.message);
-        return;
-      }
-
-      toast("Check your email for the sign-in link");
-    } catch {
-      setAuthError("Could not send login email.");
-    } finally {
-      setAuthLoading(false);
-    }
+  if (!supabaseConfigured) {
+    setAuthError(
+      "Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY."
+    );
+    return;
   }
+
+  const trimmed = email.trim().toLowerCase();
+  if (!trimmed || !trimmed.includes("@")) {
+    setAuthError("Enter a valid email.");
+    return;
+  }
+  if (!password || password.length < 6) {
+    setAuthError("Enter your password (6+ characters).");
+    return;
+  }
+
+  setAuthLoading(true);
+  try {
+    const { error } = await supabase.auth.signInWithPassword({
+      email: trimmed,
+      password,
+    });
+
+    if (error) {
+      setAuthError(error.message);
+      return;
+    }
+
+    toast("Signed in");
+    setPassword("");
+    setAuthMode("signin");
+  } catch {
+    setAuthError("Could not sign in.");
+  } finally {
+    setAuthLoading(false);
+  }
+}
+
+async function signUpPassword() {
+  setAuthError(null);
+  setAuthMessage(null);
+
+  if (!supabaseConfigured) {
+    setAuthError(
+      "Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY."
+    );
+    return;
+  }
+
+  const trimmed = email.trim().toLowerCase();
+  if (!trimmed || !trimmed.includes("@")) {
+    setAuthError("Enter a valid email.");
+    return;
+  }
+  if (!password || password.length < 6) {
+    setAuthError("Create a password (6+ characters).");
+    return;
+  }
+
+  setAuthLoading(true);
+  try {
+    const { error } = await supabase.auth.signUp({
+      email: trimmed,
+      password,
+    });
+
+    if (error) {
+      setAuthError(error.message);
+      return;
+    }
+
+    setAuthMessage("Check your email to confirm your account, then sign in.");
+    setPassword("");
+    setAuthMode("signin");
+  } catch {
+    setAuthError("Could not create account.");
+  } finally {
+    setAuthLoading(false);
+  }
+}
+
+async function sendPasswordReset() {
+  setAuthError(null);
+  setAuthMessage(null);
+
+  if (!supabaseConfigured) {
+    setAuthError(
+      "Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY."
+    );
+    return;
+  }
+
+  const trimmed = email.trim().toLowerCase();
+  if (!trimmed || !trimmed.includes("@")) {
+    setAuthError("Enter a valid email.");
+    return;
+  }
+
+  setAuthLoading(true);
+  try {
+    const origin =
+      typeof window !== "undefined" ? window.location.origin : undefined;
+
+    const { error } = await supabase.auth.resetPasswordForEmail(trimmed, {
+      redirectTo: origin ? `${origin}/` : undefined,
+    });
+
+    if (error) {
+      setAuthError(error.message);
+      return;
+    }
+
+    setAuthMessage("Password reset email sent. Open the link to set a new password.");
+    toast("Reset email sent");
+  } catch {
+    setAuthError("Could not send password reset email.");
+  } finally {
+    setAuthLoading(false);
+  }
+}
+
+async function updatePassword() {
+  setAuthError(null);
+  setAuthMessage(null);
+
+  if (!supabaseConfigured) return;
+
+  if (!newPassword || newPassword.length < 6) {
+    setAuthError("New password must be 6+ characters.");
+    return;
+  }
+
+  setAuthLoading(true);
+  try {
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+
+    if (error) {
+      setAuthError(error.message);
+      return;
+    }
+
+    setAuthMessage("Password updated. You're signed in.");
+    setNewPassword("");
+    toast("Password updated");
+  } catch {
+    setAuthError("Could not update password.");
+  } finally {
+    setAuthLoading(false);
+  }
+}
 
   async function signOut() {
     setAuthError(null);
@@ -735,51 +867,234 @@ export default function SettingsModal({
               </button>
             </div>
           ) : (
-            <>
-              <div style={{ marginTop: 8, fontSize: 13, opacity: 0.9 }}>
-                Sign in to unlock CSV import/export (and auto-backup).
-              </div>
+            
+<>
+  <div style={{ marginTop: 8, fontSize: 13, opacity: 0.9 }}>
+    {authMode === "signup"
+      ? "Create an account to unlock Pro features."
+      : authMode === "reset"
+      ? "Send yourself a password reset email."
+      : authMode === "updatepw"
+      ? "Set a new password to finish your reset."
+      : "Sign in to unlock CSV import/export (and auto-backup)."}
+  </div>
 
-              <input
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@email.com"
-                style={{
-                  width: "100%",
-                  marginTop: 10,
-                  background: "rgba(0,0,0,0.18)",
-                  border: "1px solid rgba(255,255,255,0.15)",
-                  color: "white",
-                  borderRadius: 10,
-                  padding: 10,
-                  fontFamily: "inherit",
-                }}
-              />
+  <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+    <button
+      onClick={() => {
+        setAuthError(null);
+        setAuthMessage(null);
+        setAuthMode("signin");
+      }}
+      style={{
+        flex: 1,
+        padding: 10,
+        borderRadius: 10,
+        border: "1px solid rgba(255,255,255,0.15)",
+        background: authMode === "signin" ? "rgba(255,87,33,0.14)" : "transparent",
+        color: "white",
+        cursor: "pointer",
+      }}
+      type="button"
+    >
+      Sign in
+    </button>
 
-              <button
-                onClick={sendMagicLink}
-                disabled={!supabaseConfigured || authLoading}
-                style={{
-                  width: "100%",
-                  marginTop: 10,
-                  padding: 10,
-                  borderRadius: 10,
-                  border: "none",
-                  background: "#FF5721",
-                  color: "white",
-                  cursor: supabaseConfigured ? "pointer" : "not-allowed",
-                  opacity: !supabaseConfigured ? 0.6 : 1,
-                }}
-              >
-                {authLoading ? "Sending…" : "Send sign-in link"}
-              </button>
+    <button
+      onClick={() => {
+        setAuthError(null);
+        setAuthMessage(null);
+        setAuthMode("signup");
+      }}
+      style={{
+        flex: 1,
+        padding: 10,
+        borderRadius: 10,
+        border: "1px solid rgba(255,255,255,0.15)",
+        background: authMode === "signup" ? "rgba(255,87,33,0.14)" : "transparent",
+        color: "white",
+        cursor: "pointer",
+      }}
+      type="button"
+    >
+      Create
+    </button>
 
-              {authError && (
-                <div style={{ marginTop: 8, fontSize: 13, color: "#FFB199" }}>
-                  {authError}
-                </div>
-              )}
-            </>
+    <button
+      onClick={() => {
+        setAuthError(null);
+        setAuthMessage(null);
+        setAuthMode("reset");
+      }}
+      style={{
+        flex: 1,
+        padding: 10,
+        borderRadius: 10,
+        border: "1px solid rgba(255,255,255,0.15)",
+        background: authMode === "reset" ? "rgba(255,87,33,0.14)" : "transparent",
+        color: "white",
+        cursor: "pointer",
+      }}
+      type="button"
+    >
+      Reset
+    </button>
+  </div>
+
+  <input
+    value={email}
+    onChange={(e) => setEmail(e.target.value)}
+    placeholder="you@email.com"
+    autoComplete="email"
+    inputMode="email"
+    style={{
+      width: "100%",
+      marginTop: 12,
+      background: "rgba(0,0,0,0.18)",
+      border: "1px solid rgba(255,255,255,0.15)",
+      color: "white",
+      borderRadius: 10,
+      padding: 10,
+      fontFamily: "inherit",
+    }}
+  />
+
+  {(authMode === "signin" || authMode === "signup") && (
+    <input
+      value={password}
+      onChange={(e) => setPassword(e.target.value)}
+      placeholder="Password"
+      type="password"
+      autoComplete={authMode === "signup" ? "new-password" : "current-password"}
+      style={{
+        width: "100%",
+        marginTop: 10,
+        background: "rgba(0,0,0,0.18)",
+        border: "1px solid rgba(255,255,255,0.15)",
+        color: "white",
+        borderRadius: 10,
+        padding: 10,
+        fontFamily: "inherit",
+      }}
+    />
+  )}
+
+  {authMode === "updatepw" && (
+    <input
+      value={newPassword}
+      onChange={(e) => setNewPassword(e.target.value)}
+      placeholder="New password"
+      type="password"
+      autoComplete="new-password"
+      style={{
+        width: "100%",
+        marginTop: 10,
+        background: "rgba(0,0,0,0.18)",
+        border: "1px solid rgba(255,255,255,0.15)",
+        color: "white",
+        borderRadius: 10,
+        padding: 10,
+        fontFamily: "inherit",
+      }}
+    />
+  )}
+
+  {authMode === "signin" && (
+    <button
+      onClick={signInPassword}
+      disabled={!supabaseConfigured || authLoading}
+      style={{
+        width: "100%",
+        marginTop: 10,
+        padding: 10,
+        borderRadius: 10,
+        border: "none",
+        background: "#FF5721",
+        color: "white",
+        cursor: supabaseConfigured ? "pointer" : "not-allowed",
+        opacity: !supabaseConfigured ? 0.6 : 1,
+      }}
+      type="button"
+    >
+      {authLoading ? "Signing in…" : "Sign in"}
+    </button>
+  )}
+
+  {authMode === "signup" && (
+    <button
+      onClick={signUpPassword}
+      disabled={!supabaseConfigured || authLoading}
+      style={{
+        width: "100%",
+        marginTop: 10,
+        padding: 10,
+        borderRadius: 10,
+        border: "none",
+        background: "#FF5721",
+        color: "white",
+        cursor: supabaseConfigured ? "pointer" : "not-allowed",
+        opacity: !supabaseConfigured ? 0.6 : 1,
+      }}
+      type="button"
+    >
+      {authLoading ? "Creating…" : "Create account"}
+    </button>
+  )}
+
+  {authMode === "reset" && (
+    <button
+      onClick={sendPasswordReset}
+      disabled={!supabaseConfigured || authLoading}
+      style={{
+        width: "100%",
+        marginTop: 10,
+        padding: 10,
+        borderRadius: 10,
+        border: "none",
+        background: "#FF5721",
+        color: "white",
+        cursor: supabaseConfigured ? "pointer" : "not-allowed",
+        opacity: !supabaseConfigured ? 0.6 : 1,
+      }}
+      type="button"
+    >
+      {authLoading ? "Sending…" : "Send reset email"}
+    </button>
+  )}
+
+  {authMode === "updatepw" && (
+    <button
+      onClick={updatePassword}
+      disabled={!supabaseConfigured || authLoading}
+      style={{
+        width: "100%",
+        marginTop: 10,
+        padding: 10,
+        borderRadius: 10,
+        border: "none",
+        background: "#FF5721",
+        color: "white",
+        cursor: supabaseConfigured ? "pointer" : "not-allowed",
+        opacity: !supabaseConfigured ? 0.6 : 1,
+      }}
+      type="button"
+    >
+      {authLoading ? "Updating…" : "Update password"}
+    </button>
+  )}
+
+  {(authError || authMessage) && (
+    <div
+      style={{
+        marginTop: 10,
+        fontSize: 13,
+        color: authError ? "#FFB199" : "rgba(255,255,255,0.8)",
+      }}
+    >
+      {authError || authMessage}
+    </div>
+  )}
+</>
           )}
         </div>
 

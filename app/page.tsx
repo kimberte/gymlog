@@ -228,40 +228,6 @@ export default function HomePage() {
     window.setTimeout(() => setToast(null), 1400);
   }
 
-  async function onShareCalendar() {
-    if (selectedDate) {
-      showToast("Close the editor to share");
-      return;
-    }
-    const node = calendarCaptureRef.current;
-    if (!node) {
-      showToast("Nothing to share");
-      return;
-    }
-
-    showToast("Preparing image...");
-
-    try {
-      const stamp = new Date();
-      const yyyy = stamp.getFullYear();
-      const mm = String(stamp.getMonth() + 1).padStart(2, "0");
-      const dd = String(stamp.getDate()).padStart(2, "0");
-      const filename = `gym-log-${yyyy}-${mm}-${dd}.png`;
-
-      const res = await shareNodeAsPng({
-        node,
-        filename,
-        title: "Gym Log",
-        text: "My Gym Log calendar",
-      });
-
-      if (res.kind === "shared") showToast("Shared");
-      else if (res.kind === "downloaded") showToast("Downloaded");
-      else showToast("Sharing not supported");
-    } catch {
-      showToast("Share failed");
-    }
-  }
 
   // Track auth state (for backup gating)
   useEffect(() => {

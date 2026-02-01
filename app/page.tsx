@@ -7,6 +7,7 @@ import SettingsModal from "./components/SettingsModal";
 import { loadWorkouts, saveWorkouts } from "./lib/storage";
 import { supabase } from "./lib/supabaseClient";
 import { upsertBackup } from "./lib/backup";
+import { shareNodeAsPng } from "./lib/shareImage";
 
 type WeekStart = "sunday" | "monday";
 
@@ -143,12 +144,48 @@ function SettingsIcon({ size = 20 }: { size?: number }) {
   );
 }
 
+function ShareIcon({ size = 20 }: { size?: number }) {
+  // simple "share" arrow icon
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <path
+        d="M12 3v10"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <path
+        d="M8 7l4-4 4 4"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 export default function HomePage() {
   const [workouts, setWorkouts] = useState<Record<string, any>>({});
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [stacked, setStacked] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+
+  const calendarCaptureRef = useRef<HTMLDivElement | null>(null);
 
   // ✅ week start (non-pro)
   const [weekStart, setWeekStart] = useState<WeekStart>("sunday");
@@ -189,6 +226,41 @@ export default function HomePage() {
   function showToast(msg: string) {
     setToast(msg);
     window.setTimeout(() => setToast(null), 1400);
+  }
+
+  async function onShareCalendar() {
+    if (selectedDate) {
+      showToast("Close the editor to share");
+      return;
+    }
+    const node = calendarCaptureRef.current;
+    if (!node) {
+      showToast("Nothing to share");
+      return;
+    }
+
+    showToast("Preparing image...");
+
+    try {
+      const stamp = new Date();
+      const yyyy = stamp.getFullYear();
+      const mm = String(stamp.getMonth() + 1).padStart(2, "0");
+      const dd = String(stamp.getDate()).padStart(2, "0");
+      const filename = `gym-log-${yyyy}-${mm}-${dd}.png`;
+
+      const res = await shareNodeAsPng({
+        node,
+        filename,
+        title: "Gym Log",
+        text: "My Gym Log calendar",
+      });
+
+      if (res.kind === "shared") showToast("Shared");
+      else if (res.kind === "downloaded") showToast("Downloaded");
+      else showToast("Sharing not supported");
+    } catch {
+      showToast("Share failed");
+    }
   }
 
   // Track auth state (for backup gating)
@@ -235,6 +307,39 @@ export default function HomePage() {
     }
   }
 
+  async function onShareCalendar() {
+    if (selectedDate) {
+      showToast("Close the editor to share");
+      return;
+    }
+    if (showSettings) {
+      showToast("Close settings to share");
+      return;
+    }
+
+    const node = calendarCaptureRef.current;
+    if (!node) {
+      showToast("Nothing to share");
+      return;
+    }
+
+    try {
+      showToast("Preparing image…");
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, "0");
+      const d = String(now.getDate()).padStart(2, "0");
+
+      await shareNodeAsPng({
+        node,
+        filename: `gym-log-calendar-${y}-${m}-${d}.png`,
+        title: "Gym Log",
+      });
+    } catch {
+      showToast("Share failed");
+    }
+  }
+
   return (
     <>
       <header className="top-bar">
@@ -249,6 +354,22 @@ export default function HomePage() {
           <h1>Gym Log</h1>
         </div>
         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          <button
+            className="icon-btn"
+            title={
+              selectedDate
+                ? "Close the editor to share"
+                : showSettings
+                  ? "Close settings to share"
+                  : "Share"
+            }
+            aria-label="Share calendar"
+            onClick={onShareCalendar}
+            disabled={Boolean(selectedDate) || Boolean(showSettings)}
+          >
+            <ShareIcon />
+          </button>
+
           <button
             className="icon-btn"
             title="Toggle view"
@@ -269,13 +390,15 @@ export default function HomePage() {
         </div>
       </header>
 
-      <WorkoutCalendar
-        workouts={workouts}
-        onSelectDate={setSelectedDate}
-        stacked={stacked}
-        weekStart={weekStart}
-        selectedDate={selectedDate}
-      />
+      <div ref={calendarCaptureRef} style={{ position: "relative" }}>
+        <WorkoutCalendar
+          workouts={workouts}
+          onSelectDate={setSelectedDate}
+          stacked={stacked}
+          weekStart={weekStart}
+          selectedDate={selectedDate}
+        />
+      </div>
 
       {selectedDate && (
         <WorkoutEditor

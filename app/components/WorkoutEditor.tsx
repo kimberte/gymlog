@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type RefObject } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type RefObject,
+} from "react";
 import { EXERCISES } from "../lib/exercises";
 import { WorkoutEntry, WorkoutMap, getDayEntries } from "../lib/storage";
 
@@ -33,6 +40,29 @@ function formatDisplayDate(yyyyMMdd: string) {
   });
 }
 
+// ✅ Clipboard payloads
+const CLIPBOARD_WORKOUT_KIND = "gym-log-workout-v1";
+const CLIPBOARD_DAY_KIND = "gym-log-day-v1";
+
+type ClipboardWorkout = {
+  kind: typeof CLIPBOARD_WORKOUT_KIND;
+  title: string;
+  notes: string;
+};
+
+type ClipboardDay = {
+  kind: typeof CLIPBOARD_DAY_KIND;
+  entries: Array<{ title: string; notes: string }>; // up to 3
+};
+
+function safeJsonParse<T>(text: string): T | null {
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    return null;
+  }
+}
+
 export default function WorkoutEditor({
   date,
   workouts,
@@ -42,11 +72,13 @@ export default function WorkoutEditor({
   toast,
 }: Props) {
   const initialEntries = useMemo<WorkoutEntry[]>(() => {
-    const entries = getDayEntries(workouts, date).slice(0, 3).map((e, i) => ({
-      id: String(e?.id || `w${i + 1}`),
-      title: String(e?.title ?? ""),
-      notes: String(e?.notes ?? ""),
-    }));
+    const entries = getDayEntries(workouts, date)
+      .slice(0, 3)
+      .map((e, i) => ({
+        id: String(e?.id || `w${i + 1}`),
+        title: String(e?.title ?? ""),
+        notes: String(e?.notes ?? ""),
+      }));
     return entries.length ? entries : [{ id: "w1", title: "", notes: "" }];
   }, [workouts, date]);
 
@@ -107,8 +139,10 @@ export default function WorkoutEditor({
     if (!vv) return;
 
     const update = () => {
-      // How much of the layout viewport is covered by the keyboard / browser UI.
-      const covered = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      const covered = Math.max(
+        0,
+        window.innerHeight - vv.height - vv.offsetTop
+      );
       setKeyboardPad(covered);
     };
 
@@ -125,7 +159,6 @@ export default function WorkoutEditor({
     const el = ref.current;
     if (!el) return;
     el.focus({ preventScroll: true } as any);
-    // Scroll the input into view within the modal (keyboard-safe)
     requestAnimationFrame(() => {
       try {
         el.scrollIntoView({ block: "center", behavior: "smooth" });
@@ -185,7 +218,6 @@ export default function WorkoutEditor({
     if (!ok) return;
 
     if (entries.length === 1) {
-      // Clear the day entirely
       const next = { ...(workouts as any) };
       delete (next as any)[date];
       setWorkouts(next as any);
@@ -197,7 +229,6 @@ export default function WorkoutEditor({
 
     setEntries((prev) => {
       const next = prev.filter((_, i) => i !== activeIdx);
-      // re-label ids w1..w3 for consistency
       return next.map((e, i) => ({ ...e, id: `w${i + 1}` }));
     });
     setActiveIdx((i) => Math.max(0, i - 1));
@@ -229,20 +260,92 @@ export default function WorkoutEditor({
     onClose();
   }
 
+  // ✅ Copy ALL workouts (up to 3) for this day: title + notes
   async function copyToClipboard() {
     try {
-      await navigator.clipboard.writeText(active?.notes ?? "");
-      toast("Copied");
+      const cleaned = entries
+        .slice(0, 3)
+        .map((e) => ({
+          title: String(e?.title ?? ""),
+          notes: String(e?.notes ?? ""),
+        }))
+        .filter(hasContent);
+
+      if (cleaned.length === 0) {
+        toast("Nothing to copy");
+        return;
+      }
+
+      const payload: ClipboardDay = {
+        kind: CLIPBOARD_DAY_KIND,
+        entries: cleaned.slice(0, 3),
+      };
+
+      await navigator.clipboard.writeText(JSON.stringify(payload));
+      toast(`Copied ${payload.entries.length} workout${payload.entries.length === 1 ? "" : "s"}`);
     } catch {
       toast("Copy failed");
     }
   }
 
+  // ✅ Paste ALL workouts if day-payload; otherwise fallback to old behaviors
   async function pasteFromClipboard() {
     try {
       const text = await navigator.clipboard.readText();
       if (!text) return;
-      const merged = (active?.notes ?? "").trimEnd();
+
+      // Day payload (preferred)
+      const dayParsed = safeJsonParse<ClipboardDay>(text);
+      if (dayParsed && dayParsed.kind === CLIPBOARD_DAY_KIND) {
+        const incoming = (dayParsed.entries ?? [])
+          .slice(0, 3)
+          .map((e, i) => ({
+            id: `w${i + 1}`,
+            title: String(e?.title ?? ""),
+            notes: String(e?.notes ?? ""),
+          }))
+          .filter(hasContent);
+
+        if (incoming.length === 0) {
+          toast("Nothing to paste");
+          return;
+        }
+
+        setEntries(incoming.length ? incoming : [{ id: "w1", title: "", notes: "" }]);
+        setActiveIdx(0);
+        setShowHelper(false);
+
+        toast(`Pasted ${incoming.length} workout${incoming.length === 1 ? "" : "s"}`);
+        return;
+      }
+
+      // Single workout payload (older copy format)
+      const oneParsed = safeJsonParse<ClipboardWorkout>(text);
+      if (oneParsed && oneParsed.kind === CLIPBOARD_WORKOUT_KIND) {
+        const incomingTitle = String(oneParsed.title ?? "").trim();
+        const incomingNotes = String(oneParsed.notes ?? "");
+
+        const currentTitle = String(active?.title ?? "").trim();
+        const currentNotes = String(active?.notes ?? "").trimEnd();
+
+        const nextTitle = currentTitle ? currentTitle : incomingTitle;
+        const mergedNotes = currentNotes
+          ? incomingNotes
+            ? currentNotes + "\n" + incomingNotes
+            : currentNotes
+          : incomingNotes;
+
+        updateActive({
+          title: nextTitle,
+          notes: mergedNotes,
+        });
+
+        toast("Pasted");
+        return;
+      }
+
+      // Plain text fallback (append to active notes)
+      const merged = String(active?.notes ?? "").trimEnd();
       const next = merged ? merged + "\n" + text : text;
       updateActive({ notes: next });
       toast("Pasted");
@@ -254,9 +357,7 @@ export default function WorkoutEditor({
   function toggleHelper() {
     setShowHelper((v) => {
       const next = !v;
-      if (next) {
-        setTimeout(() => exRef.current?.focus(), 50);
-      }
+      if (next) setTimeout(() => exRef.current?.focus(), 50);
       return next;
     });
   }
@@ -291,7 +392,7 @@ export default function WorkoutEditor({
       return;
     }
 
-    const base = (active?.notes ?? "").trimEnd();
+    const base = String(active?.notes ?? "").trimEnd();
     const next = base ? base + "\n" + line : line;
     updateActive({ notes: next });
 
@@ -300,7 +401,6 @@ export default function WorkoutEditor({
     setTimeout(() => notesRef.current?.focus(), 50);
   }
 
-  // nice label for tabs
   const tabLabels = useMemo(() => {
     return entries.map((e, i) => {
       const t = String(e.title ?? "").trim();
@@ -328,7 +428,6 @@ export default function WorkoutEditor({
             placeholder="Workout title"
           />
 
-          {/* Tabs row */}
           <div
             style={{
               display: "flex",
@@ -347,8 +446,14 @@ export default function WorkoutEditor({
                 style={{
                   padding: "8px 10px",
                   borderRadius: 999,
-                  border: i === activeIdx ? "1px solid var(--accent)" : "1px solid var(--border)",
-                  background: i === activeIdx ? "rgba(255,87,33,0.14)" : "transparent",
+                  border:
+                    i === activeIdx
+                      ? "1px solid var(--accent)"
+                      : "1px solid var(--border)",
+                  background:
+                    i === activeIdx
+                      ? "rgba(255,87,33,0.14)"
+                      : "transparent",
                   color: "var(--text)",
                   fontSize: 13,
                   cursor: "pointer",
@@ -383,8 +488,11 @@ export default function WorkoutEditor({
           </div>
         </div>
 
-        <div className="editor-content" ref={editorContentRef} style={{ paddingBottom: keyboardPad ? keyboardPad + 12 : 0 }}>
-          {/* Main notes area */}
+        <div
+          className="editor-content"
+          ref={editorContentRef}
+          style={{ paddingBottom: keyboardPad ? keyboardPad + 12 : 0 }}
+        >
           <textarea
             ref={notesRef}
             className="editor-notes"
@@ -393,7 +501,6 @@ export default function WorkoutEditor({
             placeholder="Workout notes"
           />
 
-          {/* Exercise helper panel (compact) */}
           {showHelper && (
             <div
               style={{
@@ -458,8 +565,7 @@ export default function WorkoutEditor({
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns:
-                    "repeat(auto-fit, minmax(110px, 1fr))",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))",
                   gap: 8,
                   marginTop: 8,
                 }}
@@ -545,10 +651,10 @@ export default function WorkoutEditor({
                 value={quick}
                 onChange={(e) => setQuick(e.target.value)}
                 placeholder="Quick note (optional)"
-                  ref={quickRef}
-                  enterKeyHint="done"
-                  onKeyDown={(e) => handleHelperKeyDown(e, undefined, true)}
-                  style={{
+                ref={quickRef}
+                enterKeyHint="done"
+                onKeyDown={(e) => handleHelperKeyDown(e, undefined, true)}
+                style={{
                   width: "100%",
                   marginTop: 8,
                   background: "rgba(0,0,0,0.18)",
@@ -565,13 +671,20 @@ export default function WorkoutEditor({
         </div>
 
         <div className="editor-actions">
-          {/* pencil/keyboard toggle on the LEFT */}
           <button
             onClick={toggleHelper}
             className="secondary"
-            aria-label={showHelper ? "Hide exercise helper" : "Show exercise helper"}
+            aria-label={
+              showHelper ? "Hide exercise helper" : "Show exercise helper"
+            }
             title={showHelper ? "Hide exercise helper" : "Show exercise helper"}
-            style={{ flex: "0 0 auto", width: 54, display: "flex", alignItems: "center", justifyContent: "center" }}
+            style={{
+              flex: "0 0 auto",
+              width: 54,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
           >
             ✎
           </button>

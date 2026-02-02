@@ -1157,4 +1157,8 @@ button.secondary.danger {
   line-height: 1;
   white-space: nowrap;
 }
- 
+
+/* Hide stacked scope toggle buttons only when exporting a screenshot */
+.exporting .stacked-scope-toggle {
+  display: none !important;
+}

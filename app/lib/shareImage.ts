@@ -100,12 +100,20 @@ export async function shareNodeAsPng(options: {
   // html-to-image is client-only; load it dynamically.
   const mod = await import("html-to-image");
 
-  // Capture to a PNG data URL.
-  const dataUrl = await mod.toPng(node, {
+  // ✅ Hide certain UI only during export
+  node.classList.add("exporting");
+
+  let dataUrl: string;
+  try {
+    // Capture to a PNG data URL.
+    dataUrl = await mod.toPng(node, {
     cacheBust: true,
     backgroundColor: "#ffffff",
     pixelRatio: 2,
-  });
+    });
+  } finally {
+    node.classList.remove("exporting");
+  }
 
   const blob = await addWatermark(dataUrl);
 

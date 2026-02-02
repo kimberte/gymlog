@@ -114,15 +114,18 @@ async function renderFinalPngBlob(dataUrl: string) {
     const yMid = headerHeight / 2;
 
     ctx.fillStyle = accent;
-    ctx.fillText(text, xStart, yMid);
 
-    ctx.drawImage(
+     ctx.drawImage(
       logo,
-      xStart + textWidth + gap,
+      xStart,
       yMid - logoSize / 2,
       logoSize,
       logoSize
     );
+
+    ctx.fillText(text, xStart + logoSize + gap, yMid);
+
+
   } catch {
     // If logo fails to load, still show brand text centered
     const text = "Gym Log";

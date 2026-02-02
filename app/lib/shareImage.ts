@@ -1,6 +1,8 @@
 // Client-only helper to capture a DOM node to PNG and share/download it.
-// Adds an export-only header banner (month + month workout count) by reading DOM text,
-// then adds the Gym Log watermark (logo + text) at bottom-right.
+// - Uses app background color (reads from CSS/body computed style)
+// - Adds export-only header banner (month + month workout count) centered and brand orange
+// - Hides export-only UI via .exporting class (CSS rule)
+// - Adds a footer band with centered larger "Gym Log" + logo watermark
 
 type ShareResult =
   | { kind: "shared" }
@@ -33,14 +35,37 @@ function loadImage(src: string) {
 }
 
 /**
+ * Pull colors from the live app so export matches theme.
+ * - background: prefer CSS vars (--app-bg / --bg), fallback to body backgroundColor, then white.
+ * - brand orange: prefer CSS vars (--brand / --accent / --orange), fallback to #ff6a00.
+ */
+function readThemeColors(): { bg: string; accent: string } {
+  const root = document.documentElement;
+  const rootStyle = getComputedStyle(root);
+  const bodyStyle = getComputedStyle(document.body);
+
+  const pickVar = (...names: string[]) => {
+    for (const n of names) {
+      const v = rootStyle.getPropertyValue(n).trim();
+      if (v) return v;
+    }
+    return "";
+  };
+
+  const bgVar = pickVar("--app-bg", "--bg", "--background", "--page-bg");
+  const bg = bgVar || bodyStyle.backgroundColor || "#ffffff";
+
+  const accentVar = pickVar("--brand", "--accent", "--orange", "--primary");
+  const accent = accentVar || "#ff6a00";
+
+  return { bg, accent };
+}
+
+/**
  * Reads the visible calendar month title + subtitle from the DOM.
- * This works even if those elements are OUTSIDE the capture node.
- *
- * If selectors ever change, we fail gracefully and simply omit the banner.
+ * Works even if those elements are outside the capture node.
  */
 function readCalendarHeaderFromDOM(): { title?: string; subtitle?: string } {
-  // These selectors match your WorkoutCalendar header markup:
-  // <div className="month-title"><h2>...</h2><div className="month-subtitle">...</div></div>
   const titleEl = document.querySelector(".month-title h2");
   const subtitleEl = document.querySelector(".month-title .month-subtitle");
 
@@ -56,39 +81,43 @@ async function renderFinalPngBlob(dataUrl: string) {
   const baseW = base.naturalWidth || base.width;
   const baseH = base.naturalHeight || base.height;
 
-  // Read header text from DOM (not from capture).
+  const { bg, accent } = readThemeColors();
   const { title, subtitle } = readCalendarHeaderFromDOM();
   const hasBanner = Boolean(title || subtitle);
 
-  // Banner sizing (scale with image width a bit)
-  const padX = Math.round(Math.max(18, baseW * 0.02));
-  const padY = Math.round(Math.max(14, baseW * 0.012));
-  const titleSize = Math.round(Math.min(28, Math.max(18, baseW * 0.03)));
-  const subtitleSize = Math.round(Math.min(20, Math.max(14, baseW * 0.02)));
-  const gap = Math.round(Math.max(6, baseW * 0.008));
+  // Scale sizes with image width
+  const padX = Math.round(Math.max(18, baseW * 0.03));
+  const padY = Math.round(Math.max(14, baseW * 0.02));
+  const titleSize = Math.round(Math.min(44, Math.max(24, baseW * 0.045))); // bigger
+  const subtitleSize = Math.round(Math.min(28, Math.max(16, baseW * 0.028))); // bigger
+  const gap = Math.round(Math.max(8, baseW * 0.015));
 
   const bannerHeight = hasBanner
     ? Math.round(padY + titleSize + (subtitle ? gap + subtitleSize : 0) + padY)
     : 0;
 
-  // Create a new canvas that is taller so banner does not cover the capture.
+  // Footer with centered brand watermark
+  const footerPadY = Math.round(Math.max(14, baseW * 0.02));
+  const footerFont = Math.round(Math.min(28, Math.max(18, baseW * 0.03))); // bigger
+  const footerLogo = Math.round(Math.min(52, Math.max(34, baseW * 0.055))); // bigger
+  const footerGap = Math.round(Math.max(10, baseW * 0.02));
+  const footerHeight = Math.round(footerPadY + Math.max(footerFont, footerLogo) + footerPadY);
+
+  // New canvas taller (banner + capture + footer)
   const canvas = document.createElement("canvas");
   canvas.width = baseW;
-  canvas.height = baseH + bannerHeight;
+  canvas.height = bannerHeight + baseH + footerHeight;
 
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas not supported");
 
-  // Background
-  ctx.fillStyle = "#ffffff";
+  // Background matches app
+  ctx.fillStyle = bg;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Banner (top)
+  // Banner top (centered, brand orange)
   if (hasBanner) {
-    // Subtle divider line
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, canvas.width, bannerHeight);
-
+    // Optional subtle divider line under banner
     ctx.strokeStyle = "rgba(0,0,0,0.08)";
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -96,68 +125,65 @@ async function renderFinalPngBlob(dataUrl: string) {
     ctx.lineTo(canvas.width, bannerHeight - 0.5);
     ctx.stroke();
 
+    const xCenter = canvas.width / 2;
+
     let y = padY + titleSize * 0.55;
 
     if (title) {
-      ctx.fillStyle = "rgba(0,0,0,0.85)";
-      ctx.font = `700 ${titleSize}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
+      ctx.fillStyle = accent;
+      ctx.font = `800 ${titleSize}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
       ctx.textBaseline = "middle";
-      ctx.textAlign = "left";
-      ctx.fillText(title, padX, y);
-      y += titleSize * 0.6 + gap;
+      ctx.textAlign = "center";
+      ctx.fillText(title, xCenter, y);
+      y += titleSize * 0.65 + gap;
     }
 
     if (subtitle) {
-      ctx.fillStyle = "rgba(0,0,0,0.60)";
-      ctx.font = `600 ${subtitleSize}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
+      ctx.fillStyle = accent;
+      ctx.globalAlpha = 0.9;
+      ctx.font = `700 ${subtitleSize}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
       ctx.textBaseline = "middle";
-      ctx.textAlign = "left";
-      ctx.fillText(subtitle, padX, y);
+      ctx.textAlign = "center";
+      ctx.fillText(subtitle, xCenter, y);
+      ctx.globalAlpha = 1;
     }
   }
 
   // Draw captured image below banner
   ctx.drawImage(base, 0, bannerHeight);
 
-  // Watermark: Gym Log text + logo (bottom-right of full image)
+  // Footer separator
+  const footerTopY = bannerHeight + baseH;
+  ctx.strokeStyle = "rgba(0,0,0,0.10)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, footerTopY + 0.5);
+  ctx.lineTo(canvas.width, footerTopY + 0.5);
+  ctx.stroke();
+
+  // Watermark footer: centered "Gym Log" + logo
   const logoSrc = "/icons/gym-app-logo-color-40x40.png";
   try {
     const logo = await loadImage(logoSrc);
 
-    const pad = Math.round(Math.max(16, canvas.width * 0.02));
-    const logoSize = Math.round(Math.min(40, Math.max(28, canvas.width * 0.045)));
     const text = "Gym Log";
-    const fontSize = Math.round(Math.min(22, Math.max(16, canvas.width * 0.028)));
-    const gap2 = Math.round(8);
-
-    ctx.font = `700 ${fontSize}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
+    ctx.font = `800 ${footerFont}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
     ctx.textBaseline = "middle";
     ctx.textAlign = "left";
 
     const textWidth = ctx.measureText(text).width;
-    const wmHeight = Math.max(logoSize, fontSize);
-    const xRight = canvas.width - pad;
-    const yMid = canvas.height - pad - wmHeight / 2;
 
-    // Very subtle shadow for legibility
-    ctx.shadowColor = "rgba(0,0,0,0.16)";
-    ctx.shadowBlur = 6;
-    ctx.shadowOffsetY = 2;
+    const totalW = textWidth + footerGap + footerLogo;
+    const xStart = (canvas.width - totalW) / 2;
+    const yMid = footerTopY + footerHeight / 2;
 
-    const totalWidth = textWidth + gap2 + logoSize;
-    const xStart = xRight - totalWidth;
-
-    ctx.fillStyle = "rgba(0,0,0,0.55)";
+    // Use accent (brand orange) and keep it crisp
+    ctx.fillStyle = accent;
     ctx.fillText(text, xStart, yMid);
 
-    ctx.drawImage(logo, xStart + textWidth + gap2, yMid - logoSize / 2, logoSize, logoSize);
-
-    // Reset shadow
-    ctx.shadowColor = "transparent";
-    ctx.shadowBlur = 0;
-    ctx.shadowOffsetY = 0;
+    ctx.drawImage(logo, xStart + textWidth + footerGap, yMid - footerLogo / 2, footerLogo, footerLogo);
   } catch {
-    // If logo fails to load for any reason, we still export.
+    // If logo fails, export still works (text-only could be added, but we keep it simple)
   }
 
   const blob: Blob = await new Promise((resolve, reject) => {
@@ -175,8 +201,8 @@ export async function shareNodeAsPng(options: {
 }): Promise<ShareResult> {
   const { node, filename, title, text } = options;
 
-  // html-to-image is client-only; load it dynamically.
   const mod = await import("html-to-image");
+  const { bg } = readThemeColors();
 
   // Hide certain UI only during export
   node.classList.add("exporting");
@@ -185,7 +211,7 @@ export async function shareNodeAsPng(options: {
   try {
     dataUrl = await mod.toPng(node, {
       cacheBust: true,
-      backgroundColor: "#ffffff",
+      backgroundColor: bg, // ✅ match app background
       pixelRatio: 2,
     });
   } finally {
@@ -194,7 +220,6 @@ export async function shareNodeAsPng(options: {
 
   const blob = await renderFinalPngBlob(dataUrl);
 
-  // Attempt to share (mobile). Fallback to download.
   const file = blobToFile(blob, filename);
   const nav: any = navigator;
 

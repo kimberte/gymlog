@@ -18,7 +18,6 @@ function startOfWeek(d: Date, weekStart: "sunday" | "monday") {
   return copy;
 }
 
-
 function isToday(d: Date) {
   const t = new Date();
   return (
@@ -57,11 +56,7 @@ function summarizeTitles(entries: WorkoutEntry[]) {
   const titles = active.map((e) => String(e.title ?? "").trim()).filter(Boolean);
 
   // If no titles but there are note-only entries, show a friendly placeholder.
-  const displayTitles = titles.length
-    ? titles
-    : active.length
-      ? ["Notes"]
-      : [];
+  const displayTitles = titles.length ? titles : active.length ? ["Notes"] : [];
 
   const first = displayTitles[0] ?? "";
   const extra = Math.max(0, active.length - 1);
@@ -85,33 +80,33 @@ export default function WorkoutCalendar({
 }: Props) {
   const [cursor, setCursor] = useState(new Date());
 
-// Forces a re-render at midnight (and on long-open sessions) so the "today" highlight stays accurate.
-const [, forceTodayRerender] = useState(0);
+  // Forces a re-render at midnight (and on long-open sessions) so the "today" highlight stays accurate.
+  const [, forceTodayRerender] = useState(0);
 
-useEffect(() => {
-  let timeout: ReturnType<typeof setTimeout> | null = null;
+  useEffect(() => {
+    let timeout: ReturnType<typeof setTimeout> | null = null;
 
-  const schedule = () => {
-    const now = new Date();
-    // Next local midnight (+ a tiny buffer)
-    const next = new Date(now);
-    next.setHours(24, 0, 5, 0);
-    const ms = Math.max(1000, next.getTime() - now.getTime());
+    const schedule = () => {
+      const now = new Date();
+      // Next local midnight (+ a tiny buffer)
+      const next = new Date(now);
+      next.setHours(24, 0, 5, 0);
+      const ms = Math.max(1000, next.getTime() - now.getTime());
 
-    timeout = setTimeout(() => {
-      forceTodayRerender((x) => x + 1);
-      schedule();
-    }, ms);
-  };
+      timeout = setTimeout(() => {
+        forceTodayRerender((x) => x + 1);
+        schedule();
+      }, ms);
+    };
 
-  schedule();
+    schedule();
 
-  return () => {
-    if (timeout) clearTimeout(timeout);
-  };
-}, []);
+    return () => {
+      if (timeout) clearTimeout(timeout);
+    };
+  }, []);
+
   const [stackedScope, setStackedScope] = useState<"week" | "month">("week");
-
 
   const labels = useMemo(() => {
     return weekStart === "monday"
@@ -135,14 +130,25 @@ useEffect(() => {
     // Prefer selectedDate if it's within the visible month; otherwise use today if month matches; else first of month.
     if (selectedDate) {
       const d = fromDateKey(selectedDate);
-      if (d.getFullYear() === cursor.getFullYear() && d.getMonth() === cursor.getMonth()) return d;
+      if (
+        d.getFullYear() === cursor.getFullYear() &&
+        d.getMonth() === cursor.getMonth()
+      )
+        return d;
     }
     const t = new Date();
-    if (t.getFullYear() === cursor.getFullYear() && t.getMonth() === cursor.getMonth()) return t;
+    if (
+      t.getFullYear() === cursor.getFullYear() &&
+      t.getMonth() === cursor.getMonth()
+    )
+      return t;
     return new Date(cursor.getFullYear(), cursor.getMonth(), 1);
   }, [selectedDate, cursor]);
 
-  const weekStartDate = useMemo(() => startOfWeek(stackedAnchor, weekStart), [stackedAnchor, weekStart]);
+  const weekStartDate = useMemo(
+    () => startOfWeek(stackedAnchor, weekStart),
+    [stackedAnchor, weekStart]
+  );
   const weekEndDate = useMemo(() => {
     const e = new Date(weekStartDate);
     e.setDate(e.getDate() + 6);
@@ -221,7 +227,11 @@ useEffect(() => {
 
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           {!isCurrentMonth && (
-            <button onClick={jumpToToday} aria-label="Jump to current month" title="Jump to current month">
+            <button
+              onClick={jumpToToday}
+              aria-label="Jump to current month"
+              title="Jump to current month"
+            >
               Today
             </button>
           )}
@@ -255,10 +265,15 @@ useEffect(() => {
 
               const key = toDateKey(d);
               const entries = getDayEntries(workouts, key).slice(0, 3);
-              const markers = entries.map(markerType).filter(Boolean) as Array<"full" | "half">;
+              const markers = entries
+                .map(markerType)
+                .filter(Boolean) as Array<"full" | "half">;
 
               const { first, extra, activeCount } = summarizeTitles(entries);
               const isSelected = Boolean(selectedDate && key === selectedDate);
+
+              // ✅ Photo indicator (no loading)
+              const hasPhoto = Boolean((workouts as any)?.[key]?.image?.path);
 
               return (
                 <div
@@ -273,6 +288,32 @@ useEffect(() => {
                     if (e.key === "Enter" || e.key === " ") onSelectDate(key);
                   }}
                 >
+                  {/* Top-right photo badge */}
+                  {hasPhoto && (
+                    <div
+                      aria-label="Photo attached"
+                      title="Photo attached"
+                      style={{
+                        position: "absolute",
+                        bottom: 8,
+                        right: 8,
+                        width: 20,
+                        height: 20,
+                        borderRadius: 999,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 12,
+                        background: "rgba(0,0,0,0.28)",
+                        border: "1px solid rgba(255,255,255,0.14)",
+                        color: "rgba(255,255,255,0.92)",
+                        pointerEvents: "none",
+                      }}
+                    >
+                      📷
+                    </div>
+                  )}
+
                   {markers.length > 0 && (
                     <div className="workout-dots" aria-hidden="true">
                       {markers.slice(0, 3).map((m, i) =>
@@ -313,57 +354,93 @@ useEffect(() => {
           </div>
 
           <div className="stacked-list">
-          {stackedDays.map((d) => {
-            const key = toDateKey(d);
-            const entries = getDayEntries(workouts, key).slice(0, 3);
-            const markers = entries.map(markerType).filter(Boolean) as Array<"full" | "half">;
+            {stackedDays.map((d) => {
+              const key = toDateKey(d);
+              const entries = getDayEntries(workouts, key).slice(0, 3);
+              const markers = entries
+                .map(markerType)
+                .filter(Boolean) as Array<"full" | "half">;
 
-            const titles = entries.filter(hasWorkoutContent).map((e) => String(e.title ?? "").trim()).filter(Boolean);
-            const displayTitles =
-              titles.length ? titles : entries.some((e) => Boolean(String(e.notes ?? "").trim())) ? ["Notes"] : [];            const titleLines = displayTitles.length ? displayTitles : ["—"];
+              const titles = entries
+                .filter(hasWorkoutContent)
+                .map((e) => String(e.title ?? "").trim())
+                .filter(Boolean);
+              const displayTitles = titles.length
+                ? titles
+                : entries.some((e) => Boolean(String(e.notes ?? "").trim()))
+                ? ["Notes"]
+                : [];
+              const titleLines = displayTitles.length ? displayTitles : ["—"];
 
-            const isSelected = Boolean(selectedDate && key === selectedDate);
+              const isSelected = Boolean(selectedDate && key === selectedDate);
 
-            return (
-              <div
-                key={key}
-                className={`stacked-row ${isToday(d) ? "today" : ""} ${
-                  isSelected ? "selected" : ""
-                }`}
-                onClick={() => onSelectDate(key)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") onSelectDate(key);
-                }}
-              >
-                <div className="stacked-date">
-                  {markers.length > 0 && (
-                    <span className="workout-dots-inline" aria-hidden="true">
-                      {markers.slice(0, 3).map((m, i) =>
-                        m === "half" ? (
-                          <span key={i} className="workout-half-dot" />
-                        ) : (
-                          <span key={i} className="workout-dot" />
-                        )
-                      )}
-                    </span>
-                  )}
-                  {formatStackedDate(d)}
+              // ✅ Photo indicator (no loading)
+              const hasPhoto = Boolean((workouts as any)?.[key]?.image?.path);
+
+              return (
+                <div
+                  key={key}
+                  className={`stacked-row ${isToday(d) ? "today" : ""} ${
+                    isSelected ? "selected" : ""
+                  }`}
+                  onClick={() => onSelectDate(key)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") onSelectDate(key);
+                  }}
+                >
+                  <div className="stacked-date">
+                    {markers.length > 0 && (
+                      <span className="workout-dots-inline" aria-hidden="true">
+                        {markers.slice(0, 3).map((m, i) =>
+                          m === "half" ? (
+                            <span key={i} className="workout-half-dot" />
+                          ) : (
+                            <span key={i} className="workout-dot" />
+                          )
+                        )}
+                      </span>
+                    )}
+
+                    {/* Small camera badge inline */}
+                    {hasPhoto && (
+                      <span
+                        aria-label="Photo attached"
+                        title="Photo attached"
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          width: 18,
+                          height: 18,
+                          borderRadius: 999,
+                          marginRight: 8,
+                          fontSize: 12,
+                          background: "rgba(0,0,0,0.28)",
+                          border: "1px solid rgba(255,255,255,0.14)",
+                          color: "rgba(255,255,255,0.92)",
+                          flex: "0 0 auto",
+                        }}
+                      >
+                        📷
+                      </span>
+                    )}
+
+                    {formatStackedDate(d)}
+                  </div>
+
+                  <div className="stacked-title">
+                    {titleLines.slice(0, 3).map((t, i) => (
+                      <div key={i} className="stacked-title-line">
+                        {t}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-
-                                <div className="stacked-title">
-                  {titleLines.slice(0, 3).map((t, i) => (
-                    <div key={i} className="stacked-title-line">
-                      {t}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
+              );
+            })}
           </div>
-        
 
           <div className="stacked-scope-toggle bottom">
             <button
@@ -376,6 +453,7 @@ useEffect(() => {
           </div>
         </div>
       )}
+
       <div
         style={{
           padding: "14px 16px 18px",

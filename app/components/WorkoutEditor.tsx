@@ -10,6 +10,13 @@ import {
 } from "react";
 import { EXERCISES } from "../lib/exercises";
 import { WorkoutEntry, WorkoutMap, getDayEntries } from "../lib/storage";
+import { getSessionUser } from "../lib/backup";
+import { compressImageToWebp } from "../lib/imageCompress";
+import {
+  getWorkoutImageSignedUrl,
+  removeWorkoutImage,
+  uploadWorkoutImage,
+} from "../lib/workoutImages";
 
 type Props = {
   date: string; // YYYY-MM-DD
@@ -85,6 +92,21 @@ export default function WorkoutEditor({
   const [entries, setEntries] = useState<WorkoutEntry[]>(initialEntries);
   const [activeIdx, setActiveIdx] = useState(0);
 
+  // Pro image upload (1 image per date, Supabase Storage)
+  const [sessionUserId, setSessionUserId] = useState<string | null>(null);
+  const [imagePath, setImagePath] = useState<string | null>(
+    (workouts as any)?.[date]?.image?.path
+      ? String((workouts as any)[date].image.path)
+      : null
+  );
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [imageBusy, setImageBusy] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // ✅ Option 1: Collapsible photo (notes-first)
+  const [photoOpen, setPhotoOpen] = useState(false);
+
   // exercise helper panel
   const [showHelper, setShowHelper] = useState(false);
   const [exName, setExName] = useState("");
@@ -139,10 +161,7 @@ export default function WorkoutEditor({
     if (!vv) return;
 
     const update = () => {
-      const covered = Math.max(
-        0,
-        window.innerHeight - vv.height - vv.offsetTop
-      );
+      const covered = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
       setKeyboardPad(covered);
     };
 
@@ -154,6 +173,51 @@ export default function WorkoutEditor({
       vv.removeEventListener("scroll", update);
     };
   }, []);
+
+  // Load signed-in user (Pro gating)
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const user = await getSessionUser();
+      if (cancelled) return;
+      setSessionUserId(user?.id ?? null);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Sync image meta from stored workouts for this date
+  useEffect(() => {
+    const p = (workouts as any)?.[date]?.image?.path
+      ? String((workouts as any)[date].image.path)
+      : null;
+    setImagePath(p);
+    setImageUrl(null);
+    setPhotoOpen(false);
+  }, [workouts, date]);
+
+  // Fetch signed URL for preview
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!sessionUserId || !imagePath) return;
+      try {
+        const url = await getWorkoutImageSignedUrl(imagePath, 3600);
+        if (cancelled) return;
+        setImageUrl(url);
+        setPhotoOpen(false);
+      } catch {
+        // If missing/unauthorized, just hide preview
+        if (cancelled) return;
+        setImageUrl(null);
+        setPhotoOpen(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [sessionUserId, imagePath]);
 
   function focusNext(ref: RefObject<HTMLInputElement | null>) {
     const el = ref.current;
@@ -191,7 +255,58 @@ export default function WorkoutEditor({
     setWeight("");
     setTime("");
     setQuick("");
+    setPhotoOpen(false);
   }, [initialEntries]);
+
+  // Load auth + existing image meta
+  useEffect(() => {
+    let cancelled = false;
+
+    const run = async () => {
+      try {
+        const user = await getSessionUser();
+        if (cancelled) return;
+        setUserId(user?.id ?? null);
+
+        const existingPath = (workouts as any)?.[date]?.image?.path
+          ? String((workouts as any)[date].image.path)
+          : null;
+        setImagePath(existingPath);
+
+        if (user?.id && existingPath) {
+          try {
+            const url = await getWorkoutImageSignedUrl(existingPath, 3600);
+            if (!cancelled) {
+              setImageUrl(url);
+              setPhotoOpen(false);
+            }
+          } catch (err: any) {
+            console.error("Load workout photo failed:", err);
+            if (!cancelled) {
+              setImageUrl(null);
+              setPhotoOpen(false);
+            }
+          }
+        } else {
+          setImageUrl(null);
+          setPhotoOpen(false);
+        }
+      } catch {
+        if (!cancelled) {
+          setUserId(null);
+          setImagePath(null);
+          setImageUrl(null);
+          setPhotoOpen(false);
+        }
+      }
+    };
+
+    run();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [date, workouts]);
 
   const active = entries[activeIdx] ?? entries[0];
 
@@ -247,10 +362,17 @@ export default function WorkoutEditor({
 
     const next = { ...(workouts as any) };
 
+    // Preserve any existing image metadata for this day
+    const existingImage = (next as any)?.[date]?.image;
+
     if (cleaned.length === 0) {
-      delete (next as any)[date];
+      if (existingImage?.path) {
+        (next as any)[date] = { entries: [], image: existingImage };
+      } else {
+        delete (next as any)[date];
+      }
     } else {
-      (next as any)[date] = { entries: cleaned };
+      (next as any)[date] = { entries: cleaned, image: existingImage };
     }
 
     setWorkouts(next as any);
@@ -258,6 +380,112 @@ export default function WorkoutEditor({
 
     toast("Saved");
     onClose();
+  }
+
+  async function handleSelectImage(file: File) {
+    if (!sessionUserId) {
+      toast("Sign in to upload a photo");
+      return;
+    }
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast("Image too large (max 10MB)");
+      return;
+    }
+
+    setImageBusy(true);
+    try {
+      // Compress to WebP (try a couple quality levels to stay under the hard cap)
+      const hardCap = 1.5 * 1024 * 1024;
+      let blob = await compressImageToWebp(file, {
+        maxLongEdge: 1800,
+        quality: 0.78,
+      });
+      if (blob.size > hardCap) {
+        blob = await compressImageToWebp(file, {
+          maxLongEdge: 1800,
+          quality: 0.7,
+        });
+      }
+      if (blob.size > hardCap) {
+        blob = await compressImageToWebp(file, {
+          maxLongEdge: 1800,
+          quality: 0.62,
+        });
+      }
+      if (blob.size > hardCap) {
+        toast("Image too large after compression");
+        return;
+      }
+
+      const path = await uploadWorkoutImage({
+        userId: sessionUserId,
+        date,
+        blob,
+      });
+
+      const url = await getWorkoutImageSignedUrl(path, 3600);
+      setImagePath(path);
+      setImageUrl(url);
+      setPhotoOpen(false);
+
+      // Persist meta locally so we can show the preview state without extra lookups
+      const next = { ...(workouts as any) };
+      const day =
+        (next as any)[date] && typeof (next as any)[date] === "object"
+          ? (next as any)[date]
+          : { entries: [] };
+      (next as any)[date] = {
+        ...day,
+        entries: Array.isArray(day.entries) ? day.entries : [],
+        image: { path, updatedAt: Date.now() },
+      };
+      setWorkouts(next as any);
+      onSaved?.(next as any);
+
+      toast("Photo uploaded");
+    } catch (err: any) {
+      console.error("Photo upload failed:", err);
+      const msg = err?.message || err?.error_description || err?.error || "";
+      toast(msg ? `Photo upload failed: ${msg}` : "Photo upload failed");
+    } finally {
+      setImageBusy(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
+  async function handleRemoveImage() {
+    if (!sessionUserId || !imagePath) return;
+    const ok = window.confirm("Remove this photo?");
+    if (!ok) return;
+
+    setImageBusy(true);
+    try {
+      await removeWorkoutImage(imagePath);
+      setImageUrl(null);
+      setImagePath(null);
+      setPhotoOpen(false);
+
+      const next = { ...(workouts as any) };
+      if ((next as any)[date] && typeof (next as any)[date] === "object") {
+        const day = { ...(next as any)[date] };
+        delete (day as any).image;
+        // If the day has no entries left, remove the day entirely
+        const entriesArr = Array.isArray(day.entries) ? day.entries : [];
+        if (!entriesArr.length) delete (next as any)[date];
+        else (next as any)[date] = day;
+      }
+      setWorkouts(next as any);
+      onSaved?.(next as any);
+
+      toast("Photo removed");
+    } catch (err: any) {
+      console.error("Remove photo failed:", err);
+      const msg = err?.message || err?.error_description || err?.error || "";
+      toast(msg ? `Failed to remove photo: ${msg}` : "Failed to remove photo");
+    } finally {
+      setImageBusy(false);
+    }
   }
 
   // ✅ Copy ALL workouts (up to 3) for this day: title + notes
@@ -282,7 +510,11 @@ export default function WorkoutEditor({
       };
 
       await navigator.clipboard.writeText(JSON.stringify(payload));
-      toast(`Copied ${payload.entries.length} workout${payload.entries.length === 1 ? "" : "s"}`);
+      toast(
+        `Copied ${payload.entries.length} workout${
+          payload.entries.length === 1 ? "" : "s"
+        }`
+      );
     } catch {
       toast("Copy failed");
     }
@@ -311,11 +543,17 @@ export default function WorkoutEditor({
           return;
         }
 
-        setEntries(incoming.length ? incoming : [{ id: "w1", title: "", notes: "" }]);
+        setEntries(
+          incoming.length ? incoming : [{ id: "w1", title: "", notes: "" }]
+        );
         setActiveIdx(0);
         setShowHelper(false);
 
-        toast(`Pasted ${incoming.length} workout${incoming.length === 1 ? "" : "s"}`);
+        toast(
+          `Pasted ${incoming.length} workout${
+            incoming.length === 1 ? "" : "s"
+          }`
+        );
         return;
       }
 
@@ -410,10 +648,7 @@ export default function WorkoutEditor({
 
   return (
     <div className="overlay" onMouseDown={onClose}>
-      <div
-        className="editor editor-full"
-        onMouseDown={(e) => e.stopPropagation()}
-      >
+      <div className="editor editor-full" onMouseDown={(e) => e.stopPropagation()}>
         <button className="close" onClick={onClose} aria-label="Close">
           ✕
         </button>
@@ -450,10 +685,7 @@ export default function WorkoutEditor({
                     i === activeIdx
                       ? "1px solid var(--accent)"
                       : "1px solid var(--border)",
-                  background:
-                    i === activeIdx
-                      ? "rgba(255,87,33,0.14)"
-                      : "transparent",
+                  background: i === activeIdx ? "rgba(255,87,33,0.14)" : "transparent",
                   color: "var(--text)",
                   fontSize: 13,
                   cursor: "pointer",
@@ -500,6 +732,188 @@ export default function WorkoutEditor({
             onChange={(e) => updateActive({ notes: e.target.value })}
             placeholder="Workout notes"
           />
+
+          {/* Pro: 1 photo per date (stored in Supabase) - collapsible */}
+          <div
+            style={{
+              marginTop: 10,
+              padding: 10,
+              borderRadius: 12,
+              border: "1px solid rgba(255,255,255,0.12)",
+              background: "rgba(0,0,0,0.10)",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 12,
+              }}
+            >
+              <div style={{ minWidth: 0 }}>
+                <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                  <div style={{ fontSize: 12, opacity: 0.85, marginBottom: 2 }}>
+                    Photo
+                  </div>
+
+                  {imageUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setPhotoOpen((v) => !v)}
+                      disabled={imageBusy}
+                      style={{
+                        background: "transparent",
+                        border: "none",
+                        color: "rgba(255,255,255,0.78)",
+                        padding: 0,
+                        fontSize: 12,
+                        cursor: imageBusy ? "not-allowed" : "pointer",
+                        textDecoration: "underline",
+                        textUnderlineOffset: 3,
+                        opacity: imageBusy ? 0.6 : 0.85,
+                      }}
+                    >
+                      {photoOpen ? "Hide" : "Show"}
+                    </button>
+                  )}
+                </div>
+
+                {!sessionUserId && (
+                  <div style={{ fontSize: 12, opacity: 0.65 }}>
+                    Pro feature — sign in to upload
+                  </div>
+                )}
+              </div>
+
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                {imagePath && sessionUserId && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveImage}
+                    disabled={imageBusy}
+                    style={{
+                      background: "transparent",
+                      border: "1px solid rgba(255,255,255,0.18)",
+                      color: "var(--text)",
+                      borderRadius: 10,
+                      padding: "8px 10px",
+                      fontWeight: 500,
+                      cursor: imageBusy ? "not-allowed" : "pointer",
+                      fontSize: 13,
+                      opacity: imageBusy ? 0.6 : 1,
+                    }}
+                  >
+                    Remove
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={!sessionUserId || imageBusy}
+                  style={{
+                    background: !sessionUserId
+                      ? "rgba(255,255,255,0.08)"
+                      : "var(--accent)",
+                    border: !sessionUserId
+                      ? "1px solid rgba(255,255,255,0.12)"
+                      : "none",
+                    color: !sessionUserId
+                      ? "rgba(255,255,255,0.75)"
+                      : "white",
+                    borderRadius: 10,
+                    padding: "8px 12px",
+                    fontWeight: 600,
+                    cursor: !sessionUserId || imageBusy ? "not-allowed" : "pointer",
+                    fontSize: 13,
+                    opacity: !sessionUserId || imageBusy ? 0.55 : 1,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {imagePath ? "Replace" : "Upload"}
+                </button>
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  style={{ display: "none" }}
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) handleSelectImage(f);
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Collapsed thumbnail */}
+            {imageUrl && !photoOpen && (
+              <button
+                type="button"
+                onClick={() => setPhotoOpen(true)}
+                disabled={imageBusy}
+                aria-label="Show photo"
+                style={{
+                  marginTop: 10,
+                  width: "100%",
+                  padding: 0,
+                  border: 0,
+                  background: "transparent",
+                  cursor: imageBusy ? "not-allowed" : "pointer",
+                  position: "relative",
+                  textAlign: "left",
+                  opacity: imageBusy ? 0.6 : 1,
+                }}
+              >
+                <img
+                  src={imageUrl}
+                  alt="Workout photo"
+                  style={{
+                    width: "100%",
+                    height: 110,
+                    objectFit: "cover",
+                    borderRadius: 12,
+                    border: "1px solid rgba(255,255,255,0.10)",
+                    display: "block",
+                  }}
+                />
+                <div
+                  style={{
+                    position: "absolute",
+                    right: 10,
+                    bottom: 10,
+                    fontSize: 12,
+                    padding: "6px 10px",
+                    borderRadius: 999,
+                    background: "rgba(0,0,0,0.45)",
+                    color: "rgba(255,255,255,0.9)",
+                  }}
+                >
+                  Tap to view
+                </div>
+              </button>
+            )}
+
+            {/* Expanded preview (capped height so it doesn't dominate) */}
+            {imageUrl && photoOpen && (
+              <div style={{ marginTop: 10 }}>
+                <img
+                  src={imageUrl}
+                  alt="Workout photo"
+                  style={{
+                    width: "100%",
+                    maxHeight: 240,
+                    objectFit: "contain",
+                    borderRadius: 12,
+                    border: "1px solid rgba(255,255,255,0.10)",
+                    display: "block",
+                    background: "rgba(0,0,0,0.18)",
+                  }}
+                />
+              </div>
+            )}
+          </div>
 
           {showHelper && (
             <div
@@ -674,9 +1088,7 @@ export default function WorkoutEditor({
           <button
             onClick={toggleHelper}
             className="secondary"
-            aria-label={
-              showHelper ? "Hide exercise helper" : "Show exercise helper"
-            }
+            aria-label={showHelper ? "Hide exercise helper" : "Show exercise helper"}
             title={showHelper ? "Hide exercise helper" : "Show exercise helper"}
             style={{
               flex: "0 0 auto",

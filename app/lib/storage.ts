@@ -15,6 +15,11 @@ export type WorkoutEntry = {
 
 export type WorkoutDay = {
   entries: WorkoutEntry[]; // up to 3
+  // Optional Pro feature: 1 image per date (stored in Supabase Storage)
+  image?: {
+    path: string;
+    updatedAt: number;
+  };
 };
 
 export type WorkoutMap = Record<string, WorkoutDay>;
@@ -109,7 +114,18 @@ export function normalizeWorkoutsMap(input: any): WorkoutMap {
       const entries = (v.entries || [])
         .slice(0, 3)
         .map((e: any, i: number) => normalizeEntry(e, `w${i + 1}`));
-      out[date] = { entries };
+      const image =
+        v && typeof v === "object" && v.image && typeof v.image === "object"
+          ? {
+              path: String((v as any).image.path ?? ""),
+              updatedAt: Number((v as any).image.updatedAt ?? Date.now()),
+            }
+          : undefined;
+
+      out[date] = {
+        entries,
+        image: image?.path ? image : undefined,
+      };
       continue;
     }
 

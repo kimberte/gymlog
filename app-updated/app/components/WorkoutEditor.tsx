@@ -223,7 +223,13 @@ export default function WorkoutEditor({
   useEffect(() => {
     setEntries(initialEntries);
     setActiveIdx(0);
-
+    setShowHelper(false);
+    setExName("");
+    setSets("");
+    setReps("");
+    setWeight("");
+    setTime("");
+    setQuick("");
     setMediaUrl(null);
     setMediaOpen(false);
   }, [initialEntries]);

@@ -20,11 +20,7 @@ function startOfWeek(d: Date, weekStart: "sunday" | "monday") {
 
 function isToday(d: Date) {
   const t = new Date();
-  return (
-    d.getDate() === t.getDate() &&
-    d.getMonth() === t.getMonth() &&
-    d.getFullYear() === t.getFullYear()
-  );
+  return d.getDate() === t.getDate() && d.getMonth() === t.getMonth() && d.getFullYear() === t.getFullYear();
 }
 
 function formatMonthYear(d: Date) {
@@ -53,9 +49,7 @@ function markerType(e: WorkoutEntry): "full" | "half" | null {
 
 function summarizeTitles(entries: WorkoutEntry[]) {
   const active = entries.filter(hasWorkoutContent);
-  const titles = active
-    .map((e) => String(e.title ?? "").trim())
-    .filter(Boolean);
+  const titles = active.map((e) => String(e.title ?? "").trim()).filter(Boolean);
   const displayTitles = titles.length ? titles : active.length ? ["Notes"] : [];
 
   const first = displayTitles[0] ?? "";
@@ -71,12 +65,8 @@ function getMediaFlags(workouts: WorkoutMap, dateKey: string) {
 
   // Per-entry media support
   const entries = (day?.entries ?? []) as any[];
-  const hasEntryPhoto = entries.some(
-    (e) => e?.media?.kind === "image" && e?.media?.path
-  );
-  const hasEntryVideo = entries.some(
-    (e) => e?.media?.kind === "video" && e?.media?.path
-  );
+  const hasEntryPhoto = entries.some((e) => e?.media?.kind === "image" && e?.media?.path);
+  const hasEntryVideo = entries.some((e) => e?.media?.kind === "video" && e?.media?.path);
 
   return {
     hasPhoto: hasLegacyPhoto || hasEntryPhoto,
@@ -96,13 +86,7 @@ type Props = {
   selectedDate?: string | null;
 };
 
-export default function WorkoutCalendar({
-  workouts,
-  onSelectDate,
-  stacked,
-  weekStart,
-  selectedDate,
-}: Props) {
+export default function WorkoutCalendar({ workouts, onSelectDate, stacked, weekStart, selectedDate }: Props) {
   const [cursor, setCursor] = useState(new Date());
 
   // Forces a re-render at midnight so "today" stays accurate.
@@ -169,25 +153,14 @@ export default function WorkoutCalendar({
   const stackedAnchor = useMemo(() => {
     if (selectedDate) {
       const d = fromDateKey(selectedDate);
-      if (
-        d.getFullYear() === cursor.getFullYear() &&
-        d.getMonth() === cursor.getMonth()
-      )
-        return d;
+      if (d.getFullYear() === cursor.getFullYear() && d.getMonth() === cursor.getMonth()) return d;
     }
     const t = new Date();
-    if (
-      t.getFullYear() === cursor.getFullYear() &&
-      t.getMonth() === cursor.getMonth()
-    )
-      return t;
+    if (t.getFullYear() === cursor.getFullYear() && t.getMonth() === cursor.getMonth()) return t;
     return new Date(cursor.getFullYear(), cursor.getMonth(), 1);
   }, [selectedDate, cursor]);
 
-  const weekStartDate = useMemo(
-    () => startOfWeek(stackedAnchor, weekStart),
-    [stackedAnchor, weekStart]
-  );
+  const weekStartDate = useMemo(() => startOfWeek(stackedAnchor, weekStart), [stackedAnchor, weekStart]);
   const weekEndDate = useMemo(() => {
     const e = new Date(weekStartDate);
     e.setDate(e.getDate() + 6);
@@ -228,15 +201,10 @@ export default function WorkoutCalendar({
     return count;
   }, [monthDays, workouts]);
 
-  const monthWorkoutLabel =
-    monthWorkoutCount === 1
-      ? "1 workout this month"
-      : `${monthWorkoutCount} workouts this month`;
+  const monthWorkoutLabel = monthWorkoutCount === 1 ? "1 workout this month" : `${monthWorkoutCount} workouts this month`;
 
   const today = useMemo(() => new Date(), []);
-  const isCurrentMonth =
-    cursor.getFullYear() === today.getFullYear() &&
-    cursor.getMonth() === today.getMonth();
+  const isCurrentMonth = cursor.getFullYear() === today.getFullYear() && cursor.getMonth() === today.getMonth();
 
   function jumpToToday() {
     const t = new Date();
@@ -247,9 +215,7 @@ export default function WorkoutCalendar({
     <div className="calendar">
       <header>
         <button
-          onClick={() =>
-            setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))
-          }
+          onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))}
           aria-label="Previous month"
         >
           ‹
@@ -257,26 +223,18 @@ export default function WorkoutCalendar({
 
         <div className="month-title">
           <h2>{formatMonthYear(cursor)}</h2>
-          {monthWorkoutCount > 0 && (
-            <div className="month-subtitle">{monthWorkoutLabel}</div>
-          )}
+          {monthWorkoutCount > 0 && <div className="month-subtitle">{monthWorkoutLabel}</div>}
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           {!isCurrentMonth && (
-            <button
-              onClick={jumpToToday}
-              aria-label="Jump to current month"
-              title="Jump to current month"
-            >
+            <button onClick={jumpToToday} aria-label="Jump to current month" title="Jump to current month">
               Today
             </button>
           )}
 
           <button
-            onClick={() =>
-              setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))
-            }
+            onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))}
             aria-label="Next month"
           >
             ›
@@ -300,9 +258,7 @@ export default function WorkoutCalendar({
 
               const key = toDateKey(d);
               const entries = getDayEntries(workouts, key).slice(0, 3);
-              const markers = entries
-                .map(markerType)
-                .filter(Boolean) as Array<"full" | "half">;
+              const markers = entries.map(markerType).filter(Boolean) as Array<"full" | "half">;
 
               const { first, extra, activeCount } = summarizeTitles(entries);
               const isSelected = Boolean(selectedDate && key === selectedDate);
@@ -313,9 +269,7 @@ export default function WorkoutCalendar({
               return (
                 <div
                   key={key}
-                  className={`cell ${isToday(d) ? "today" : ""} ${
-                    isSelected ? "selected" : ""
-                  }`}
+                  className={`cell ${isToday(d) ? "today" : ""} ${isSelected ? "selected" : ""}`}
                   onClick={() => onSelectDate(key)}
                   role="button"
                   tabIndex={0}
@@ -383,19 +337,12 @@ export default function WorkoutCalendar({
                   {markers.length > 0 && (
                     <div className="workout-dots" aria-hidden="true">
                       {markers.slice(0, 3).map((m, i) =>
-                        m === "half" ? (
-                          <span key={i} className="workout-half-dot" />
-                        ) : (
-                          <span key={i} className="workout-dot" />
-                        )
+                        m === "half" ? <span key={i} className="workout-half-dot" /> : <span key={i} className="workout-dot" />
                       )}
                     </div>
                   )}
 
-                  <div
-                    className="cell-date"
-                    style={{ display: "flex", gap: 6, alignItems: "center" }}
-                  >
+                  <div className="cell-date" style={{ display: "flex", gap: 6, alignItems: "center" }}>
                     <span>{d.getDate()}</span>
                     {pb && (
                       <span
@@ -429,11 +376,7 @@ export default function WorkoutCalendar({
       {stacked && (
         <div className="stacked-wrap">
           <div className="stacked-scope-toggle">
-            <button
-              type="button"
-              className="stacked-toggle-btn"
-              onClick={toggleStackedScope}
-            >
+            <button type="button" className="stacked-toggle-btn" onClick={toggleStackedScope}>
               {stackedScope === "week" ? "View full month" : "View current week"}
             </button>
           </div>
@@ -442,20 +385,14 @@ export default function WorkoutCalendar({
             {stackedDays.map((d) => {
               const key = toDateKey(d);
               const entries = getDayEntries(workouts, key).slice(0, 3);
-              const markers = entries
-                .map(markerType)
-                .filter(Boolean) as Array<"full" | "half">;
+              const markers = entries.map(markerType).filter(Boolean) as Array<"full" | "half">;
 
               const titles = entries
                 .filter(hasWorkoutContent)
                 .map((e) => String(e.title ?? "").trim())
                 .filter(Boolean);
 
-              const displayTitles = titles.length
-                ? titles
-                : entries.some((e) => Boolean(String(e.notes ?? "").trim()))
-                ? ["Notes"]
-                : [];
+              const displayTitles = titles.length ? titles : entries.some((e) => Boolean(String(e.notes ?? "").trim())) ? ["Notes"] : [];
               const titleLines = displayTitles.length ? displayTitles : ["—"];
 
               const isSelected = Boolean(selectedDate && key === selectedDate);
@@ -465,9 +402,7 @@ export default function WorkoutCalendar({
               return (
                 <div
                   key={key}
-                  className={`stacked-row ${isToday(d) ? "today" : ""} ${
-                    isSelected ? "selected" : ""
-                  }`}
+                  className={`stacked-row ${isToday(d) ? "today" : ""} ${isSelected ? "selected" : ""}`}
                   onClick={() => onSelectDate(key)}
                   role="button"
                   tabIndex={0}
@@ -475,31 +410,18 @@ export default function WorkoutCalendar({
                     if (e.key === "Enter" || e.key === " ") onSelectDate(key);
                   }}
                 >
-                  {/* ✅ DATE FIRST, icons AFTER */}
                   <div className="stacked-date">
-                    <span style={{ marginRight: 10 }}>{formatStackedDate(d)}</span>
-
                     {markers.length > 0 && (
                       <span className="workout-dots-inline" aria-hidden="true">
                         {markers.slice(0, 3).map((m, i) =>
-                          m === "half" ? (
-                            <span key={i} className="workout-half-dot" />
-                          ) : (
-                            <span key={i} className="workout-dot" />
-                          )
+                          m === "half" ? <span key={i} className="workout-half-dot" /> : <span key={i} className="workout-dot" />
                         )}
                       </span>
                     )}
 
+                    {/* ✅ stacked view keeps layout, just adds icons */}
                     {(hasPhoto || hasVideo) && (
-                      <span
-                        style={{
-                          display: "inline-flex",
-                          gap: 6,
-                          marginLeft: 8,
-                          alignItems: "center",
-                        }}
-                      >
+                      <span style={{ display: "inline-flex", gap: 6, marginRight: 8, alignItems: "center" }}>
                         {hasPhoto && (
                           <span
                             title="Photo attached"
@@ -552,7 +474,7 @@ export default function WorkoutCalendar({
                           border: "1px solid rgba(255,255,255,0.16)",
                           background: "rgba(0,0,0,0.20)",
                           lineHeight: 1.2,
-                          marginLeft: 8,
+                          marginRight: 8,
                           flex: "0 0 auto",
                         }}
                         title="Personal Best"
@@ -560,6 +482,7 @@ export default function WorkoutCalendar({
                         PB
                       </span>
                     )}
+                    {formatStackedDate(d)}
                   </div>
 
                   <div className="stacked-title">
@@ -575,11 +498,7 @@ export default function WorkoutCalendar({
           </div>
 
           <div className="stacked-scope-toggle bottom">
-            <button
-              type="button"
-              className="stacked-toggle-btn"
-              onClick={toggleStackedScope}
-            >
+            <button type="button" className="stacked-toggle-btn" onClick={toggleStackedScope}>
               {stackedScope === "week" ? "View full month" : "View current week"}
             </button>
           </div>
@@ -599,21 +518,13 @@ export default function WorkoutCalendar({
       >
         <a
           href="/privacy"
-          style={{
-            color: "var(--text)",
-            textDecoration: "underline",
-            textUnderlineOffset: 3,
-          }}
+          style={{ color: "var(--text)", textDecoration: "underline", textUnderlineOffset: 3 }}
         >
           Privacy
         </a>
         <a
           href="/terms"
-          style={{
-            color: "var(--text)",
-            textDecoration: "underline",
-            textUnderlineOffset: 3,
-          }}
+          style={{ color: "var(--text)", textDecoration: "underline", textUnderlineOffset: 3 }}
         >
           Terms
         </a>

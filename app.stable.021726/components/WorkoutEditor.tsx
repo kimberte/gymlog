@@ -11,7 +11,6 @@ import { WorkoutEntry, WorkoutMap, getDayEntries } from "../lib/storage";
 import { getSessionUser } from "../lib/backup";
 import { compressImageToWebp } from "../lib/imageCompress";
 import { shareNodeAsPngPlain } from "../lib/shareImage";
-import { publishWorkoutDay } from "../lib/communityShare";
 
 // NEW: per-workout media (image OR video)
 import {
@@ -305,7 +304,6 @@ export default function WorkoutEditor({
       }
       setWorkouts(next as any);
       onSaved?.(next as any);
-      publishWorkoutDay(date, next as any);
       toast("Workout deleted");
       onClose();
       return;
@@ -344,7 +342,6 @@ export default function WorkoutEditor({
     (next as any)[date] = day;
     setWorkouts(next as any);
     onSaved?.(next as any);
-    publishWorkoutDay(date, next as any);
   }
 
   function handleSave() {
@@ -382,7 +379,6 @@ export default function WorkoutEditor({
 
     setWorkouts(next as any);
     onSaved?.(next as any);
-    publishWorkoutDay(date, next as any);
     toast("Saved");
     onClose();
   }
@@ -417,7 +413,6 @@ export default function WorkoutEditor({
 
     setWorkouts(next as any);
     onSaved?.(next as any);
-    publishWorkoutDay(date, next as any);
     toast(nextPb ? "Marked PB" : "PB cleared");
   }
 

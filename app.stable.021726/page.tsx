@@ -320,15 +320,6 @@ export default function HomePage() {
           <h1>Gym Log</h1>
         </div>
         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-          <a
-            href="/community"
-            className="icon-btn"
-            title="Community"
-            aria-label="Open community"
-            style={{ textDecoration: "none", padding: "8px 10px" }}
-          >
-            Community
-          </a>
           <button
             className="icon-btn"
             title={

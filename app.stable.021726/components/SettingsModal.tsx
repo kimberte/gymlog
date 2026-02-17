@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { exportCSV, importCSV } from "../lib/csv";
 import { supabase } from "../lib/supabaseClient";
 import { fetchLatestBackup, formatBackupDate } from "../lib/backup";
-import { ensureProfileRow } from "../lib/communityShare";
 
 type WeekStart = "sunday" | "monday";
 
@@ -177,12 +176,10 @@ export default function SettingsModal({
         const token = data.session?.access_token ?? null;
         setSessionEmail(userEmail);
         setSessionToken(token);
-        if (userEmail) ensureProfileRow();
 
         unsub = supabase.auth.onAuthStateChange((event, newSession) => {
           setSessionEmail(newSession?.user?.email ?? null);
           setSessionToken(newSession?.access_token ?? null);
-          if (newSession?.user?.email) ensureProfileRow();
           if (event === "PASSWORD_RECOVERY") {
             setAuthMode("updatepw");
             setAuthMessage("Set a new password to finish resetting your account.");

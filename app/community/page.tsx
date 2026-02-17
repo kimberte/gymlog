@@ -9,6 +9,7 @@ type Profile = { id: string; email: string };
 type FriendRequest = {
   id: number;
   from_user: string;
+  from_email?: string;
   to_user: string;
   status: "pending" | "accepted" | "declined";
   created_at: string;
@@ -54,9 +55,31 @@ function Modal({ open, onClose, children }: { open: boolean; onClose: () => void
       onKeyDown={(e) => {
         if (e.key === "Escape") onClose();
       }}
-      style={{ zIndex: 60 }}
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 60,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 16,
+        background: "rgba(0,0,0,0.55)",
+      }}
     >
-      <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 760 }}>
+      <div
+        className="modal"
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          maxWidth: 760,
+          width: "100%",
+          maxHeight: "calc(100vh - 32px)",
+          overflow: "auto",
+          borderRadius: 14,
+          border: "1px solid rgba(255,255,255,0.12)",
+          background: "var(--panel)",
+          boxShadow: "0 20px 60px rgba(0,0,0,0.55)",
+        }}
+      >
         <div className="modal-header">
           <h3 style={{ margin: 0 }}>Workout</h3>
           <button className="close-btn" onClick={onClose} aria-label="Close">
@@ -149,7 +172,18 @@ export default function CommunityPage() {
       .eq("to_user", myId)
       .eq("status", "pending")
       .order("created_at", { ascending: false });
-    setIncoming((reqs ?? []) as any);
+
+    const incomingReqs = (reqs ?? []) as FriendRequest[];
+    // Attach sender email for display
+    const fromIds = Array.from(new Set(incomingReqs.map((r) => r.from_user).filter(Boolean)));
+    if (fromIds.length) {
+      const { data: fromProfiles } = await supabase.from("profiles").select("id,email").in("id", fromIds);
+      const map = new Map<string, string>();
+      (fromProfiles ?? []).forEach((p: any) => map.set(p.id, p.email));
+      setIncoming(incomingReqs.map((r) => ({ ...r, from_email: map.get(r.from_user) })));
+    } else {
+      setIncoming(incomingReqs);
+    }
 
     // friends list
     const { data: fs } = await supabase.from("friendships").select("friend_id").eq("user_id", myId);
@@ -535,7 +569,7 @@ export default function CommunityPage() {
                       background: "rgba(255,255,255,0.04)",
                     }}
                   >
-                    <div style={{ fontWeight: 700 }}>{r.from_user}</div>
+                    <div style={{ fontWeight: 700 }}>{r.from_email || r.from_user}</div>
                     <div style={{ display: "flex", gap: 8 }}>
                       <button className="primary" onClick={() => acceptRequest(r)}>
                         Accept

@@ -178,6 +178,31 @@ function ShareIcon({ size = 20 }: { size?: number }) {
   );
 }
 
+function PeopleIcon({ size = 20 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <path
+        d="M16 11a3 3 0 1 0-6 0 3 3 0 0 0 6 0Z"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      <path
+        d="M4 20c0-3.3 3.6-6 8-6s8 2.7 8 6"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 export default function HomePage() {
   const [workouts, setWorkouts] = useState<Record<string, any>>({});
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -320,15 +345,6 @@ export default function HomePage() {
           <h1>Gym Log</h1>
         </div>
         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-          <a
-            href="/community"
-            className="icon-btn"
-            title="Community"
-            aria-label="Open community"
-            style={{ textDecoration: "none", padding: "8px 10px" }}
-          >
-            Community
-          </a>
           <button
             className="icon-btn"
             title={
@@ -352,6 +368,17 @@ export default function HomePage() {
             onClick={() => setStacked((s) => !s)}
           >
             {stacked ? <ListIcon /> : <CalendarIcon />}
+          </button>
+
+          <button
+            className="icon-btn"
+            title="Community"
+            aria-label="Open community"
+            onClick={() => {
+              window.location.href = "/community";
+            }}
+          >
+            <PeopleIcon />
           </button>
 
           <button

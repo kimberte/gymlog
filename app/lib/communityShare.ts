@@ -1,113 +1,140 @@
 "use client";
 
 import { supabase } from "./supabaseClient";
+import { uploadWorkoutMedia } from "./workoutMedia";
 
-// Community is fully siloed away from core logging.
-// Sharing is opt-in and OFF by default.
-export const SHARE_ENABLED_KEY = "gym-log-community-share-enabled";
+const COMMUNITY_SHARE_KEY = "gym-log-community-share-enabled";
 
-export function loadShareEnabled(): boolean {
+export function isCommunityShareEnabled(): boolean {
   if (typeof window === "undefined") return false;
   try {
-    return localStorage.getItem(SHARE_ENABLED_KEY) === "1";
+    return localStorage.getItem(COMMUNITY_SHARE_KEY) === "1";
   } catch {
     return false;
   }
 }
 
+export function setCommunityShareEnabled(enabled: boolean) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(COMMUNITY_SHARE_KEY, enabled ? "1" : "0");
+  } catch {
+    // ignore
+  }
+}
+
+// Back-compat helpers (older names)
+export const loadShareEnabled = isCommunityShareEnabled;
 export function saveShareEnabled(v: boolean) {
+  setCommunityShareEnabled(v);
+}
+
+function isBlobLike(path: string) {
+  return path.startsWith("blob:") || path.startsWith("data:");
+}
+
+function pickVideoExtFromType(type: string): "mp4" | "mov" {
+  if (String(type || "").toLowerCase().includes("quicktime")) return "mov";
+  return "mp4";
+}
+
+async function ensureUser() {
+  const { data } = await supabase.auth.getSession();
+  const user = data.session?.user;
+  return user ?? null;
+}
+
+export async function deleteWorkoutDay(args: { dateKey: string }) {
+  if (!isCommunityShareEnabled()) return;
+  const user = await ensureUser();
+  if (!user) return;
+
   try {
-    localStorage.setItem(SHARE_ENABLED_KEY, v ? "1" : "0");
-  } catch {}
-}
-
-function safeEntriesForDay(day: any): any[] {
-  if (!day) return [];
-  if (Array.isArray(day?.entries)) return day.entries;
-  // legacy single-entry shape
-  return [day];
-}
-
-function deriveTitle(entries: any[]): string | null {
-  const first = entries
-    .map((e) => String(e?.title ?? "").trim())
-    .find((t) => Boolean(t));
-  return first || null;
-}
-
-function deriveMediaFlags(day: any): { has_photo: boolean; has_video: boolean } {
-  const entries = safeEntriesForDay(day);
-  // Legacy day image support
-  const hasLegacyPhoto = Boolean(day?.image?.path);
-
-  // Per-entry media support (your current model)
-  const hasPhoto =
-    hasLegacyPhoto ||
-    entries.some((e) => {
-      const m = e?.media;
-      if (m?.kind === "image" && m?.path) return true;
-      // newer arrays
-      if (Array.isArray(e?.images) && e.images.length) return true;
-      return false;
-    });
-
-  const hasVideo = entries.some((e) => {
-    const m = e?.media;
-    if (m?.kind === "video" && m?.path) return true;
-    if (Array.isArray(e?.videos) && e.videos.length) return true;
-    return false;
-  });
-
-  return { has_photo: Boolean(hasPhoto), has_video: Boolean(hasVideo) };
-}
-
-/**
- * Ensures the current user has a row in public.profiles.
- * Note: requires RLS policies allowing authed users to insert/update their own profile.
- */
-export async function ensureProfileRow() {
-  try {
-    const { data } = await supabase.auth.getUser();
-    const user = data.user;
-    const email = user?.email;
-    if (!user?.id || !email) return;
-
     await supabase
-      .from("profiles")
-      .upsert({ id: user.id, email }, { onConflict: "id" });
+      .from("workout_days")
+      .delete()
+      .eq("user_id", user.id)
+      .eq("date_key", args.dateKey);
   } catch {
-    // Ignore: community is optional.
+    // best-effort, never break core
   }
 }
 
-/**
- * Upserts the workout day snapshot used by the community feed.
- * Fully opt-in. If sharing is disabled or not signed in, it does nothing.
- */
-export async function publishWorkoutDay(dateKey: string, workouts: Record<string, any>) {
+export async function publishWorkoutDay(args: { dateKey: string; workouts: Record<string, any> }) {
+  if (!isCommunityShareEnabled()) return;
+  const user = await ensureUser();
+  if (!user) return;
+
+  const day = args.workouts?.[args.dateKey];
+  if (!day) {
+    await deleteWorkoutDay({ dateKey: args.dateKey });
+    return;
+  }
+
+  const rawEntries: any[] = Array.isArray(day?.entries) ? day.entries : [];
+
+  // Upload any blob/data media to Storage and replace paths with Storage paths
+  const entries = await Promise.all(
+    rawEntries.map(async (e: any, idx: number) => {
+      const entryId = String(e?.id || `w${idx + 1}`);
+      const media = e?.media;
+      if (!media?.path || !media?.kind) return e;
+
+      const path = String(media.path);
+      if (!isBlobLike(path)) return e; // already a storage path or external URL
+
+      try {
+        const res = await fetch(path);
+        const blob = await res.blob();
+
+        if (media.kind === "image") {
+          const storagePath = await uploadWorkoutMedia({
+            userId: user.id,
+            date: args.dateKey,
+            entryId,
+            blob,
+            kind: "image",
+            ext: "webp",
+          });
+          return { ...e, media: { ...media, path: storagePath } };
+        }
+
+        // video
+        const ext = pickVideoExtFromType(blob.type);
+        const storagePath = await uploadWorkoutMedia({
+          userId: user.id,
+          date: args.dateKey,
+          entryId,
+          blob,
+          kind: "video",
+          ext,
+        });
+        return { ...e, media: { ...media, path: storagePath } };
+      } catch {
+        // If upload fails, keep original path (may not render for friends, but don't break save)
+        return e;
+      }
+    })
+  );
+
+  const hasPhoto = entries.some((e: any) => e?.media?.kind === "image" && e?.media?.path);
+  const hasVideo = entries.some((e: any) => e?.media?.kind === "video" && e?.media?.path);
+  const title = String(entries.find((e: any) => String(e?.title || "").trim())?.title || "").trim() || null;
+
   try {
-    if (!loadShareEnabled()) return;
-    const { data } = await supabase.auth.getUser();
-    const user = data.user;
-    if (!user?.id) return;
-
-    const day = (workouts as any)?.[dateKey];
-    const entries = safeEntriesForDay(day);
-    const title = deriveTitle(entries);
-    const flags = deriveMediaFlags(day);
-
     await supabase.from("workout_days").upsert(
       {
         user_id: user.id,
-        date_key: dateKey,
+        date_key: args.dateKey,
         title,
         entries,
-        ...flags,
+        has_photo: Boolean(hasPhoto),
+        has_video: Boolean(hasVideo),
         updated_at: new Date().toISOString(),
       },
       { onConflict: "user_id,date_key" }
     );
   } catch {
-    // Ignore: core logging must never break because of community.
+    // best-effort
   }
 }

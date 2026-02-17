@@ -10,6 +10,7 @@ import {
 import { WorkoutEntry, WorkoutMap, getDayEntries } from "../lib/storage";
 import { getSessionUser } from "../lib/backup";
 import { compressImageToWebp } from "../lib/imageCompress";
+import { shareNodeAsPngPlain } from "../lib/shareImage";
 
 // NEW: per-workout media (image OR video)
 import {
@@ -157,6 +158,13 @@ export default function WorkoutEditor({
   const notesRef = useRef<HTMLTextAreaElement | null>(null);
 
   const editorContentRef = useRef<HTMLDivElement | null>(null);
+
+  // Share workout (vertical card)
+  const shareCardRef = useRef<HTMLDivElement | null>(null);
+  const [shareBusy, setShareBusy] = useState(false);
+  const [sharePosterUrl, setSharePosterUrl] = useState<string | null>(null);
+  // Keep the share card invisible during normal use (prevents brand-color "bleed" behind modal)
+  const [isCapturingShare, setIsCapturingShare] = useState(false);
 
   // Keyboard-safe bottom padding (mobile)
   const [keyboardPad, setKeyboardPad] = useState(0);
@@ -408,7 +416,111 @@ export default function WorkoutEditor({
     toast(nextPb ? "Marked PB" : "PB cleared");
   }
 
-  async function handlePickFile(file: File) {
+  
+  async function captureVideoPoster(url: string): Promise<string | null> {
+    try {
+      const v = document.createElement("video");
+      // Attempt to keep canvas untainted for signed URLs
+      (v as any).crossOrigin = "anonymous";
+      v.muted = true;
+      v.playsInline = true;
+      v.preload = "auto";
+      v.src = url;
+
+      await new Promise<void>((resolve, reject) => {
+        const ok = () => resolve();
+        const bad = () => reject(new Error("Failed to load video"));
+        v.addEventListener("loadeddata", ok, { once: true });
+        v.addEventListener("error", bad, { once: true });
+      });
+
+      // Seek very early to get first frame
+      const seekTo = Math.min(0.08, Math.max(0, (v.duration || 0) * 0.01));
+      try {
+        v.currentTime = seekTo;
+        await new Promise<void>((resolve) => {
+          v.addEventListener("seeked", () => resolve(), { once: true });
+        });
+      } catch {
+        // ignore; some browsers don't like seeking before metadata fully ready
+      }
+
+      const w = v.videoWidth || 0;
+      const h = v.videoHeight || 0;
+      if (!w || !h) return null;
+
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return null;
+
+      ctx.drawImage(v, 0, 0, w, h);
+
+      // JPEG is smaller; PNG is fine too. Use JPEG for video frames.
+      return canvas.toDataURL("image/jpeg", 0.92);
+    } catch {
+      return null;
+    }
+  }
+
+  async function ensureSharePoster() {
+    const media = (active as any)?.media as WorkoutMediaMeta;
+    if (!media?.path || !mediaUrl) {
+      setSharePosterUrl(null);
+      return;
+    }
+    if (media.kind === "image") {
+      setSharePosterUrl(mediaUrl);
+      return;
+    }
+    // video -> poster frame
+    const poster = await captureVideoPoster(mediaUrl);
+    setSharePosterUrl(poster);
+  }
+
+  async function handleShareWorkout() {
+    if (shareBusy) return;
+    try {
+      setShareBusy(true);
+
+      // Make share card visible just for capture (html-to-image needs it rendered)
+      setIsCapturingShare(true);
+      await new Promise<void>((r) => requestAnimationFrame(() => r()));
+
+      // Make sure we have poster ready (video -> frame)
+      await ensureSharePoster();
+
+      // Wait a couple ticks for DOM to paint poster/styles
+      await new Promise<void>((r) => requestAnimationFrame(() => r()));
+      await new Promise((r) => setTimeout(r, 60));
+
+      const node = shareCardRef.current;
+      if (!node) {
+        toast("Nothing to share");
+        return;
+      }
+
+      const dateLabel = formatDisplayDate(date);
+      const filename = `gym-log-workout-${date}.png`;
+
+      await shareNodeAsPngPlain({
+        node,
+        filename,
+        title: "Gym Log",
+        text: `${dateLabel}`,
+      });
+
+      toast("Shared");
+    } catch {
+      toast("Share failed");
+    } finally {
+      setShareBusy(false);
+      setIsCapturingShare(false);
+    }
+  }
+
+async function handlePickFile(file: File) {
     if (!sessionUserId) {
       toast("Sign in to upload");
       return;
@@ -1065,6 +1177,153 @@ export default function WorkoutEditor({
 
         </div>
 
+        {/* Offscreen share card (1080x1920) */}
+        <div
+          ref={shareCardRef}
+          aria-hidden="true"
+          style={{
+            // Keep it in-layout (html-to-image can fail if it's far offscreen)
+            position: "fixed",
+            top: 0,
+            left: 0,
+            zIndex: -1,
+            pointerEvents: "none",
+            opacity: isCapturingShare ? 1 : 0,
+            width: 1080,
+            height: 1920,
+            background: "var(--accent)",
+            color: "#fff",
+            overflow: "hidden",
+            borderRadius: 0,
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          {/* Media top half */}
+          <div
+            style={{
+              height: "50%",
+              width: "100%",
+              background: "rgba(0,0,0,0.18)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              position: "relative",
+            }}
+          >
+            {sharePosterUrl ? (
+              <img
+                src={sharePosterUrl}
+                alt=""
+                crossOrigin="anonymous"
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+            ) : (
+              <div
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  opacity: 0.9,
+                  fontSize: 44,
+                  fontWeight: 700,
+                }}
+              >
+                Gym Log
+              </div>
+            )}
+
+            {/* subtle fade for readability */}
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                background:
+                  "linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.25) 70%, rgba(0,0,0,0.45) 100%)",
+                pointerEvents: "none",
+              }}
+            />
+          </div>
+
+          {/* Overlay content */}
+          <div
+            style={{
+              height: "50%",
+              padding: "70px 72px",
+              display: "flex",
+              flexDirection: "column",
+              gap: 26,
+            }}
+          >
+            {/* Logo + Date */}
+            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+              <img
+                src="/icons/gym-app-logo-color-40x40.png"
+                alt="Gym Log"
+                width={46}
+                height={46}
+                style={{ display: "block" }}
+              />
+              <div style={{ fontSize: 28, fontWeight: 600, opacity: 0.95 }}>
+                {formatDisplayDate(date)}
+              </div>
+            </div>
+
+            {/* Workout name */}
+            <div
+              style={{
+                fontSize: 56,
+                fontWeight: 700,
+                lineHeight: 1.08,
+                letterSpacing: -0.5,
+              }}
+            >
+              {String(active?.title ?? "").trim() || "Workout"}
+            </div>
+
+            {/* Workout description (clamped) */}
+            <div
+              style={{
+                fontSize: 30,
+                lineHeight: 1.35,
+                opacity: 0.92,
+                display: "-webkit-box",
+                WebkitLineClamp: 7,
+                WebkitBoxOrient: "vertical" as any,
+                overflow: "hidden",
+                whiteSpace: "pre-wrap",
+              }}
+            >
+              {String(active?.notes ?? "").trim() || "—"}
+            </div>
+
+            <div style={{ marginTop: "auto" }}>
+              <div style={{ fontSize: 26, opacity: 0.7, fontWeight: 500 }}>
+                Find My Workout On
+              </div>
+              <div
+                style={{
+                  fontSize: 74,
+                  fontWeight: 800,
+                  letterSpacing: -0.5,
+                  fontFamily: '"Playfair Display", serif',
+                  color: "var(--accent)",
+                  lineHeight: 1,
+                  marginTop: 6,
+                }}
+              >
+                Gym Log
+              </div>
+              <div style={{ fontSize: 26, opacity: 0.75, fontWeight: 600, marginTop: 10 }}>
+                gymlogapp.com
+              </div>
+            </div>
+          </div>
+        </div>
+
+
         <div className="editor-actions">
           <button
             onClick={togglePb}
@@ -1082,6 +1341,17 @@ export default function WorkoutEditor({
             }}
           >
             PB
+          </button>
+
+          <button
+            onClick={handleShareWorkout}
+            className="secondary"
+            disabled={shareBusy}
+            title="Share this workout"
+            aria-label="Share this workout"
+            style={{ flex: "0 0 auto", opacity: shareBusy ? 0.6 : 1 }}
+          >
+            {shareBusy ? "Sharing…" : "Share"}
           </button>
 
           <button onClick={copyToClipboard} className="secondary">

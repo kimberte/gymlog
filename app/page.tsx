@@ -31,58 +31,24 @@ function saveWeekStart(v: WeekStart) {
 
 function CalendarIcon({ size = 20 }: { size?: number }) {
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-    >
-      <path
-        d="M7 2v3M17 2v3"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-      <path
-        d="M4.5 9h15"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M7 2v3M17 2v3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M4.5 9h15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
       <path
         d="M6.5 5h11A2.5 2.5 0 0 1 20 7.5v12A2.5 2.5 0 0 1 17.5 22h-11A2.5 2.5 0 0 1 4 19.5v-12A2.5 2.5 0 0 1 6.5 5Z"
         stroke="currentColor"
         strokeWidth="2"
         strokeLinejoin="round"
       />
-      <path
-        d="M7.5 12h3M13.5 12h3M7.5 16h3M13.5 16h3"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
+      <path d="M7.5 12h3M13.5 12h3M7.5 16h3M13.5 16h3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </svg>
   );
 }
 
 function ListIcon({ size = 20 }: { size?: number }) {
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-    >
-      <path
-        d="M7 7h14M7 12h14M7 17h14"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M7 7h14M7 12h14M7 17h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
       <circle cx="4.5" cy="7" r="1.2" fill="currentColor" />
       <circle cx="4.5" cy="12" r="1.2" fill="currentColor" />
       <circle cx="4.5" cy="17" r="1.2" fill="currentColor" />
@@ -91,16 +57,8 @@ function ListIcon({ size = 20 }: { size?: number }) {
 }
 
 function SettingsIcon({ size = 20 }: { size?: number }) {
-  // clean flat "nut/cog" icon
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-    >
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       <path
         d="M12 2.75
            13.6 4.35
@@ -135,70 +93,26 @@ function SettingsIcon({ size = 20 }: { size?: number }) {
         strokeWidth="2"
         strokeLinejoin="round"
       />
-      <path
-        d="M12 15.4a3.4 3.4 0 1 0 0-6.8 3.4 3.4 0 0 0 0 6.8Z"
-        stroke="currentColor"
-        strokeWidth="2"
-      />
+      <path d="M12 15.4a3.4 3.4 0 1 0 0-6.8 3.4 3.4 0 0 0 0 6.8Z" stroke="currentColor" strokeWidth="2" />
     </svg>
   );
 }
 
 function ShareIcon({ size = 20 }: { size?: number }) {
-  // simple "share" arrow icon
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-    >
-      <path
-        d="M12 3v10"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-      <path
-        d="M8 7l4-4 4 4"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M12 3v10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M8 7l4-4 4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </svg>
   );
 }
 
 function PeopleIcon({ size = 20 }: { size?: number }) {
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-    >
-      <path
-        d="M16 11a3 3 0 1 0-6 0 3 3 0 0 0 6 0Z"
-        stroke="currentColor"
-        strokeWidth="2"
-      />
-      <path
-        d="M4 20c0-3.3 3.6-6 8-6s8 2.7 8 6"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M16 11a3 3 0 1 0-6 0 3 3 0 0 0 6 0Z" stroke="currentColor" strokeWidth="2" />
+      <path d="M4 20c0-3.3 3.6-6 8-6s8 2.7 8 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </svg>
   );
 }
@@ -212,21 +126,17 @@ export default function HomePage() {
 
   const calendarCaptureRef = useRef<HTMLDivElement | null>(null);
 
-  // ✅ week start (non-pro)
   const [weekStart, setWeekStart] = useState<WeekStart>("sunday");
 
-  // ---- backup state ----
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [lastBackupAt, setLastBackupAt] = useState<string | null>(null);
 
   const lastBackupHashRef = useRef<string>("");
   const backupBusyRef = useRef(false);
 
-  // ✅ prevents "wipe workouts on first mount"
   const didLoadRef = useRef(false);
 
   useEffect(() => {
-    // LOAD ONCE
     const loaded = loadWorkouts();
     setWorkouts(loaded);
 
@@ -237,13 +147,11 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    // ✅ do not save until initial load happened
     if (!didLoadRef.current) return;
     saveWorkouts(workouts);
   }, [workouts]);
 
   useEffect(() => {
-    // ✅ persist weekStart
     if (!didLoadRef.current) return;
     saveWeekStart(weekStart);
   }, [weekStart]);
@@ -253,11 +161,8 @@ export default function HomePage() {
     window.setTimeout(() => setToast(null), 1400);
   }
 
-
-  // Track auth state (for backup gating)
   useEffect(() => {
-    let unsub: { data?: { subscription?: { unsubscribe: () => void } } } | null =
-      null;
+    let unsub: { data?: { subscription?: { unsubscribe: () => void } } } | null = null;
 
     async function init() {
       const { data } = await supabase.auth.getSession();
@@ -278,7 +183,6 @@ export default function HomePage() {
   }, []);
 
   async function requestBackup(nextWorkouts: Record<string, any>) {
-    // 🔒 Only back up on explicit saves (not every keystroke)
     if (!isSignedIn) return;
     if (!didLoadRef.current) return;
     if (backupBusyRef.current) return;
@@ -292,7 +196,7 @@ export default function HomePage() {
       lastBackupHashRef.current = hash;
       setLastBackupAt(updatedAt);
     } catch {
-      // keep quiet
+      // quiet
     } finally {
       backupBusyRef.current = false;
     }
@@ -344,16 +248,11 @@ export default function HomePage() {
           />
           <h1>Gym Log</h1>
         </div>
+
         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
           <button
             className="icon-btn"
-            title={
-              selectedDate
-                ? "Close the editor to share"
-                : showSettings
-                  ? "Close settings to share"
-                  : "Share"
-            }
+            title={selectedDate ? "Close the editor to share" : showSettings ? "Close settings to share" : "Share"}
             aria-label="Share calendar"
             onClick={onShareCalendar}
             disabled={Boolean(selectedDate) || Boolean(showSettings)}
@@ -361,15 +260,11 @@ export default function HomePage() {
             <ShareIcon />
           </button>
 
-          <button
-            className="icon-btn"
-            title="Toggle view"
-            aria-label="Toggle view"
-            onClick={() => setStacked((s) => !s)}
-          >
+          <button className="icon-btn" title="Toggle view" aria-label="Toggle view" onClick={() => setStacked((s) => !s)}>
             {stacked ? <ListIcon /> : <CalendarIcon />}
           </button>
 
+          {/* ✅ Community icon stands out */}
           <button
             className="icon-btn"
             title="Community"
@@ -377,16 +272,17 @@ export default function HomePage() {
             onClick={() => {
               window.location.href = "/community";
             }}
+            style={{
+              color: "var(--accent)",
+              background: "rgba(255,255,255,0.06)",
+              borderColor: "rgba(255,255,255,0.18)",
+              boxShadow: "0 0 0 1px rgba(0,0,0,0.10) inset",
+            }}
           >
             <PeopleIcon />
           </button>
 
-          <button
-            className="icon-btn"
-            title="Settings"
-            aria-label="Open settings"
-            onClick={() => setShowSettings(true)}
-          >
+          <button className="icon-btn" title="Settings" aria-label="Open settings" onClick={() => setShowSettings(true)}>
             <SettingsIcon />
           </button>
         </div>

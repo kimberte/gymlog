@@ -51,10 +51,13 @@ function formatStackDate(dateKey: string) {
 }
 
 function clampEmail(email: string) {
-  // mobile-friendly
   if (email.length <= 34) return email;
   return `${email.slice(0, 16)}…${email.slice(-14)}`;
 }
+
+const BRAND_GREY_CARD = "rgba(255,255,255,0.06)";
+const BRAND_GREY_CARD_STRONG = "rgba(255,255,255,0.08)";
+const BORDER = "1px solid rgba(255,255,255,0.12)";
 
 export default function CommunityPage() {
   const [tab, setTab] = useState<Tab>("feed");
@@ -115,7 +118,7 @@ export default function CommunityPage() {
     };
   }, []);
 
-  // Ensure profiles row exists (new table)
+  // Ensure profiles row exists
   useEffect(() => {
     (async () => {
       if (!sessionUserId || !sessionEmail) return;
@@ -135,11 +138,7 @@ export default function CommunityPage() {
   async function loadFriendsAndRequests() {
     if (!sessionUserId) return;
     try {
-      // Friends
-      const { data: fr, error: frErr } = await supabase
-        .from("friendships")
-        .select("friend_id")
-        .eq("user_id", sessionUserId);
+      const { data: fr, error: frErr } = await supabase.from("friendships").select("friend_id").eq("user_id", sessionUserId);
       if (frErr) throw frErr;
       const ids = (fr ?? []).map((r: any) => String(r.friend_id));
 
@@ -150,7 +149,6 @@ export default function CommunityPage() {
         setFriends([]);
       }
 
-      // Requests incoming/outgoing
       const { data: reqs, error: rErr } = await supabase
         .from("friend_requests")
         .select("id,from_user,to_user,status,created_at")
@@ -161,13 +159,7 @@ export default function CommunityPage() {
       const inReq = (reqs ?? []).filter((r: any) => r.to_user === sessionUserId);
       const outReq = (reqs ?? []).filter((r: any) => r.from_user === sessionUserId);
 
-      // Map IDs -> emails
-      const needIds = Array.from(
-        new Set([
-          ...inReq.map((r: any) => String(r.from_user)),
-          ...outReq.map((r: any) => String(r.to_user)),
-        ])
-      );
+      const needIds = Array.from(new Set([...inReq.map((r: any) => String(r.from_user)), ...outReq.map((r: any) => String(r.to_user))]));
       let map: Record<string, string> = {};
       if (needIds.length) {
         const { data: ps } = await supabase.from("profiles").select("id,email").in("id", needIds);
@@ -206,20 +198,19 @@ export default function CommunityPage() {
 
       if (error) throw error;
 
-      // attach emails
       const need = Array.from(new Set((data ?? []).map((r: any) => String(r.user_id))));
       let map: Record<string, string> = {};
       if (need.length) {
         const { data: ps } = await supabase.from("profiles").select("id,email").in("id", need);
         for (const p of ps ?? []) map[String((p as any).id)] = String((p as any).email);
       }
+
       setFeed((data ?? []).map((r: any) => ({ ...(r as any), email: map[String(r.user_id)] })));
     } catch {
       // ignore
     }
   }
 
-  // load on tab switch
   useEffect(() => {
     if (!sessionUserId) return;
     void loadFriendsAndRequests();
@@ -269,20 +260,17 @@ export default function CommunityPage() {
       setSearchEmail("");
       await loadFriendsAndRequests();
     } catch (e: any) {
-      const msg = e?.message || "Request failed";
-      showToast(msg);
+      showToast(e?.message || "Request failed");
     }
   }
 
   async function acceptRequest(reqId: number, fromUser: string) {
     if (!sessionUserId) return;
     try {
-      // Prefer RPC if you added it; otherwise best-effort fallback.
       const rpc = await supabase.rpc("accept_friend_request", { req_id: reqId });
       if ((rpc as any)?.error) throw (rpc as any).error;
       showToast("Friend added");
     } catch {
-      // fallback: mark accepted + insert my direction (other direction requires RPC)
       await supabase.from("friend_requests").update({ status: "accepted" }).eq("id", reqId);
       await supabase.from("friendships").insert({ user_id: sessionUserId, friend_id: fromUser });
       showToast("Accepted (ask friend to add you back if needed)");
@@ -368,14 +356,35 @@ export default function CommunityPage() {
   return (
     <div style={{ padding: 14, overflowX: "hidden" }}>
       <div style={{ maxWidth: 980, margin: "0 auto" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-          <div>
-            <h1 style={{ margin: 0, fontSize: 22 }}>Community</h1>
-            <div style={{ opacity: 0.75, fontSize: 13, marginTop: 2 }}>
-              Friends only • Today ± 7 days
-            </div>
-          </div>
+        {/* ✅ Back to calendar + title */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 10 }}>
+          <a
+            href="/"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              textDecoration: "none",
+              color: "var(--text)",
+              opacity: 0.9,
+              padding: "8px 10px",
+              borderRadius: 12,
+              border: BORDER,
+              background: BRAND_GREY_CARD,
+              flex: "0 0 auto",
+            }}
+          >
+            <span aria-hidden="true">←</span> Calendar
+          </a>
 
+          <div style={{ textAlign: "right" }}>
+            <h1 style={{ margin: 0, fontSize: 22 }}>Community</h1>
+            <div style={{ opacity: 0.75, fontSize: 13, marginTop: 2 }}>Friends only • Today ± 7 days</div>
+          </div>
+        </div>
+
+        {/* Share toggle */}
+        <div style={{ display: "flex", justifyContent: "flex-end" }}>
           <label
             style={{
               display: "inline-flex",
@@ -383,37 +392,36 @@ export default function CommunityPage() {
               gap: 10,
               padding: "10px 12px",
               borderRadius: 14,
-              background: "rgba(255,255,255,0.06)",
-              border: "1px solid rgba(255,255,255,0.10)",
+              background: BRAND_GREY_CARD,
+              border: BORDER,
               flex: "0 0 auto",
             }}
             title="Share your saved workouts to friends"
           >
-            <span style={{ fontSize: 13, opacity: 0.9 }}>Share my workouts</span>
-            <input
-              type="checkbox"
-              checked={shareEnabled}
-              onChange={(e) => setShareEnabled(e.target.checked)}
-            />
+            <span style={{ fontSize: 13, opacity: 0.95 }}>Share my workouts</span>
+            <input type="checkbox" checked={shareEnabled} onChange={(e) => setShareEnabled(e.target.checked)} />
           </label>
         </div>
 
+        {/* Tabs */}
         <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
-          {([
-            ["feed", "Feed"],
-            ["friends", "Friends"],
-            ["requests", "Requests"],
-          ] as Array<[Tab, string]>).map(([k, label]) => (
+          {(
+            [
+              ["feed", "Feed"],
+              ["friends", "Friends"],
+              ["requests", "Requests"],
+            ] as Array<[Tab, string]>
+          ).map(([k, label]) => (
             <button
               key={k}
               onClick={() => setTab(k)}
               style={{
                 padding: "10px 12px",
                 borderRadius: 12,
-                border: "1px solid rgba(255,255,255,0.12)",
-                background: tab === k ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0.04)",
+                border: BORDER,
+                background: tab === k ? BRAND_GREY_CARD_STRONG : BRAND_GREY_CARD,
                 color: "var(--text)",
-                fontWeight: 650,
+                fontWeight: 750,
               }}
             >
               {label}
@@ -421,16 +429,10 @@ export default function CommunityPage() {
           ))}
         </div>
 
+        {/* FRIENDS */}
         {tab === "friends" && (
           <div style={{ marginTop: 14 }}>
-            <div
-              style={{
-                border: "1px solid rgba(255,255,255,0.10)",
-                background: "rgba(255,255,255,0.04)",
-                borderRadius: 16,
-                padding: 12,
-              }}
-            >
+            <div style={{ border: BORDER, background: BRAND_GREY_CARD, borderRadius: 16, padding: 12 }}>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
                 <input
                   value={searchEmail}
@@ -441,8 +443,8 @@ export default function CommunityPage() {
                     minWidth: 0,
                     padding: "10px 12px",
                     borderRadius: 12,
-                    border: "1px solid rgba(255,255,255,0.12)",
-                    background: "rgba(0,0,0,0.18)",
+                    border: BORDER,
+                    background: "rgba(0,0,0,0.12)",
                     color: "var(--text)",
                   }}
                 />
@@ -452,10 +454,10 @@ export default function CommunityPage() {
                   style={{
                     padding: "10px 12px",
                     borderRadius: 12,
-                    border: "1px solid rgba(255,255,255,0.12)",
-                    background: "rgba(255,255,255,0.06)",
+                    border: BORDER,
+                    background: BRAND_GREY_CARD_STRONG,
                     color: "var(--text)",
-                    fontWeight: 650,
+                    fontWeight: 750,
                     flex: "0 0 auto",
                   }}
                 >
@@ -469,8 +471,8 @@ export default function CommunityPage() {
                     marginTop: 10,
                     padding: 12,
                     borderRadius: 14,
-                    border: "1px solid rgba(255,255,255,0.10)",
-                    background: "rgba(255,255,255,0.03)",
+                    border: BORDER,
+                    background: BRAND_GREY_CARD,
                     display: "flex",
                     gap: 10,
                     alignItems: "center",
@@ -478,20 +480,18 @@ export default function CommunityPage() {
                   }}
                 >
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis" }}>
-                      {searchResult.email}
-                    </div>
-                    <div style={{ opacity: 0.75, fontSize: 13 }}>Send friend request?</div>
+                    <div style={{ fontWeight: 800, overflow: "hidden", textOverflow: "ellipsis" }}>{searchResult.email}</div>
+                    <div style={{ opacity: 0.8, fontSize: 13 }}>Send friend request?</div>
                   </div>
                   <button
                     onClick={sendRequest}
                     style={{
                       padding: "10px 12px",
                       borderRadius: 12,
-                      border: "1px solid rgba(255,255,255,0.12)",
+                      border: "1px solid rgba(0,0,0,0.10)",
                       background: "var(--accent)",
                       color: "#111",
-                      fontWeight: 800,
+                      fontWeight: 900,
                       flex: "0 0 auto",
                     }}
                   >
@@ -502,9 +502,9 @@ export default function CommunityPage() {
             </div>
 
             <div style={{ marginTop: 14 }}>
-              <h2 style={{ margin: "0 0 8px", fontSize: 16, opacity: 0.9 }}>Your Friends</h2>
+              <h2 style={{ margin: "0 0 8px", fontSize: 16, opacity: 0.95 }}>Your Friends</h2>
               {friends.length === 0 ? (
-                <div style={{ opacity: 0.75, fontSize: 14 }}>No friends yet.</div>
+                <div style={{ opacity: 0.8, fontSize: 14 }}>No friends yet.</div>
               ) : (
                 <div style={{ display: "grid", gap: 8 }}>
                   {friends
@@ -520,22 +520,22 @@ export default function CommunityPage() {
                           justifyContent: "space-between",
                           padding: 12,
                           borderRadius: 16,
-                          border: "1px solid rgba(255,255,255,0.10)",
-                          background: "rgba(255,255,255,0.04)",
+                          border: BORDER,
+                          background: BRAND_GREY_CARD,
                         }}
                       >
                         <div style={{ minWidth: 0 }}>
-                          <div style={{ fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis" }}>{f.email}</div>
+                          <div style={{ fontWeight: 800, overflow: "hidden", textOverflow: "ellipsis" }}>{f.email}</div>
                         </div>
                         <button
                           onClick={() => removeFriend(f.id)}
                           style={{
                             padding: "9px 12px",
                             borderRadius: 12,
-                            border: "1px solid rgba(255,255,255,0.12)",
-                            background: "rgba(255,255,255,0.06)",
+                            border: BORDER,
+                            background: BRAND_GREY_CARD_STRONG,
                             color: "var(--text)",
-                            fontWeight: 650,
+                            fontWeight: 750,
                             flex: "0 0 auto",
                           }}
                         >
@@ -549,34 +549,21 @@ export default function CommunityPage() {
           </div>
         )}
 
+        {/* REQUESTS */}
         {tab === "requests" && (
           <div style={{ marginTop: 14 }}>
-            <h2 style={{ margin: "0 0 8px", fontSize: 16, opacity: 0.9 }}>Incoming Requests</h2>
+            <h2 style={{ margin: "0 0 8px", fontSize: 16, opacity: 0.95 }}>Incoming Requests</h2>
             {incoming.filter((r) => r.status === "pending").length === 0 ? (
-              <div style={{ opacity: 0.75, fontSize: 14 }}>No requests.</div>
+              <div style={{ opacity: 0.8, fontSize: 14 }}>No requests.</div>
             ) : (
               <div style={{ display: "grid", gap: 8 }}>
                 {incoming
                   .filter((r) => r.status === "pending")
                   .map((r) => (
-                    <div
-                      key={r.id}
-                      style={{
-                        display: "flex",
-                        gap: 10,
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        padding: 12,
-                        borderRadius: 16,
-                        border: "1px solid rgba(255,255,255,0.10)",
-                        background: "rgba(255,255,255,0.04)",
-                      }}
-                    >
+                    <div key={r.id} style={{ display: "flex", gap: 10, alignItems: "center", justifyContent: "space-between", padding: 12, borderRadius: 16, border: BORDER, background: BRAND_GREY_CARD }}>
                       <div style={{ minWidth: 0 }}>
-                        <div style={{ fontWeight: 750, overflow: "hidden", textOverflow: "ellipsis" }}>
-                          {r.from_email ?? r.from_user}
-                        </div>
-                        <div style={{ opacity: 0.75, fontSize: 13 }}>Wants to add you</div>
+                        <div style={{ fontWeight: 850, overflow: "hidden", textOverflow: "ellipsis" }}>{r.from_email ?? r.from_user}</div>
+                        <div style={{ opacity: 0.8, fontSize: 13 }}>Wants to add you</div>
                       </div>
                       <div style={{ display: "flex", gap: 8, flex: "0 0 auto" }}>
                         <button
@@ -584,10 +571,10 @@ export default function CommunityPage() {
                           style={{
                             padding: "9px 12px",
                             borderRadius: 12,
-                            border: "1px solid rgba(255,255,255,0.12)",
+                            border: "1px solid rgba(0,0,0,0.10)",
                             background: "var(--accent)",
                             color: "#111",
-                            fontWeight: 800,
+                            fontWeight: 900,
                           }}
                         >
                           Accept
@@ -597,10 +584,10 @@ export default function CommunityPage() {
                           style={{
                             padding: "9px 12px",
                             borderRadius: 12,
-                            border: "1px solid rgba(255,255,255,0.12)",
-                            background: "rgba(255,255,255,0.06)",
+                            border: BORDER,
+                            background: BRAND_GREY_CARD_STRONG,
                             color: "var(--text)",
-                            fontWeight: 650,
+                            fontWeight: 750,
                           }}
                         >
                           Decline
@@ -611,27 +598,17 @@ export default function CommunityPage() {
               </div>
             )}
 
-            <h2 style={{ margin: "18px 0 8px", fontSize: 16, opacity: 0.9 }}>Sent Requests</h2>
+            <h2 style={{ margin: "18px 0 8px", fontSize: 16, opacity: 0.95 }}>Sent Requests</h2>
             {outgoing.filter((r) => r.status === "pending").length === 0 ? (
-              <div style={{ opacity: 0.75, fontSize: 14 }}>No sent requests.</div>
+              <div style={{ opacity: 0.8, fontSize: 14 }}>No sent requests.</div>
             ) : (
               <div style={{ display: "grid", gap: 8 }}>
                 {outgoing
                   .filter((r) => r.status === "pending")
                   .map((r) => (
-                    <div
-                      key={r.id}
-                      style={{
-                        padding: 12,
-                        borderRadius: 16,
-                        border: "1px solid rgba(255,255,255,0.10)",
-                        background: "rgba(255,255,255,0.04)",
-                      }}
-                    >
-                      <div style={{ fontWeight: 750, overflow: "hidden", textOverflow: "ellipsis" }}>
-                        {r.to_email ?? r.to_user}
-                      </div>
-                      <div style={{ opacity: 0.75, fontSize: 13 }}>Pending</div>
+                    <div key={r.id} style={{ padding: 12, borderRadius: 16, border: BORDER, background: BRAND_GREY_CARD }}>
+                      <div style={{ fontWeight: 850, overflow: "hidden", textOverflow: "ellipsis" }}>{r.to_email ?? r.to_user}</div>
+                      <div style={{ opacity: 0.8, fontSize: 13 }}>Pending</div>
                     </div>
                   ))}
               </div>
@@ -639,19 +616,20 @@ export default function CommunityPage() {
           </div>
         )}
 
+        {/* FEED */}
         {tab === "feed" && (
           <div style={{ marginTop: 14 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-              <h2 style={{ margin: 0, fontSize: 16, opacity: 0.9 }}>Today</h2>
+              <h2 style={{ margin: 0, fontSize: 16, opacity: 0.95 }}>Today</h2>
               <button
                 onClick={loadFeed}
                 style={{
                   padding: "9px 12px",
                   borderRadius: 12,
-                  border: "1px solid rgba(255,255,255,0.12)",
-                  background: "rgba(255,255,255,0.06)",
+                  border: BORDER,
+                  background: BRAND_GREY_CARD_STRONG,
                   color: "var(--text)",
-                  fontWeight: 650,
+                  fontWeight: 750,
                 }}
               >
                 Refresh
@@ -660,54 +638,30 @@ export default function CommunityPage() {
 
             <div style={{ marginTop: 8, display: "grid", gap: 8 }}>
               {(feedByDate[todayKey] ?? []).length === 0 ? (
-                <div style={{ opacity: 0.75, fontSize: 14 }}>No workouts shared today.</div>
+                <div style={{ opacity: 0.8, fontSize: 14 }}>No workouts shared today.</div>
               ) : (
-                (feedByDate[todayKey] ?? []).map((it) => (
-                  <FeedRow key={`${it.user_id}-${it.date_key}`} item={it} onOpen={() => setOpenItem(it)} />
-                ))
+                (feedByDate[todayKey] ?? []).map((it) => <FeedRow key={`${it.user_id}-${it.date_key}`} item={it} onOpen={() => setOpenItem(it)} />)
               )}
             </div>
 
-            <SectionToggle
-              title="Last 7 Days"
-              open={showPast}
-              onToggle={() => setShowPast((v) => !v)}
-            />
+            <SectionToggle title="Last 7 Days" open={showPast} onToggle={() => setShowPast((v) => !v)} />
             {showPast && (
               <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
                 {pastKeys.length === 0 ? (
-                  <div style={{ opacity: 0.75, fontSize: 14 }}>No workouts in the last 7 days.</div>
+                  <div style={{ opacity: 0.8, fontSize: 14 }}>No workouts in the last 7 days.</div>
                 ) : (
-                  pastKeys.map((k) => (
-                    <DateGroup
-                      key={k}
-                      label={formatStackDate(k)}
-                      items={feedByDate[k] ?? []}
-                      onOpen={(it) => setOpenItem(it)}
-                    />
-                  ))
+                  pastKeys.map((k) => <DateGroup key={k} label={formatStackDate(k)} items={feedByDate[k] ?? []} onOpen={(it) => setOpenItem(it)} />)
                 )}
               </div>
             )}
 
-            <SectionToggle
-              title="Next 7 Days"
-              open={showFuture}
-              onToggle={() => setShowFuture((v) => !v)}
-            />
+            <SectionToggle title="Next 7 Days" open={showFuture} onToggle={() => setShowFuture((v) => !v)} />
             {showFuture && (
               <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
                 {futureKeys.length === 0 ? (
-                  <div style={{ opacity: 0.75, fontSize: 14 }}>No upcoming workouts.</div>
+                  <div style={{ opacity: 0.8, fontSize: 14 }}>No upcoming workouts.</div>
                 ) : (
-                  futureKeys.map((k) => (
-                    <DateGroup
-                      key={k}
-                      label={formatStackDate(k)}
-                      items={feedByDate[k] ?? []}
-                      onOpen={(it) => setOpenItem(it)}
-                    />
-                  ))
+                  futureKeys.map((k) => <DateGroup key={k} label={formatStackDate(k)} items={feedByDate[k] ?? []} onOpen={(it) => setOpenItem(it)} />)
                 )}
               </div>
             )}
@@ -715,6 +669,7 @@ export default function CommunityPage() {
         )}
       </div>
 
+      {/* MODAL */}
       {openItem && (
         <div
           role="dialog"
@@ -723,7 +678,7 @@ export default function CommunityPage() {
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(0,0,0,0.55)",
+            background: "rgba(10,12,14,0.45)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -738,14 +693,15 @@ export default function CommunityPage() {
               maxHeight: "calc(100vh - 24px)",
               overflow: "hidden",
               borderRadius: 18,
-              border: "1px solid rgba(255,255,255,0.12)",
-              background: "rgba(255,255,255,0.06)",
-              backdropFilter: "blur(10px)",
+              border: BORDER,
+              background: "#2f343f", // ✅ brand grey card
               color: "var(--text)",
               display: "flex",
               flexDirection: "column",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.35)",
             }}
           >
+            {/* Header */}
             <div
               style={{
                 padding: "14px 16px",
@@ -757,36 +713,39 @@ export default function CommunityPage() {
                 flex: "0 0 auto",
               }}
             >
-              <div style={{ fontWeight: 800 }}>Workout</div>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ opacity: 0.9, fontWeight: 750, wordBreak: "break-word" }}>
+                  {openItem.email ? clampEmail(openItem.email) : openItem.user_id} • {formatStackDate(openItem.date_key)}
+                </div>
+                <div style={{ fontSize: 22, fontWeight: 900, marginTop: 6, wordBreak: "break-word" }}>
+                  {openItem.title || "Workout"}
+                </div>
+              </div>
+
               <button
                 onClick={() => setOpenItem(null)}
                 style={{
                   width: 40,
                   height: 40,
                   borderRadius: 12,
-                  border: "1px solid rgba(255,255,255,0.14)",
-                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(0,0,0,0.10)",
+                  background: "rgba(255,255,255,0.08)",
                   color: "var(--text)",
                   fontSize: 22,
                   lineHeight: "40px",
+                  flex: "0 0 auto",
                 }}
                 aria-label="Close"
+                title="Close"
               >
                 ×
               </button>
             </div>
 
+            {/* Content */}
             <div style={{ padding: 16, overflowY: "auto" }}>
-              <div style={{ opacity: 0.85, fontWeight: 650, wordBreak: "break-word" }}>
-                {openItem.email ? clampEmail(openItem.email) : openItem.user_id} • {formatStackDate(openItem.date_key)}
-              </div>
-
-              <div style={{ fontSize: 28, fontWeight: 850, marginTop: 8, wordBreak: "break-word" }}>
-                {openItem.title || "Workout"}
-              </div>
-
-              <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
-                {(Array.isArray(openItem.entries) ? openItem.entries : []).slice(0, 3).map((e: any, idx: number) => {
+              <div style={{ marginTop: 2, display: "grid", gap: 10 }}>
+                {(Array.isArray(openItem.entries) ? openItem.entries : []).slice(0, 6).map((e: any, idx: number) => {
                   const t = String(e?.title ?? "").trim();
                   const notes = String(e?.notes ?? "").trim();
                   const m = e?.media;
@@ -801,13 +760,21 @@ export default function CommunityPage() {
                         border: "1px solid rgba(255,255,255,0.10)",
                         borderRadius: 16,
                         padding: 14,
-                        background: "rgba(0,0,0,0.18)",
+                        background: "rgba(255,255,255,0.06)",
                         overflow: "hidden",
                       }}
                     >
-                      {t && <div style={{ fontWeight: 850, fontSize: 18, marginBottom: 6, wordBreak: "break-word" }}>{t}</div>}
+                      {/* entry title (keep, but visually lighter so the modal title isn't “repeated”) */}
+                      {t && (
+                        <div style={{ fontWeight: 850, fontSize: 16, marginBottom: 6, wordBreak: "break-word" }}>
+                          {t}
+                        </div>
+                      )}
+
                       {notes && (
-                        <div style={{ whiteSpace: "pre-wrap", opacity: 0.92, wordBreak: "break-word" }}>{notes}</div>
+                        <div style={{ whiteSpace: "pre-wrap", opacity: 0.92, wordBreak: "break-word" }}>
+                          {notes}
+                        </div>
                       )}
 
                       {kind && path && (
@@ -827,8 +794,17 @@ export default function CommunityPage() {
                               />
                             )
                           ) : (
-                            <div style={{ opacity: 0.75, fontSize: 14 }}>
-                              Media is loading…
+                            <div
+                              style={{
+                                opacity: 0.85,
+                                fontSize: 13,
+                                display: "inline-flex",
+                                gap: 8,
+                                alignItems: "center",
+                              }}
+                            >
+                              <span style={{ color: "var(--accent)", fontWeight: 900 }}>●</span>
+                              Media loading…
                             </div>
                           )}
                         </div>
@@ -837,11 +813,18 @@ export default function CommunityPage() {
                   );
                 })}
               </div>
+
+              {(Array.isArray(openItem.entries) ? openItem.entries : []).length > 6 && (
+                <div style={{ marginTop: 12, opacity: 0.8, fontSize: 13 }}>
+                  Showing first 6 entries…
+                </div>
+              )}
             </div>
           </div>
         </div>
       )}
 
+      {/* Toast */}
       {toast && (
         <div
           style={{
@@ -851,12 +834,15 @@ export default function CommunityPage() {
             transform: "translateX(-50%)",
             padding: "10px 14px",
             borderRadius: 14,
-            border: "1px solid rgba(255,255,255,0.14)",
-            background: "rgba(0,0,0,0.65)",
-            backdropFilter: "blur(10px)",
+            border: BORDER,
+            background: "#2f343f",
             color: "#fff",
-            fontWeight: 700,
+            fontWeight: 800,
             zIndex: 99999,
+            maxWidth: "calc(100vw - 24px)",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
           }}
         >
           {toast}
@@ -876,17 +862,20 @@ function SectionToggle(props: { title: string; open: boolean; onToggle: () => vo
         textAlign: "left",
         padding: "12px 14px",
         borderRadius: 16,
-        border: "1px solid rgba(255,255,255,0.10)",
-        background: "rgba(255,255,255,0.04)",
+        border: "1px solid rgba(255,255,255,0.12)",
+        background: "rgba(255,255,255,0.06)",
         color: "var(--text)",
-        fontWeight: 800,
+        fontWeight: 900,
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
+        gap: 10,
       }}
     >
       <span>{props.title}</span>
-      <span style={{ opacity: 0.8 }}>{props.open ? "Hide" : "Tap to load"}</span>
+      <span style={{ opacity: 0.8, color: "var(--accent)", fontWeight: 900 }}>
+        {props.open ? "Hide" : "Tap to load"}
+      </span>
     </button>
   );
 }
@@ -898,7 +887,7 @@ function DateGroup(props: {
 }) {
   return (
     <div>
-      <div style={{ fontWeight: 850, opacity: 0.85, marginBottom: 8 }}>{props.label}</div>
+      <div style={{ fontWeight: 900, opacity: 0.9, marginBottom: 8 }}>{props.label}</div>
       <div style={{ display: "grid", gap: 8 }}>
         {props.items.map((it) => (
           <FeedRow key={`${it.user_id}-${it.date_key}-${it.updated_at}`} item={it} onOpen={() => props.onOpen(it)} />
@@ -911,6 +900,7 @@ function DateGroup(props: {
 function FeedRow(props: { item: WorkoutDayRow & { email?: string }; onOpen: () => void }) {
   const it = props.item;
   const title = it.title || "Workout";
+
   return (
     <button
       onClick={props.onOpen}
@@ -918,20 +908,53 @@ function FeedRow(props: { item: WorkoutDayRow & { email?: string }; onOpen: () =
         textAlign: "left",
         padding: 12,
         borderRadius: 16,
-        border: "1px solid rgba(255,255,255,0.10)",
-        background: "rgba(255,255,255,0.04)",
+        border: "1px solid rgba(255,255,255,0.12)",
+        background: "rgba(255,255,255,0.06)",
         color: "var(--text)",
         display: "flex",
         gap: 10,
         alignItems: "center",
         justifyContent: "space-between",
+        minWidth: 0,
       }}
     >
       <div style={{ minWidth: 0, flex: "1 1 auto" }}>
-        <div style={{ display: "flex", gap: 8, alignItems: "center", minWidth: 0, flexWrap: "wrap" }}>
-          <span style={{ fontWeight: 750, wordBreak: "break-word" }}>{it.email ?? it.user_id}</span>
-          <span style={{ opacity: 0.6 }}>•</span>
-          <span style={{ fontWeight: 850, wordBreak: "break-word" }}>{title}</span>
+        <div
+          style={{
+            display: "flex",
+            gap: 8,
+            alignItems: "center",
+            minWidth: 0,
+          }}
+        >
+          <span
+            style={{
+              fontWeight: 800,
+              minWidth: 0,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+              opacity: 0.92,
+            }}
+            title={it.email ?? it.user_id}
+          >
+            {it.email ?? it.user_id}
+          </span>
+
+          <span style={{ opacity: 0.55 }}>•</span>
+
+          <span
+            style={{
+              fontWeight: 900,
+              minWidth: 0,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+            title={title}
+          >
+            {title}
+          </span>
         </div>
       </div>
 
@@ -946,8 +969,8 @@ function FeedRow(props: { item: WorkoutDayRow & { email?: string }; onOpen: () =
               display: "inline-flex",
               alignItems: "center",
               justifyContent: "center",
-              border: "1px solid rgba(255,255,255,0.12)",
-              background: "rgba(0,0,0,0.18)",
+              border: "1px solid rgba(0,0,0,0.12)",
+              background: "rgba(255,255,255,0.08)",
               fontSize: 13,
             }}
           >
@@ -964,8 +987,8 @@ function FeedRow(props: { item: WorkoutDayRow & { email?: string }; onOpen: () =
               display: "inline-flex",
               alignItems: "center",
               justifyContent: "center",
-              border: "1px solid rgba(255,255,255,0.12)",
-              background: "rgba(0,0,0,0.18)",
+              border: "1px solid rgba(0,0,0,0.12)",
+              background: "rgba(255,255,255,0.08)",
               fontSize: 13,
             }}
           >

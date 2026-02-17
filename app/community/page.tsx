@@ -80,16 +80,56 @@ function Modal({ open, onClose, children }: { open: boolean; onClose: () => void
           boxShadow: "0 20px 60px rgba(0,0,0,0.55)",
         }}
       >
-        <div className="modal-header">
-          <h3 style={{ margin: 0 }}>Workout</h3>
-          <button className="close-btn" onClick={onClose} aria-label="Close">
+        <div
+          className="modal-header"
+          style={{
+            position: "sticky",
+            top: 0,
+            zIndex: 2,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "14px 14px",
+            borderBottom: "1px solid rgba(255,255,255,0.08)",
+            background: "var(--panel)",
+            backdropFilter: "blur(10px)",
+          }}
+        >
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, opacity: 0.9 }}>Workout</h3>
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            style={{
+              width: 34,
+              height: 34,
+              borderRadius: 10,
+              border: "1px solid rgba(255,255,255,0.14)",
+              background: "rgba(255,255,255,0.06)",
+              color: "var(--text)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              fontSize: 18,
+              lineHeight: 1,
+            }}
+          >
             ✕
           </button>
         </div>
-        <div className="modal-body">{children}</div>
+        <div className="modal-body" style={{ padding: 14 }}>{children}</div>
       </div>
     </div>
   );
+}
+
+function isRenderableImageSrc(src: string) {
+  const s = String(src || "").trim();
+  if (!s) return false;
+  if (s.startsWith("http://") || s.startsWith("https://") || s.startsWith("data:image/")) return true;
+  // blob: URLs are local/session-only and will break in community views.
+  if (s.startsWith("blob:")) return false;
+  return false;
 }
 
 export default function CommunityPage() {
@@ -627,15 +667,38 @@ export default function CommunityPage() {
       <Modal open={Boolean(openItem)} onClose={() => setOpenItem(null)}>
         {openItem && (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <div style={{ opacity: 0.85 }}>
-              <b>{openItem.email || openItem.who}</b> • {formatPretty(openItem.row.date_key)}
+            <div style={{ opacity: 0.85, display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
+              <b style={{ wordBreak: "break-word" }}>{openItem.email || openItem.who}</b>
+              <span style={{ opacity: 0.8 }}>• {formatPretty(openItem.row.date_key)}</span>
             </div>
-            <div style={{ fontWeight: 900, fontSize: 18 }}>{openItem.row.title || "Workout"}</div>
+
+            <div style={{ fontWeight: 900, fontSize: 20, lineHeight: 1.15 }}>
+              {openItem.row.title || (openItem.row.entries?.[0]?.title ? String(openItem.row.entries[0].title) : "Workout")}
+            </div>
+
             <div style={{ opacity: 0.85, fontSize: 13 }}>
               {openItem.row.has_photo ? "📷 Photo" : ""} {openItem.row.has_video ? "🎥 Video" : ""}
             </div>
 
-            <div style={{ marginTop: 8 }}>
+            {/* Top media preview (best-effort) */}
+            {(() => {
+              const entries = (openItem.row.entries ?? []) as any[];
+              const firstImg = entries.find((e) => e?.media?.kind === "image" && isRenderableImageSrc(e?.media?.path))?.media?.path;
+              if (!firstImg) return null;
+              return (
+                <img
+                  src={firstImg}
+                  alt="Workout photo"
+                  style={{ width: "100%", borderRadius: 12, maxHeight: 360, objectFit: "cover" }}
+                  onError={(ev) => {
+                    const img = ev.currentTarget as HTMLImageElement;
+                    img.style.display = "none";
+                  }}
+                />
+              );
+            })()}
+
+            <div style={{ marginTop: 6 }}>
               {(openItem.row.entries ?? []).map((e: any, idx: number) => (
                 <div
                   key={idx}
@@ -648,17 +711,28 @@ export default function CommunityPage() {
                 >
                   <div style={{ fontWeight: 800 }}>{String(e?.title ?? "Workout").trim() || "Workout"}</div>
                   {String(e?.notes ?? "").trim() && (
-                    <div style={{ marginTop: 6, whiteSpace: "pre-wrap", opacity: 0.9 }}>{String(e.notes)}</div>
+                    <div style={{ marginTop: 6, whiteSpace: "pre-wrap", opacity: 0.9, wordBreak: "break-word" }}>
+                      {String(e.notes)}
+                    </div>
                   )}
 
                   {/* image preview (best-effort) */}
-                  {e?.media?.kind === "image" && e?.media?.path && (
-                    <img
-                      src={e.media.path}
-                      alt="Workout"
-                      style={{ marginTop: 10, width: "100%", borderRadius: 12, maxHeight: 320, objectFit: "cover" }}
-                    />
-                  )}
+                  {e?.media?.kind === "image" && e?.media?.path &&
+                    (isRenderableImageSrc(e.media.path) ? (
+                      <img
+                        src={e.media.path}
+                        alt="Workout"
+                        style={{ marginTop: 10, width: "100%", borderRadius: 12, maxHeight: 320, objectFit: "cover" }}
+                        onError={(ev) => {
+                          const img = ev.currentTarget as HTMLImageElement;
+                          img.style.display = "none";
+                        }}
+                      />
+                    ) : (
+                      <div style={{ marginTop: 10, fontSize: 12, opacity: 0.75 }}>
+                        Photo is not available (it was saved locally on the other device).
+                      </div>
+                    ))}
                 </div>
               ))}
             </div>

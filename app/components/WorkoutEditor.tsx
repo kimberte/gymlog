@@ -300,7 +300,7 @@ export default function WorkoutEditor({
       setWorkouts(next as any);
       onSaved?.(next as any);
       // Best-effort: remove from community snapshot if enabled
-      void deleteWorkoutDay(date);
+      void deleteWorkoutDay({ dateKey: date });
       toast("Workout deleted");
       onClose();
       return;

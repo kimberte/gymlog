@@ -122,10 +122,10 @@ export default function CommunityPage() {
   // Friends + requests
   const [friends, setFriends] = useState<Profile[]>([]);
   const [incoming, setIncoming] = useState<
-    (FriendRequestRow & { from_email?: string })[]
+    (FriendRequestRow & { from_email?: string; from_first?: string | null; from_last?: string | null })[]
   >([]);
   const [outgoing, setOutgoing] = useState<
-    (FriendRequestRow & { to_email?: string })[]
+    (FriendRequestRow & { to_email?: string; to_first?: string | null; to_last?: string | null })[]
   >([]);
 
   // Feed
@@ -173,9 +173,7 @@ export default function CommunityPage() {
     (async () => {
       if (!sessionUserId || !sessionEmail) return;
       try {
-        await supabase
-          .from("profiles")
-          .upsert({ id: sessionUserId, email: sessionEmail }, { onConflict: "id" });
+        await supabase.from("profiles").upsert({ id: sessionUserId, email: sessionEmail }, { onConflict: "id" });
       } catch {
         // ignore
       }
@@ -226,6 +224,7 @@ export default function CommunityPage() {
       if (error) throw error;
       showToast("Saved");
       await loadFeed();
+      await loadFriendsAndRequests();
     } catch {
       showToast("Save failed");
     } finally {
@@ -237,18 +236,12 @@ export default function CommunityPage() {
     if (!sessionUserId) return;
     try {
       // Friends
-      const { data: fr, error: frErr } = await supabase
-        .from("friendships")
-        .select("friend_id")
-        .eq("user_id", sessionUserId);
+      const { data: fr, error: frErr } = await supabase.from("friendships").select("friend_id").eq("user_id", sessionUserId);
       if (frErr) throw frErr;
       const ids = (fr ?? []).map((r: any) => String(r.friend_id));
 
       if (ids.length) {
-        const { data: ps } = await supabase
-          .from("profiles")
-          .select("id,email")
-          .in("id", ids);
+        const { data: ps } = await supabase.from("profiles").select("id,email,first_name,last_name").in("id", ids);
         setFriends((ps ?? []) as any);
       } else {
         setFriends([]);
@@ -265,7 +258,7 @@ export default function CommunityPage() {
       const inReq = (reqs ?? []).filter((r: any) => r.to_user === sessionUserId);
       const outReq = (reqs ?? []).filter((r: any) => r.from_user === sessionUserId);
 
-      // Map IDs -> emails
+      // Map IDs -> profile (email + name)
       const needIds = Array.from(
         new Set([
           ...inReq.map((r: any) => String(r.from_user)),
@@ -273,17 +266,42 @@ export default function CommunityPage() {
         ])
       );
 
-      let map: Record<string, string> = {};
+      let map: Record<string, Profile> = {};
       if (needIds.length) {
-        const { data: ps } = await supabase
-          .from("profiles")
-          .select("id,email")
-          .in("id", needIds);
-        for (const p of ps ?? []) map[String((p as any).id)] = String((p as any).email);
+        const { data: ps } = await supabase.from("profiles").select("id,email,first_name,last_name").in("id", needIds);
+        for (const p of ps ?? []) {
+          map[String((p as any).id)] = {
+            id: String((p as any).id),
+            email: String((p as any).email ?? ""),
+            first_name: (p as any).first_name ?? null,
+            last_name: (p as any).last_name ?? null,
+          };
+        }
       }
 
-      setIncoming(inReq.map((r: any) => ({ ...(r as any), from_email: map[String(r.from_user)] })));
-      setOutgoing(outReq.map((r: any) => ({ ...(r as any), to_email: map[String(r.to_user)] })));
+      setIncoming(
+        inReq.map((r: any) => {
+          const prof = map[String(r.from_user)];
+          return {
+            ...(r as any),
+            from_email: prof?.email,
+            from_first: prof?.first_name ?? null,
+            from_last: prof?.last_name ?? null,
+          };
+        })
+      );
+
+      setOutgoing(
+        outReq.map((r: any) => {
+          const prof = map[String(r.to_user)];
+          return {
+            ...(r as any),
+            to_email: prof?.email,
+            to_first: prof?.first_name ?? null,
+            to_last: prof?.last_name ?? null,
+          };
+        })
+      );
     } catch {
       // ignore
     }
@@ -292,10 +310,7 @@ export default function CommunityPage() {
   async function loadFeed() {
     if (!sessionUserId) return;
     try {
-      const { data: fr } = await supabase
-        .from("friendships")
-        .select("friend_id")
-        .eq("user_id", sessionUserId);
+      const { data: fr } = await supabase.from("friendships").select("friend_id").eq("user_id", sessionUserId);
       const ids = (fr ?? []).map((r: any) => String(r.friend_id));
       if (!ids.length) {
         setFeed([]);
@@ -319,17 +334,10 @@ export default function CommunityPage() {
 
       // attach email + name
       const need = Array.from(new Set((data ?? []).map((r: any) => String(r.user_id))));
-      let map: Record<
-        string,
-        { email: string; first_name?: string | null; last_name?: string | null }
-      > = {};
+      let map: Record<string, { email: string; first_name?: string | null; last_name?: string | null }> = {};
 
       if (need.length) {
-        const { data: ps } = await supabase
-          .from("profiles")
-          .select("id,email,first_name,last_name")
-          .in("id", need);
-
+        const { data: ps } = await supabase.from("profiles").select("id,email,first_name,last_name").in("id", need);
         for (const p of ps ?? []) {
           map[String((p as any).id)] = {
             email: String((p as any).email ?? ""),
@@ -373,11 +381,7 @@ export default function CommunityPage() {
     }
     setSearchBusy(true);
     try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id,email")
-        .ilike("email", q)
-        .limit(1);
+      const { data, error } = await supabase.from("profiles").select("id,email").ilike("email", q).limit(1);
       if (error) throw error;
       const found = (data ?? [])[0] as any;
       if (!found) {
@@ -461,17 +465,13 @@ export default function CommunityPage() {
   }, [feed]);
 
   const pastKeys = useMemo(() => {
-    const keys = Object.keys(feedByDate).filter(
-      (k) => k < todayKey && k >= toDateKey(addDays(new Date(), -7))
-    );
+    const keys = Object.keys(feedByDate).filter((k) => k < todayKey && k >= toDateKey(addDays(new Date(), -7)));
     keys.sort();
     return keys;
   }, [feedByDate, todayKey]);
 
   const futureKeys = useMemo(() => {
-    const keys = Object.keys(feedByDate).filter(
-      (k) => k > todayKey && k <= toDateKey(addDays(new Date(), 7))
-    );
+    const keys = Object.keys(feedByDate).filter((k) => k > todayKey && k <= toDateKey(addDays(new Date(), 7)));
     keys.sort();
     return keys;
   }, [feedByDate, todayKey]);
@@ -519,20 +519,22 @@ export default function CommunityPage() {
               gap: 8,
               textDecoration: "none",
               color: "var(--text)",
-              opacity: 0.9,
-              padding: "8px 10px",
-              borderRadius: 12,
+              padding: "10px 12px",
+              borderRadius: 14,
               border: BORDER,
               background: BRAND_GREY_CARD,
+              fontWeight: 900,
               flex: "0 0 auto",
             }}
+            title="Back to calendar"
           >
-            <span aria-hidden="true">←</span> Calendar
+            <span style={{ fontSize: 18, lineHeight: 1, opacity: 0.9 }}>←</span>
+            <span>Calendar</span>
           </a>
 
           <div style={{ textAlign: "right" }}>
             <h1 style={{ margin: 0, fontSize: 22 }}>Community</h1>
-            <div style={{ opacity: 0.75, fontSize: 13, marginTop: 2 }}>
+            <div style={{ opacity: 0.8, fontSize: 13, marginTop: 2 }}>
               Friends only • Today ± 7 days
             </div>
           </div>
@@ -553,7 +555,7 @@ export default function CommunityPage() {
             }}
             title="Share your saved workouts to friends"
           >
-            <span style={{ fontSize: 13, opacity: 0.95 }}>Share my workouts</span>
+            <span style={{ fontSize: 13, opacity: 0.95, fontWeight: 800 }}>Share my workouts</span>
             <input
               type="checkbox"
               checked={shareEnabled}
@@ -564,7 +566,11 @@ export default function CommunityPage() {
 
         {/* Tabs */}
         <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
-          {([["feed","Feed"],["friends","Friends"],["requests","Requests"]] as Array<[Tab,string]>).map(([k,label]) => (
+          {([
+            ["feed", "Feed"],
+            ["friends", "Friends"],
+            ["requests", "Requests"],
+          ] as Array<[Tab, string]>).map(([k, label]) => (
             <button
               key={k}
               onClick={() => setTab(k)}
@@ -574,7 +580,7 @@ export default function CommunityPage() {
                 border: BORDER,
                 background: tab === k ? BRAND_GREY_CARD_STRONG : BRAND_GREY_CARD,
                 color: "var(--text)",
-                fontWeight: 750,
+                fontWeight: 900,
               }}
             >
               {label}
@@ -582,231 +588,37 @@ export default function CommunityPage() {
           ))}
         </div>
 
-        {/* FRIENDS */}
-        {tab === "friends" && (
-          <div style={{ marginTop: 14 }}>
-            <div style={{ border: BORDER, background: BRAND_GREY_CARD, borderRadius: 16, padding: 12 }}>
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-                <input
-                  value={searchEmail}
-                  onChange={(e) => setSearchEmail(e.target.value)}
-                  placeholder="Search email to add friend"
-                  style={{
-                    flex: "1 1 240px",
-                    minWidth: 0,
-                    padding: "10px 12px",
-                    borderRadius: 12,
-                    border: BORDER,
-                    background: "rgba(0,0,0,0.12)",
-                    color: "var(--text)",
-                  }}
-                />
-                <button
-                  onClick={doSearch}
-                  disabled={searchBusy}
-                  style={{
-                    padding: "10px 12px",
-                    borderRadius: 12,
-                    border: BORDER,
-                    background: BRAND_GREY_CARD_STRONG,
-                    color: "var(--text)",
-                    fontWeight: 750,
-                    flex: "0 0 auto",
-                  }}
-                >
-                  {searchBusy ? "Searching…" : "Search"}
-                </button>
-              </div>
-
-              {searchResult && (
-                <div
-                  style={{
-                    marginTop: 10,
-                    padding: 12,
-                    borderRadius: 14,
-                    border: BORDER,
-                    background: BRAND_GREY_CARD,
-                    display: "flex",
-                    gap: 10,
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontWeight: 800, overflow: "hidden", textOverflow: "ellipsis" }}>
-                      {searchResult.email}
-                    </div>
-                    <div style={{ opacity: 0.8, fontSize: 13 }}>Send friend request?</div>
-                  </div>
-                  <button
-                    onClick={sendRequest}
-                    style={{
-                      padding: "10px 12px",
-                      borderRadius: 12,
-                      border: "1px solid rgba(0,0,0,0.10)",
-                      background: "var(--accent)",
-                      color: "#111",
-                      fontWeight: 900,
-                      flex: "0 0 auto",
-                    }}
-                  >
-                    Add
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <div style={{ marginTop: 14 }}>
-              <h2 style={{ margin: "0 0 8px", fontSize: 16, opacity: 0.95 }}>Your Friends</h2>
-              {friends.length === 0 ? (
-                <div style={{ opacity: 0.8, fontSize: 14 }}>No friends yet.</div>
-              ) : (
-                <div style={{ display: "grid", gap: 8 }}>
-                  {friends
-                    .slice()
-                    .sort((a, b) => a.email.localeCompare(b.email))
-                    .map((f) => (
-                      <div
-                        key={f.id}
-                        style={{
-                          display: "flex",
-                          gap: 10,
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          padding: 12,
-                          borderRadius: 16,
-                          border: BORDER,
-                          background: BRAND_GREY_CARD,
-                        }}
-                      >
-                        <div style={{ minWidth: 0 }}>
-                          <div style={{ fontWeight: 800, overflow: "hidden", textOverflow: "ellipsis" }}>
-                            {f.email}
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => removeFriend(f.id)}
-                          style={{
-                            padding: "9px 12px",
-                            borderRadius: 12,
-                            border: BORDER,
-                            background: BRAND_GREY_CARD_STRONG,
-                            color: "var(--text)",
-                            fontWeight: 750,
-                            flex: "0 0 auto",
-                          }}
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    ))}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* REQUESTS */}
-        {tab === "requests" && (
-          <div style={{ marginTop: 14 }}>
-            <h2 style={{ margin: "0 0 8px", fontSize: 16, opacity: 0.95 }}>Incoming Requests</h2>
-            {incoming.filter((r) => r.status === "pending").length === 0 ? (
-              <div style={{ opacity: 0.8, fontSize: 14 }}>No requests.</div>
-            ) : (
-              <div style={{ display: "grid", gap: 8 }}>
-                {incoming
-                  .filter((r) => r.status === "pending")
-                  .map((r) => (
-                    <div
-                      key={r.id}
-                      style={{
-                        display: "flex",
-                        gap: 10,
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        padding: 12,
-                        borderRadius: 16,
-                        border: BORDER,
-                        background: BRAND_GREY_CARD,
-                      }}
-                    >
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ fontWeight: 850, overflow: "hidden", textOverflow: "ellipsis" }}>
-                          {r.from_email ?? r.from_user}
-                        </div>
-                        <div style={{ opacity: 0.8, fontSize: 13 }}>Wants to add you</div>
-                      </div>
-                      <div style={{ display: "flex", gap: 8, flex: "0 0 auto" }}>
-                        <button
-                          onClick={() => acceptRequest(r.id, r.from_user)}
-                          style={{
-                            padding: "9px 12px",
-                            borderRadius: 12,
-                            border: "1px solid rgba(0,0,0,0.10)",
-                            background: "var(--accent)",
-                            color: "#111",
-                            fontWeight: 900,
-                          }}
-                        >
-                          Accept
-                        </button>
-                        <button
-                          onClick={() => declineRequest(r.id)}
-                          style={{
-                            padding: "9px 12px",
-                            borderRadius: 12,
-                            border: BORDER,
-                            background: BRAND_GREY_CARD_STRONG,
-                            color: "var(--text)",
-                            fontWeight: 750,
-                          }}
-                        >
-                          Decline
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-              </div>
-            )}
-
-            <h2 style={{ margin: "18px 0 8px", fontSize: 16, opacity: 0.95 }}>Sent Requests</h2>
-            {outgoing.filter((r) => r.status === "pending").length === 0 ? (
-              <div style={{ opacity: 0.8, fontSize: 14 }}>No sent requests.</div>
-            ) : (
-              <div style={{ display: "grid", gap: 8 }}>
-                {outgoing
-                  .filter((r) => r.status === "pending")
-                  .map((r) => (
-                    <div key={r.id} style={{ padding: 12, borderRadius: 16, border: BORDER, background: BRAND_GREY_CARD }}>
-                      <div style={{ fontWeight: 850, overflow: "hidden", textOverflow: "ellipsis" }}>
-                        {r.to_email ?? r.to_user}
-                      </div>
-                      <div style={{ opacity: 0.8, fontSize: 13 }}>Pending</div>
-                    </div>
-                  ))}
-              </div>
-            )}
-          </div>
-        )}
-
         {/* FEED */}
         {tab === "feed" && (
           <div style={{ marginTop: 14 }}>
-            {/* Name card */}
-            <div style={{ border: BORDER, borderRadius: 16, padding: 12, background: BRAND_GREY_CARD }}>
-              <div style={{ fontWeight: 900, marginBottom: 8 }}>Your display name (optional)</div>
+            <div
+              style={{
+                border: BORDER,
+                background: BRAND_GREY_CARD,
+                borderRadius: 16,
+                padding: 12,
+                marginBottom: 12,
+              }}
+            >
+              <div style={{ fontWeight: 900, marginBottom: 6, opacity: 0.95 }}>
+                Your display name (optional)
+              </div>
+              <div style={{ opacity: 0.82, fontSize: 13, marginBottom: 10 }}>
+                Friends will see this instead of your email (ex: <b>John S.</b>). Search and requests still use email.
+              </div>
+
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
                 <input
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   placeholder="First name"
                   style={{
-                    flex: "1 1 160px",
+                    flex: "1 1 180px",
                     minWidth: 0,
                     padding: "10px 12px",
                     borderRadius: 12,
                     border: BORDER,
-                    background: "rgba(0,0,0,0.12)",
+                    background: "rgba(0,0,0,0.18)",
                     color: "var(--text)",
                   }}
                 />
@@ -815,18 +627,18 @@ export default function CommunityPage() {
                   onChange={(e) => setLastName(e.target.value)}
                   placeholder="Last name"
                   style={{
-                    flex: "1 1 160px",
+                    flex: "1 1 180px",
                     minWidth: 0,
                     padding: "10px 12px",
                     borderRadius: 12,
                     border: BORDER,
-                    background: "rgba(0,0,0,0.12)",
+                    background: "rgba(0,0,0,0.18)",
                     color: "var(--text)",
                   }}
                 />
                 <button
                   onClick={saveName}
-                  disabled={nameBusy || !sessionUserId}
+                  disabled={nameBusy}
                   style={{
                     padding: "10px 12px",
                     borderRadius: 12,
@@ -835,18 +647,14 @@ export default function CommunityPage() {
                     color: "#111",
                     fontWeight: 900,
                     flex: "0 0 auto",
-                    opacity: !sessionUserId ? 0.6 : 1,
                   }}
                 >
                   {nameBusy ? "Saving…" : "Save"}
                 </button>
               </div>
-              <div style={{ opacity: 0.8, fontSize: 13, marginTop: 8 }}>
-                This is what friends see in the feed. Friend search/requests still use email.
-              </div>
             </div>
 
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 14 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
               <h2 style={{ margin: 0, fontSize: 16, opacity: 0.95 }}>Today</h2>
               <button
                 onClick={loadFeed}
@@ -900,6 +708,227 @@ export default function CommunityPage() {
             )}
           </div>
         )}
+
+        {/* FRIENDS */}
+        {tab === "friends" && (
+          <div style={{ marginTop: 14 }}>
+            <div style={{ border: BORDER, background: BRAND_GREY_CARD, borderRadius: 16, padding: 12 }}>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                <input
+                  value={searchEmail}
+                  onChange={(e) => setSearchEmail(e.target.value)}
+                  placeholder="Search email to add friend"
+                  style={{
+                    flex: "1 1 240px",
+                    minWidth: 0,
+                    padding: "10px 12px",
+                    borderRadius: 12,
+                    border: BORDER,
+                    background: "rgba(0,0,0,0.18)",
+                    color: "var(--text)",
+                  }}
+                />
+                <button
+                  onClick={doSearch}
+                  disabled={searchBusy}
+                  style={{
+                    padding: "10px 12px",
+                    borderRadius: 12,
+                    border: BORDER,
+                    background: BRAND_GREY_CARD_STRONG,
+                    color: "var(--text)",
+                    fontWeight: 900,
+                    flex: "0 0 auto",
+                  }}
+                >
+                  {searchBusy ? "Searching…" : "Search"}
+                </button>
+              </div>
+
+              {searchResult && (
+                <div
+                  style={{
+                    marginTop: 10,
+                    padding: 12,
+                    borderRadius: 14,
+                    border: BORDER,
+                    background: BRAND_GREY_CARD,
+                    display: "flex",
+                    gap: 10,
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontWeight: 900, overflow: "hidden", textOverflow: "ellipsis" }}>
+                      {searchResult.email}
+                    </div>
+                    <div style={{ opacity: 0.8, fontSize: 13 }}>Send friend request?</div>
+                  </div>
+                  <button
+                    onClick={sendRequest}
+                    style={{
+                      padding: "10px 12px",
+                      borderRadius: 12,
+                      border: "1px solid rgba(0,0,0,0.10)",
+                      background: "var(--accent)",
+                      color: "#111",
+                      fontWeight: 900,
+                      flex: "0 0 auto",
+                    }}
+                  >
+                    Add
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div style={{ marginTop: 14 }}>
+              <h2 style={{ margin: "0 0 8px", fontSize: 16, opacity: 0.95 }}>Your Friends</h2>
+              {friends.length === 0 ? (
+                <div style={{ opacity: 0.8, fontSize: 14 }}>No friends yet.</div>
+              ) : (
+                <div style={{ display: "grid", gap: 8 }}>
+                  {friends
+                    .slice()
+                    .sort((a, b) => (a.email || "").localeCompare(b.email || ""))
+                    .map((f) => (
+                      <PersonRow
+                        key={f.id}
+                        profile={f}
+                        right={
+                          <button
+                            onClick={() => removeFriend(f.id)}
+                            style={{
+                              padding: "9px 12px",
+                              borderRadius: 12,
+                              border: BORDER,
+                              background: BRAND_GREY_CARD_STRONG,
+                              color: "var(--text)",
+                              fontWeight: 750,
+                              flex: "0 0 auto",
+                            }}
+                          >
+                            Remove
+                          </button>
+                        }
+                      />
+                    ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* REQUESTS */}
+        {tab === "requests" && (
+          <div style={{ marginTop: 14 }}>
+            <h2 style={{ margin: "0 0 8px", fontSize: 16, opacity: 0.95 }}>Incoming Requests</h2>
+
+            {incoming.filter((r) => r.status === "pending").length === 0 ? (
+              <div style={{ opacity: 0.8, fontSize: 14 }}>No requests.</div>
+            ) : (
+              <div style={{ display: "grid", gap: 8 }}>
+                {incoming
+                  .filter((r) => r.status === "pending")
+                  .map((r) => {
+                    const prof: Profile = {
+                      id: r.from_user,
+                      email: r.from_email ?? String(r.from_user),
+                      first_name: r.from_first ?? null,
+                      last_name: r.from_last ?? null,
+                    };
+
+                    return (
+                      <div
+                        key={r.id}
+                        style={{
+                          border: BORDER,
+                          borderRadius: 16,
+                          background: BRAND_GREY_CARD,
+                          padding: 12,
+                          display: "flex",
+                          gap: 12,
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                        }}
+                      >
+                        <div style={{ minWidth: 0, flex: "1 1 auto" }}>
+                          <PersonRow
+                            profile={prof}
+                            compact
+                            subtitle="Incoming • Pending"
+                          />
+                        </div>
+
+                        <div style={{ display: "flex", gap: 8, flex: "0 0 auto" }}>
+                          <button
+                            onClick={() => acceptRequest(r.id, r.from_user)}
+                            style={{
+                              padding: "9px 12px",
+                              borderRadius: 12,
+                              border: "1px solid rgba(0,0,0,0.10)",
+                              background: "var(--accent)",
+                              color: "#111",
+                              fontWeight: 900,
+                            }}
+                          >
+                            Accept
+                          </button>
+                          <button
+                            onClick={() => declineRequest(r.id)}
+                            style={{
+                              padding: "9px 12px",
+                              borderRadius: 12,
+                              border: BORDER,
+                              background: BRAND_GREY_CARD_STRONG,
+                              color: "var(--text)",
+                              fontWeight: 750,
+                            }}
+                          >
+                            Decline
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
+
+            <h2 style={{ margin: "18px 0 8px", fontSize: 16, opacity: 0.95 }}>Sent Requests</h2>
+
+            {outgoing.filter((r) => r.status === "pending").length === 0 ? (
+              <div style={{ opacity: 0.8, fontSize: 14 }}>No sent requests.</div>
+            ) : (
+              <div style={{ display: "grid", gap: 8 }}>
+                {outgoing
+                  .filter((r) => r.status === "pending")
+                  .map((r) => {
+                    const prof: Profile = {
+                      id: r.to_user,
+                      email: r.to_email ?? String(r.to_user),
+                      first_name: r.to_first ?? null,
+                      last_name: r.to_last ?? null,
+                    };
+
+                    return (
+                      <div
+                        key={r.id}
+                        style={{
+                          border: BORDER,
+                          borderRadius: 16,
+                          background: BRAND_GREY_CARD,
+                          padding: 12,
+                        }}
+                      >
+                        <PersonRow profile={prof} subtitle="Sent • Pending" />
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* MODAL */}
@@ -947,7 +976,7 @@ export default function CommunityPage() {
             >
               <div style={{ minWidth: 0 }}>
                 <div style={{ opacity: 0.9, fontWeight: 750, wordBreak: "break-word" }}>
-                  {formatDisplayName(openItem)} • {formatStackDate(openItem.date_key)}
+                  {openItem.email ? clampEmail(openItem.email) : openItem.user_id} • {formatStackDate(openItem.date_key)}
                 </div>
                 <div style={{ fontSize: 22, fontWeight: 900, marginTop: 6, wordBreak: "break-word" }}>
                   {openItem.title || "Workout"}
@@ -1024,7 +1053,15 @@ export default function CommunityPage() {
                               />
                             )
                           ) : (
-                            <div style={{ opacity: 0.85, fontSize: 13, display: "inline-flex", gap: 8, alignItems: "center" }}>
+                            <div
+                              style={{
+                                opacity: 0.85,
+                                fontSize: 13,
+                                display: "inline-flex",
+                                gap: 8,
+                                alignItems: "center",
+                              }}
+                            >
                               <span style={{ color: "var(--accent)", fontWeight: 900 }}>●</span>
                               Media loading…
                             </div>
@@ -1046,7 +1083,6 @@ export default function CommunityPage() {
         </div>
       )}
 
-      {/* Toast */}
       {toast && (
         <div
           style={{
@@ -1102,19 +1138,103 @@ function SectionToggle(props: { title: string; open: boolean; onToggle: () => vo
   );
 }
 
-function DateGroup(props: { label: string; items: FeedItem[]; onOpen: (it: FeedItem) => void }) {
+function DateGroup(props: {
+  label: string;
+  items: (WorkoutDayRow & { email?: string })[];
+  onOpen: (it: WorkoutDayRow & { email?: string }) => void;
+}) {
   return (
     <div>
       <div style={{ fontWeight: 900, opacity: 0.9, marginBottom: 8 }}>{props.label}</div>
       <div style={{ display: "grid", gap: 8 }}>
         {props.items.map((it) => (
-          <FeedRow
-            key={`${it.user_id}-${it.date_key}-${it.updated_at}`}
-            item={it}
-            onOpen={() => props.onOpen(it)}
-          />
+          <FeedRow key={`${it.user_id}-${it.date_key}-${it.updated_at}`} item={it as any} onOpen={() => props.onOpen(it)} />
         ))}
       </div>
+    </div>
+  );
+}
+
+function PersonRow(props: {
+  profile: Profile;
+  right?: React.ReactNode;
+  subtitle?: string;
+  compact?: boolean;
+}) {
+  const { profile } = props;
+  const display = formatDisplayName(profile);
+  const letter = badgeLetterFor(profile);
+  const email = String(profile.email ?? "").trim();
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        gap: 12,
+        alignItems: "center",
+        justifyContent: "space-between",
+        minWidth: 0,
+      }}
+    >
+      <div style={{ display: "flex", gap: 12, alignItems: "center", minWidth: 0, flex: "1 1 auto" }}>
+        <div
+          aria-hidden="true"
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 12,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontWeight: 950,
+            background: "rgba(0,0,0,0.22)",
+            border: "1px solid rgba(255,255,255,0.12)",
+            color: "var(--text)",
+            flex: "0 0 auto",
+          }}
+        >
+          {letter}
+        </div>
+
+        <div style={{ minWidth: 0 }}>
+          <div
+            style={{
+              fontWeight: 950,
+              minWidth: 0,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+            title={display}
+          >
+            {display}
+          </div>
+
+          <div
+            style={{
+              marginTop: 4,
+              opacity: 0.82,
+              fontWeight: 750,
+              fontSize: 13,
+              minWidth: 0,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+            title={email}
+          >
+            {email}
+          </div>
+
+          {props.subtitle && (
+            <div style={{ marginTop: 6, fontSize: 12, fontWeight: 900, opacity: 0.82 }}>
+              {props.subtitle}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {props.right ? <div style={{ flex: "0 0 auto" }}>{props.right}</div> : null}
     </div>
   );
 }
@@ -1122,8 +1242,9 @@ function DateGroup(props: { label: string; items: FeedItem[]; onOpen: (it: FeedI
 function FeedRow(props: { item: FeedItem; onOpen: () => void }) {
   const it = props.item;
   const title = it.title || "Workout";
+
   const displayName = formatDisplayName(it);
-  const badge = badgeLetterFor(it);
+  const letter = badgeLetterFor(it);
 
   return (
     <button
@@ -1137,98 +1258,103 @@ function FeedRow(props: { item: FeedItem; onOpen: () => void }) {
         color: "var(--text)",
         display: "flex",
         gap: 12,
-        alignItems: "flex-start",
+        alignItems: "center",
         justifyContent: "space-between",
         minWidth: 0,
       }}
     >
-      <div
-        aria-hidden="true"
-        style={{
-          width: 34,
-          height: 34,
-          borderRadius: 12,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontWeight: 900,
-          background: "rgba(255,255,255,0.08)",
-          border: "1px solid rgba(0,0,0,0.10)",
-          flex: "0 0 auto",
-        }}
-      >
-        {badge}
-      </div>
+      <div style={{ display: "flex", gap: 12, alignItems: "center", minWidth: 0, flex: "1 1 auto" }}>
+        <div
+          aria-hidden="true"
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 12,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontWeight: 950,
+            background: "rgba(0,0,0,0.22)",
+            border: "1px solid rgba(255,255,255,0.12)",
+            color: "var(--text)",
+            flex: "0 0 auto",
+          }}
+        >
+          {letter}
+        </div>
 
-      <div style={{ minWidth: 0, flex: "1 1 auto" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, minWidth: 0 }}>
+        <div style={{ minWidth: 0, flex: "1 1 auto" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+            <div style={{ minWidth: 0, flex: "1 1 auto" }}>
+              <div
+                style={{
+                  fontWeight: 950,
+                  minWidth: 0,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+                title={title}
+              >
+                {title}
+              </div>
+            </div>
+
+            <div style={{ display: "inline-flex", gap: 8, flex: "0 0 auto", alignItems: "center" }}>
+              {it.has_photo && (
+                <span
+                  title="Photo"
+                  style={{
+                    width: 24,
+                    height: 24,
+                    borderRadius: 999,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    border: "1px solid rgba(0,0,0,0.12)",
+                    background: "rgba(255,255,255,0.08)",
+                    fontSize: 13,
+                  }}
+                >
+                  📷
+                </span>
+              )}
+              {it.has_video && (
+                <span
+                  title="Video"
+                  style={{
+                    width: 24,
+                    height: 24,
+                    borderRadius: 999,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    border: "1px solid rgba(0,0,0,0.12)",
+                    background: "rgba(255,255,255,0.08)",
+                    fontSize: 13,
+                  }}
+                >
+                  🎥
+                </span>
+              )}
+            </div>
+          </div>
+
           <div
             style={{
-              fontWeight: 900,
+              marginTop: 4,
+              opacity: 0.82,
+              fontWeight: 750,
+              fontSize: 13,
               minWidth: 0,
               overflow: "hidden",
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",
             }}
-            title={title}
+            title={displayName}
           >
-            {title}
+            {displayName}
           </div>
-
-          <div style={{ display: "inline-flex", gap: 8, flex: "0 0 auto", alignItems: "center" }}>
-            {it.has_photo && (
-              <span
-                title="Photo"
-                style={{
-                  width: 24,
-                  height: 24,
-                  borderRadius: 999,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  border: "1px solid rgba(0,0,0,0.12)",
-                  background: "rgba(255,255,255,0.08)",
-                  fontSize: 13,
-                }}
-              >
-                📷
-              </span>
-            )}
-            {it.has_video && (
-              <span
-                title="Video"
-                style={{
-                  width: 24,
-                  height: 24,
-                  borderRadius: 999,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  border: "1px solid rgba(0,0,0,0.12)",
-                  background: "rgba(255,255,255,0.08)",
-                  fontSize: 13,
-                }}
-              >
-                🎥
-              </span>
-            )}
-          </div>
-        </div>
-
-        <div
-          style={{
-            marginTop: 4,
-            opacity: 0.82,
-            fontWeight: 750,
-            fontSize: 13,
-            minWidth: 0,
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          }}
-          title={displayName}
-        >
-          {displayName}
         </div>
       </div>
     </button>

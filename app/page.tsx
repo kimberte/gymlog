@@ -111,8 +111,23 @@ function ShareIcon({ size = 20 }: { size?: number }) {
 function PeopleIcon({ size = 20 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <path d="M16 11a3 3 0 1 0-6 0 3 3 0 0 0 6 0Z" stroke="currentColor" strokeWidth="2" />
-      <path d="M4 20c0-3.3 3.6-6 8-6s8 2.7 8 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      {/* Two overlapping users (community) */}
+      <path d="M9 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z" stroke="currentColor" strokeWidth="2" />
+      <path d="M17 12a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5Z" stroke="currentColor" strokeWidth="2" />
+      <path
+        d="M2.5 20c0-3.2 3.1-5.8 7-5.8 2.3 0 4.4.9 5.7 2.3"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M12.8 16.1c1.1-1.2 2.6-1.9 4.4-1.9 3.0 0 5.3 2.4 5.3 5.8"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }

@@ -51,6 +51,22 @@ function addDays(base: Date, n: number) {
   return d;
 }
 
+function timeAgoShort(iso: string | null | undefined) {
+  if (!iso) return "";
+  const t = new Date(iso);
+  const ms = Date.now() - t.getTime();
+  if (!Number.isFinite(ms)) return "";
+  const s = Math.floor(ms / 1000);
+  if (s < 60) return "now";
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h`;
+  const d = Math.floor(h / 24);
+  if (d < 7) return `${d}d`;
+  return t.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
 function formatStackDate(dateKey: string) {
   const [y, m, d] = dateKey.split("-").map((x) => Number(x));
   const dt = new Date(y, (m || 1) - 1, d || 1);
@@ -509,44 +525,49 @@ export default function CommunityPage() {
   return (
     <div style={{ padding: 14, overflowX: "hidden" }}>
       <div style={{ maxWidth: 980, margin: "0 auto" }}>
-        {/* Back to calendar + title */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 10 }}>
-          <a
-            href="/"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 8,
-              textDecoration: "none",
-              color: "var(--text)",
-              padding: "10px 12px",
-              borderRadius: 14,
-              border: BORDER,
-              background: BRAND_GREY_CARD,
-              fontWeight: 900,
-              flex: "0 0 auto",
-            }}
-            title="Back to calendar"
-          >
-            <span style={{ fontSize: 18, lineHeight: 1, opacity: 0.9 }}>←</span>
-            <span>Calendar</span>
-          </a>
+        {/* Header matches calendar page (back + brand on left) */}
+        <header className="top-bar" style={{ padding: 0, marginBottom: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+            <a
+              href="/"
+              className="icon-btn"
+              title="Back to calendar"
+              aria-label="Back to calendar"
+              style={{
+                textDecoration: "none",
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <span style={{ fontSize: 20, lineHeight: 1, opacity: 0.95 }}>←</span>
+            </a>
 
-          <div style={{ textAlign: "right" }}>
-            <h1 style={{ margin: 0, fontSize: 22 }}>Community</h1>
-            <div style={{ opacity: 0.8, fontSize: 13, marginTop: 2 }}>
-              Friends only • Today ± 7 days
+            <div className="brand" style={{ minWidth: 0 }}>
+              <img
+                src="/icons/gym-app-logo-color-40x40.png"
+                alt="Gym Log"
+                className="brand-logo"
+                width={20}
+                height={20}
+              />
+              <h1 style={{ whiteSpace: "nowrap" }}>Gym Log</h1>
             </div>
           </div>
-        </div>
+
+          <div style={{ textAlign: "right" }}>
+            <div style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.1 }}>Community</div>
+            <div style={{ opacity: 0.8, fontSize: 13, marginTop: 2 }}>Friends only • Today ± 7 days</div>
+          </div>
+        </header>
 
         {/* Share toggle */}
         <div style={{ display: "flex", justifyContent: "flex-end" }}>
-          <label
+          <div
             style={{
               display: "inline-flex",
               alignItems: "center",
-              gap: 10,
+              gap: 12,
               padding: "10px 12px",
               borderRadius: 14,
               background: BRAND_GREY_CARD,
@@ -555,32 +576,69 @@ export default function CommunityPage() {
             }}
             title="Share your saved workouts to friends"
           >
-            <span style={{ fontSize: 13, opacity: 0.95, fontWeight: 800 }}>Share my workouts</span>
-            <input
-              type="checkbox"
-              checked={shareEnabled}
-              onChange={(e) => setShareEnabled(e.target.checked)}
-            />
-          </label>
+            <span style={{ fontSize: 13, opacity: 0.95, fontWeight: 900 }}>Share my workouts</span>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={shareEnabled}
+              onClick={() => setShareEnabled((v) => !v)}
+              style={{
+                width: 46,
+                height: 26,
+                borderRadius: 999,
+                border: BORDER,
+                background: shareEnabled ? "rgba(255,87,33,0.75)" : "rgba(0,0,0,0.22)",
+                display: "inline-flex",
+                alignItems: "center",
+                padding: 3,
+                cursor: "pointer",
+                transition: "background 0.15s ease, transform 0.08s ease",
+              }}
+            >
+              <span
+                aria-hidden="true"
+                style={{
+                  width: 20,
+                  height: 20,
+                  borderRadius: 999,
+                  background: "rgba(255,255,255,0.85)",
+                  transform: shareEnabled ? "translateX(20px)" : "translateX(0px)",
+                  transition: "transform 0.15s ease",
+                }}
+              />
+            </button>
+          </div>
         </div>
 
         {/* Tabs */}
-        <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
+        <div
+          style={{
+            display: "flex",
+            marginTop: 12,
+            borderRadius: 14,
+            border: BORDER,
+            background: BRAND_GREY_CARD,
+            overflow: "hidden",
+          }}
+        >
           {([
             ["feed", "Feed"],
             ["friends", "Friends"],
             ["requests", "Requests"],
-          ] as Array<[Tab, string]>).map(([k, label]) => (
+          ] as Array<[Tab, string]>).map(([k, label], idx) => (
             <button
               key={k}
               onClick={() => setTab(k)}
               style={{
+                flex: "1 1 0%",
                 padding: "10px 12px",
-                borderRadius: 12,
-                border: BORDER,
-                background: tab === k ? BRAND_GREY_CARD_STRONG : BRAND_GREY_CARD,
+                border: "none",
+                background: tab === k ? BRAND_GREY_CARD_STRONG : "transparent",
                 color: "var(--text)",
                 fontWeight: 900,
+                cursor: "pointer",
+                boxShadow: tab === k ? "inset 0 -2px 0 var(--accent)" : "none",
+                borderLeft: idx === 0 ? "none" : BORDER,
               }}
             >
               {label}
@@ -616,6 +674,7 @@ export default function CommunityPage() {
                     flex: "1 1 180px",
                     minWidth: 0,
                     padding: "10px 12px",
+                    height: 40,
                     borderRadius: 12,
                     border: BORDER,
                     background: "rgba(0,0,0,0.18)",
@@ -630,6 +689,7 @@ export default function CommunityPage() {
                     flex: "1 1 180px",
                     minWidth: 0,
                     padding: "10px 12px",
+                    height: 40,
                     borderRadius: 12,
                     border: BORDER,
                     background: "rgba(0,0,0,0.18)",
@@ -640,7 +700,8 @@ export default function CommunityPage() {
                   onClick={saveName}
                   disabled={nameBusy}
                   style={{
-                    padding: "10px 12px",
+                    padding: "10px 14px",
+                    height: 40,
                     borderRadius: 12,
                     border: "1px solid rgba(0,0,0,0.10)",
                     background: "var(--accent)",
@@ -974,12 +1035,54 @@ export default function CommunityPage() {
                 flex: "0 0 auto",
               }}
             >
-              <div style={{ minWidth: 0 }}>
-                <div style={{ opacity: 0.9, fontWeight: 750, wordBreak: "break-word" }}>
-                  {openItem.email ? clampEmail(openItem.email) : openItem.user_id} • {formatStackDate(openItem.date_key)}
+              <div
+                style={{
+                  minWidth: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                }}
+              >
+                <div
+                  aria-hidden="true"
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 14,
+                    background: "rgba(0,0,0,0.18)",
+                    border: "1px solid rgba(255,255,255,0.10)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontWeight: 900,
+                    flex: "0 0 auto",
+                  }}
+                >
+                  {badgeLetterFor(openItem)}
                 </div>
-                <div style={{ fontSize: 22, fontWeight: 900, marginTop: 6, wordBreak: "break-word" }}>
-                  {openItem.title || "Workout"}
+
+                <div style={{ minWidth: 0 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "baseline",
+                      justifyContent: "space-between",
+                      gap: 10,
+                    }}
+                  >
+                    <div style={{ fontWeight: 900, fontSize: 18, minWidth: 0, wordBreak: "break-word" }}>
+                      {formatDisplayName(openItem)}
+                    </div>
+                    <div style={{ opacity: 0.85, fontWeight: 800, whiteSpace: "nowrap" }}>
+                      {formatStackDate(openItem.date_key)}
+                    </div>
+                  </div>
+                  <div style={{ opacity: 0.86, fontWeight: 750, wordBreak: "break-word" }}>
+                    {openItem.email ? clampEmail(openItem.email) : openItem.user_id}
+                  </div>
+                  <div style={{ fontSize: 22, fontWeight: 950, marginTop: 6, wordBreak: "break-word" }}>
+                    {openItem.title || "Workout"}
+                  </div>
                 </div>
               </div>
 
@@ -1007,6 +1110,7 @@ export default function CommunityPage() {
               <div style={{ marginTop: 2, display: "grid", gap: 10 }}>
                 {(Array.isArray(openItem.entries) ? openItem.entries : []).slice(0, 6).map((e: any, idx: number) => {
                   const t = String(e?.title ?? "").trim();
+                  const dayTitle = String(openItem.title ?? "").trim();
                   const notes = String(e?.notes ?? "").trim();
                   const m = e?.media;
                   const path = String(m?.path || "");
@@ -1024,20 +1128,15 @@ export default function CommunityPage() {
                         overflow: "hidden",
                       }}
                     >
-                      {t && (
-                        <div style={{ fontWeight: 850, fontSize: 16, marginBottom: 6, wordBreak: "break-word" }}>
-                          {t}
-                        </div>
-                      )}
-
-                      {notes && (
-                        <div style={{ whiteSpace: "pre-wrap", opacity: 0.92, wordBreak: "break-word" }}>
-                          {notes}
-                        </div>
-                      )}
+                      {t &&
+                        t !== dayTitle && (
+                          <div style={{ fontWeight: 850, fontSize: 16, marginBottom: 6, wordBreak: "break-word" }}>
+                            {t}
+                          </div>
+                        )}
 
                       {kind && path && (
-                        <div style={{ marginTop: 10 }}>
+                        <div style={{ marginTop: t && t !== dayTitle ? 10 : 2 }}>
                           {url ? (
                             kind === "image" ? (
                               <img
@@ -1066,6 +1165,19 @@ export default function CommunityPage() {
                               Media loading…
                             </div>
                           )}
+                        </div>
+                      )}
+
+                      {notes && (
+                        <div
+                          style={{
+                            marginTop: kind && path ? 10 : 0,
+                            whiteSpace: "pre-wrap",
+                            opacity: 0.92,
+                            wordBreak: "break-word",
+                          }}
+                        >
+                          {notes}
                         </div>
                       )}
                     </div>
@@ -1180,8 +1292,8 @@ function PersonRow(props: {
         <div
           aria-hidden="true"
           style={{
-            width: 36,
-            height: 36,
+            width: 34,
+            height: 34,
             borderRadius: 12,
             display: "flex",
             alignItems: "center",
@@ -1245,6 +1357,7 @@ function FeedRow(props: { item: FeedItem; onOpen: () => void }) {
 
   const displayName = formatDisplayName(it);
   const letter = badgeLetterFor(it);
+  const when = timeAgoShort(it.updated_at);
 
   return (
     <button
@@ -1267,8 +1380,8 @@ function FeedRow(props: { item: FeedItem; onOpen: () => void }) {
         <div
           aria-hidden="true"
           style={{
-            width: 36,
-            height: 36,
+            width: 34,
+            height: 34,
             borderRadius: 12,
             display: "flex",
             alignItems: "center",
@@ -1301,6 +1414,11 @@ function FeedRow(props: { item: FeedItem; onOpen: () => void }) {
             </div>
 
             <div style={{ display: "inline-flex", gap: 8, flex: "0 0 auto", alignItems: "center" }}>
+              {when && (
+                <span style={{ fontSize: 12, opacity: 0.7, fontWeight: 900 }} title={it.updated_at}>
+                  {when}
+                </span>
+              )}
               {it.has_photo && (
                 <span
                   title="Photo"

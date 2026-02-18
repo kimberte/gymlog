@@ -379,8 +379,7 @@ export default function WorkoutEditor({
     // Best-effort: publish/remove community snapshot if enabled
     void publishWorkoutDay({ dateKey: date, workouts: next as any });
     toast("Saved");
-    onClose();
-  }
+}
 
   function togglePb() {
     const nextPb = !isPb;
@@ -713,7 +712,7 @@ export default function WorkoutEditor({
     activeMedia?.kind === "video" ? "video" : activeMedia?.kind === "image" ? "image" : null;
 
   return (
-    <div className="overlay" onMouseDown={onClose}>
+    <div className="overlay">
       <div className="editor editor-full" onMouseDown={(e) => e.stopPropagation()}>
         <button className="close" onClick={onClose} aria-label="Close">
           ✕
@@ -804,6 +803,8 @@ export default function WorkoutEditor({
               borderRadius: 12,
               border: "1px solid rgba(255,255,255,0.12)",
               background: "rgba(0,0,0,0.10)",
+              maxHeight: 260,
+              overflowY: "auto",
             }}
           >
             {/* ✅ Put text ABOVE buttons so nothing is squished */}
@@ -812,7 +813,7 @@ export default function WorkoutEditor({
                 <div style={{ minWidth: 0 }}>
                   <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
                     <div style={{ fontSize: 12, opacity: 0.85 }}>
-                      Media {mediaKind ? `(${mediaKind})` : ""}
+                      Highlight {mediaKind ? `(${mediaKind})` : ""}
                     </div>
 
                     {mediaUrl && (
@@ -844,7 +845,7 @@ export default function WorkoutEditor({
                   )}
                   {sessionUserId && (
                     <div style={{ fontSize: 12, opacity: 0.65, marginTop: 2 }}>
-                      Upload an image or a short video (max 30s)
+                      Add a highlight image or short video (max 30s)
                     </div>
                   )}
                 </div>
@@ -1071,6 +1072,8 @@ export default function WorkoutEditor({
               </div>
             )}
           </div>
+
+
 
         </div>
 

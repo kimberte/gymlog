@@ -7,7 +7,12 @@ import { isCommunityShareEnabled, setCommunityShareEnabled } from "../lib/commun
 
 type Tab = "feed" | "friends" | "requests";
 
-type Profile = { id: string; email: string };
+type Profile = {
+  id: string;
+  email: string;
+  first_name?: string | null;
+  last_name?: string | null;
+};
 
 type FriendRequestRow = {
   id: number;
@@ -25,6 +30,12 @@ type WorkoutDayRow = {
   has_photo: boolean;
   has_video: boolean;
   updated_at: string;
+};
+
+type FeedItem = WorkoutDayRow & {
+  email?: string;
+  first_name?: string | null;
+  last_name?: string | null;
 };
 
 function toDateKey(d: Date) {
@@ -55,6 +66,36 @@ function clampEmail(email: string) {
   return `${email.slice(0, 16)}…${email.slice(-14)}`;
 }
 
+function formatDisplayName(it: {
+  first_name?: any;
+  last_name?: any;
+  email?: any;
+  user_id?: any;
+}) {
+  const first = String(it?.first_name ?? "").trim();
+  const last = String(it?.last_name ?? "").trim();
+
+  if (first) {
+    const li = last ? ` ${last[0].toUpperCase()}.` : "";
+    return `${first}${li}`;
+  }
+
+  const email = String(it?.email ?? "").trim();
+  if (email) return clampEmail(email);
+
+  return String(it?.user_id ?? "").trim();
+}
+
+function badgeLetterFor(it: { first_name?: any; email?: any }) {
+  const first = String(it?.first_name ?? "").trim();
+  if (first) return first[0].toUpperCase();
+
+  const email = String(it?.email ?? "").trim();
+  if (email) return email[0].toUpperCase();
+
+  return "?";
+}
+
 const BRAND_GREY_CARD = "rgba(255,255,255,0.06)";
 const BRAND_GREY_CARD_STRONG = "rgba(255,255,255,0.08)";
 const BORDER = "1px solid rgba(255,255,255,0.12)";
@@ -68,6 +109,11 @@ export default function CommunityPage() {
 
   const [shareEnabled, setShareEnabled] = useState(false);
 
+  // Display name (optional)
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [nameBusy, setNameBusy] = useState(false);
+
   // Search
   const [searchEmail, setSearchEmail] = useState("");
   const [searchResult, setSearchResult] = useState<Profile | null>(null);
@@ -75,16 +121,20 @@ export default function CommunityPage() {
 
   // Friends + requests
   const [friends, setFriends] = useState<Profile[]>([]);
-  const [incoming, setIncoming] = useState<(FriendRequestRow & { from_email?: string })[]>([]);
-  const [outgoing, setOutgoing] = useState<(FriendRequestRow & { to_email?: string })[]>([]);
+  const [incoming, setIncoming] = useState<
+    (FriendRequestRow & { from_email?: string })[]
+  >([]);
+  const [outgoing, setOutgoing] = useState<
+    (FriendRequestRow & { to_email?: string })[]
+  >([]);
 
   // Feed
-  const [feed, setFeed] = useState<(WorkoutDayRow & { email?: string })[]>([]);
+  const [feed, setFeed] = useState<FeedItem[]>([]);
   const [showPast, setShowPast] = useState(false);
   const [showFuture, setShowFuture] = useState(false);
 
   // Modal
-  const [openItem, setOpenItem] = useState<(WorkoutDayRow & { email?: string }) | null>(null);
+  const [openItem, setOpenItem] = useState<FeedItem | null>(null);
   const [mediaUrls, setMediaUrls] = useState<Record<string, string>>({});
   const mediaBusyRef = useRef(false);
 
@@ -118,37 +168,93 @@ export default function CommunityPage() {
     };
   }, []);
 
-  // Ensure profiles row exists
+  // Ensure profiles row exists (and keep email updated)
   useEffect(() => {
     (async () => {
       if (!sessionUserId || !sessionEmail) return;
       try {
-        await supabase.from("profiles").upsert({ id: sessionUserId, email: sessionEmail }, { onConflict: "id" });
+        await supabase
+          .from("profiles")
+          .upsert({ id: sessionUserId, email: sessionEmail }, { onConflict: "id" });
       } catch {
         // ignore
       }
     })();
   }, [sessionUserId, sessionEmail]);
 
+  // Load my saved name
+  useEffect(() => {
+    (async () => {
+      if (!sessionUserId) return;
+      try {
+        const { data } = await supabase
+          .from("profiles")
+          .select("first_name,last_name")
+          .eq("id", sessionUserId)
+          .maybeSingle();
+
+        setFirstName(String((data as any)?.first_name ?? ""));
+        setLastName(String((data as any)?.last_name ?? ""));
+      } catch {
+        // ignore
+      }
+    })();
+  }, [sessionUserId]);
+
   // Persist share toggle
   useEffect(() => {
     setCommunityShareEnabled(shareEnabled);
   }, [shareEnabled]);
 
+  async function saveName() {
+    if (!sessionUserId) return;
+    if (nameBusy) return;
+
+    setNameBusy(true);
+    try {
+      const fn = firstName.trim();
+      const ln = lastName.trim();
+
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          first_name: fn ? fn : null,
+          last_name: ln ? ln : null,
+        })
+        .eq("id", sessionUserId);
+
+      if (error) throw error;
+      showToast("Saved");
+      await loadFeed();
+    } catch {
+      showToast("Save failed");
+    } finally {
+      setNameBusy(false);
+    }
+  }
+
   async function loadFriendsAndRequests() {
     if (!sessionUserId) return;
     try {
-      const { data: fr, error: frErr } = await supabase.from("friendships").select("friend_id").eq("user_id", sessionUserId);
+      // Friends
+      const { data: fr, error: frErr } = await supabase
+        .from("friendships")
+        .select("friend_id")
+        .eq("user_id", sessionUserId);
       if (frErr) throw frErr;
       const ids = (fr ?? []).map((r: any) => String(r.friend_id));
 
       if (ids.length) {
-        const { data: ps } = await supabase.from("profiles").select("id,email").in("id", ids);
+        const { data: ps } = await supabase
+          .from("profiles")
+          .select("id,email")
+          .in("id", ids);
         setFriends((ps ?? []) as any);
       } else {
         setFriends([]);
       }
 
+      // Requests incoming/outgoing
       const { data: reqs, error: rErr } = await supabase
         .from("friend_requests")
         .select("id,from_user,to_user,status,created_at")
@@ -159,10 +265,20 @@ export default function CommunityPage() {
       const inReq = (reqs ?? []).filter((r: any) => r.to_user === sessionUserId);
       const outReq = (reqs ?? []).filter((r: any) => r.from_user === sessionUserId);
 
-      const needIds = Array.from(new Set([...inReq.map((r: any) => String(r.from_user)), ...outReq.map((r: any) => String(r.to_user))]));
+      // Map IDs -> emails
+      const needIds = Array.from(
+        new Set([
+          ...inReq.map((r: any) => String(r.from_user)),
+          ...outReq.map((r: any) => String(r.to_user)),
+        ])
+      );
+
       let map: Record<string, string> = {};
       if (needIds.length) {
-        const { data: ps } = await supabase.from("profiles").select("id,email").in("id", needIds);
+        const { data: ps } = await supabase
+          .from("profiles")
+          .select("id,email")
+          .in("id", needIds);
         for (const p of ps ?? []) map[String((p as any).id)] = String((p as any).email);
       }
 
@@ -176,7 +292,10 @@ export default function CommunityPage() {
   async function loadFeed() {
     if (!sessionUserId) return;
     try {
-      const { data: fr } = await supabase.from("friendships").select("friend_id").eq("user_id", sessionUserId);
+      const { data: fr } = await supabase
+        .from("friendships")
+        .select("friend_id")
+        .eq("user_id", sessionUserId);
       const ids = (fr ?? []).map((r: any) => String(r.friend_id));
       if (!ids.length) {
         setFeed([]);
@@ -198,19 +317,45 @@ export default function CommunityPage() {
 
       if (error) throw error;
 
+      // attach email + name
       const need = Array.from(new Set((data ?? []).map((r: any) => String(r.user_id))));
-      let map: Record<string, string> = {};
+      let map: Record<
+        string,
+        { email: string; first_name?: string | null; last_name?: string | null }
+      > = {};
+
       if (need.length) {
-        const { data: ps } = await supabase.from("profiles").select("id,email").in("id", need);
-        for (const p of ps ?? []) map[String((p as any).id)] = String((p as any).email);
+        const { data: ps } = await supabase
+          .from("profiles")
+          .select("id,email,first_name,last_name")
+          .in("id", need);
+
+        for (const p of ps ?? []) {
+          map[String((p as any).id)] = {
+            email: String((p as any).email ?? ""),
+            first_name: (p as any).first_name ?? null,
+            last_name: (p as any).last_name ?? null,
+          };
+        }
       }
 
-      setFeed((data ?? []).map((r: any) => ({ ...(r as any), email: map[String(r.user_id)] })));
+      setFeed(
+        (data ?? []).map((r: any) => {
+          const prof = map[String(r.user_id)];
+          return {
+            ...(r as any),
+            email: prof?.email,
+            first_name: prof?.first_name ?? null,
+            last_name: prof?.last_name ?? null,
+          } as FeedItem;
+        })
+      );
     } catch {
       // ignore
     }
   }
 
+  // load on auth ready
   useEffect(() => {
     if (!sessionUserId) return;
     void loadFriendsAndRequests();
@@ -228,7 +373,11 @@ export default function CommunityPage() {
     }
     setSearchBusy(true);
     try {
-      const { data, error } = await supabase.from("profiles").select("id,email").ilike("email", q).limit(1);
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id,email")
+        .ilike("email", q)
+        .limit(1);
       if (error) throw error;
       const found = (data ?? [])[0] as any;
       if (!found) {
@@ -302,7 +451,7 @@ export default function CommunityPage() {
   const todayKey = useMemo(() => toDateKey(new Date()), []);
 
   const feedByDate = useMemo(() => {
-    const m: Record<string, (WorkoutDayRow & { email?: string })[]> = {};
+    const m: Record<string, FeedItem[]> = {};
     for (const item of feed) {
       const k = item.date_key;
       if (!m[k]) m[k] = [];
@@ -312,13 +461,17 @@ export default function CommunityPage() {
   }, [feed]);
 
   const pastKeys = useMemo(() => {
-    const keys = Object.keys(feedByDate).filter((k) => k < todayKey && k >= toDateKey(addDays(new Date(), -7)));
+    const keys = Object.keys(feedByDate).filter(
+      (k) => k < todayKey && k >= toDateKey(addDays(new Date(), -7))
+    );
     keys.sort();
     return keys;
   }, [feedByDate, todayKey]);
 
   const futureKeys = useMemo(() => {
-    const keys = Object.keys(feedByDate).filter((k) => k > todayKey && k <= toDateKey(addDays(new Date(), 7)));
+    const keys = Object.keys(feedByDate).filter(
+      (k) => k > todayKey && k <= toDateKey(addDays(new Date(), 7))
+    );
     keys.sort();
     return keys;
   }, [feedByDate, todayKey]);
@@ -356,7 +509,7 @@ export default function CommunityPage() {
   return (
     <div style={{ padding: 14, overflowX: "hidden" }}>
       <div style={{ maxWidth: 980, margin: "0 auto" }}>
-        {/* ✅ Back to calendar + title */}
+        {/* Back to calendar + title */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 10 }}>
           <a
             href="/"
@@ -379,7 +532,9 @@ export default function CommunityPage() {
 
           <div style={{ textAlign: "right" }}>
             <h1 style={{ margin: 0, fontSize: 22 }}>Community</h1>
-            <div style={{ opacity: 0.75, fontSize: 13, marginTop: 2 }}>Friends only • Today ± 7 days</div>
+            <div style={{ opacity: 0.75, fontSize: 13, marginTop: 2 }}>
+              Friends only • Today ± 7 days
+            </div>
           </div>
         </div>
 
@@ -399,19 +554,17 @@ export default function CommunityPage() {
             title="Share your saved workouts to friends"
           >
             <span style={{ fontSize: 13, opacity: 0.95 }}>Share my workouts</span>
-            <input type="checkbox" checked={shareEnabled} onChange={(e) => setShareEnabled(e.target.checked)} />
+            <input
+              type="checkbox"
+              checked={shareEnabled}
+              onChange={(e) => setShareEnabled(e.target.checked)}
+            />
           </label>
         </div>
 
         {/* Tabs */}
         <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
-          {(
-            [
-              ["feed", "Feed"],
-              ["friends", "Friends"],
-              ["requests", "Requests"],
-            ] as Array<[Tab, string]>
-          ).map(([k, label]) => (
+          {([["feed","Feed"],["friends","Friends"],["requests","Requests"]] as Array<[Tab,string]>).map(([k,label]) => (
             <button
               key={k}
               onClick={() => setTab(k)}
@@ -480,7 +633,9 @@ export default function CommunityPage() {
                   }}
                 >
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ fontWeight: 800, overflow: "hidden", textOverflow: "ellipsis" }}>{searchResult.email}</div>
+                    <div style={{ fontWeight: 800, overflow: "hidden", textOverflow: "ellipsis" }}>
+                      {searchResult.email}
+                    </div>
                     <div style={{ opacity: 0.8, fontSize: 13 }}>Send friend request?</div>
                   </div>
                   <button
@@ -525,7 +680,9 @@ export default function CommunityPage() {
                         }}
                       >
                         <div style={{ minWidth: 0 }}>
-                          <div style={{ fontWeight: 800, overflow: "hidden", textOverflow: "ellipsis" }}>{f.email}</div>
+                          <div style={{ fontWeight: 800, overflow: "hidden", textOverflow: "ellipsis" }}>
+                            {f.email}
+                          </div>
                         </div>
                         <button
                           onClick={() => removeFriend(f.id)}
@@ -560,9 +717,23 @@ export default function CommunityPage() {
                 {incoming
                   .filter((r) => r.status === "pending")
                   .map((r) => (
-                    <div key={r.id} style={{ display: "flex", gap: 10, alignItems: "center", justifyContent: "space-between", padding: 12, borderRadius: 16, border: BORDER, background: BRAND_GREY_CARD }}>
+                    <div
+                      key={r.id}
+                      style={{
+                        display: "flex",
+                        gap: 10,
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: 12,
+                        borderRadius: 16,
+                        border: BORDER,
+                        background: BRAND_GREY_CARD,
+                      }}
+                    >
                       <div style={{ minWidth: 0 }}>
-                        <div style={{ fontWeight: 850, overflow: "hidden", textOverflow: "ellipsis" }}>{r.from_email ?? r.from_user}</div>
+                        <div style={{ fontWeight: 850, overflow: "hidden", textOverflow: "ellipsis" }}>
+                          {r.from_email ?? r.from_user}
+                        </div>
                         <div style={{ opacity: 0.8, fontSize: 13 }}>Wants to add you</div>
                       </div>
                       <div style={{ display: "flex", gap: 8, flex: "0 0 auto" }}>
@@ -607,7 +778,9 @@ export default function CommunityPage() {
                   .filter((r) => r.status === "pending")
                   .map((r) => (
                     <div key={r.id} style={{ padding: 12, borderRadius: 16, border: BORDER, background: BRAND_GREY_CARD }}>
-                      <div style={{ fontWeight: 850, overflow: "hidden", textOverflow: "ellipsis" }}>{r.to_email ?? r.to_user}</div>
+                      <div style={{ fontWeight: 850, overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {r.to_email ?? r.to_user}
+                      </div>
                       <div style={{ opacity: 0.8, fontSize: 13 }}>Pending</div>
                     </div>
                   ))}
@@ -619,7 +792,61 @@ export default function CommunityPage() {
         {/* FEED */}
         {tab === "feed" && (
           <div style={{ marginTop: 14 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+            {/* Name card */}
+            <div style={{ border: BORDER, borderRadius: 16, padding: 12, background: BRAND_GREY_CARD }}>
+              <div style={{ fontWeight: 900, marginBottom: 8 }}>Your display name (optional)</div>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                <input
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  placeholder="First name"
+                  style={{
+                    flex: "1 1 160px",
+                    minWidth: 0,
+                    padding: "10px 12px",
+                    borderRadius: 12,
+                    border: BORDER,
+                    background: "rgba(0,0,0,0.12)",
+                    color: "var(--text)",
+                  }}
+                />
+                <input
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  placeholder="Last name"
+                  style={{
+                    flex: "1 1 160px",
+                    minWidth: 0,
+                    padding: "10px 12px",
+                    borderRadius: 12,
+                    border: BORDER,
+                    background: "rgba(0,0,0,0.12)",
+                    color: "var(--text)",
+                  }}
+                />
+                <button
+                  onClick={saveName}
+                  disabled={nameBusy || !sessionUserId}
+                  style={{
+                    padding: "10px 12px",
+                    borderRadius: 12,
+                    border: "1px solid rgba(0,0,0,0.10)",
+                    background: "var(--accent)",
+                    color: "#111",
+                    fontWeight: 900,
+                    flex: "0 0 auto",
+                    opacity: !sessionUserId ? 0.6 : 1,
+                  }}
+                >
+                  {nameBusy ? "Saving…" : "Save"}
+                </button>
+              </div>
+              <div style={{ opacity: 0.8, fontSize: 13, marginTop: 8 }}>
+                This is what friends see in the feed. Friend search/requests still use email.
+              </div>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 14 }}>
               <h2 style={{ margin: 0, fontSize: 16, opacity: 0.95 }}>Today</h2>
               <button
                 onClick={loadFeed}
@@ -640,7 +867,9 @@ export default function CommunityPage() {
               {(feedByDate[todayKey] ?? []).length === 0 ? (
                 <div style={{ opacity: 0.8, fontSize: 14 }}>No workouts shared today.</div>
               ) : (
-                (feedByDate[todayKey] ?? []).map((it) => <FeedRow key={`${it.user_id}-${it.date_key}`} item={it} onOpen={() => setOpenItem(it)} />)
+                (feedByDate[todayKey] ?? []).map((it) => (
+                  <FeedRow key={`${it.user_id}-${it.date_key}`} item={it} onOpen={() => setOpenItem(it)} />
+                ))
               )}
             </div>
 
@@ -650,7 +879,9 @@ export default function CommunityPage() {
                 {pastKeys.length === 0 ? (
                   <div style={{ opacity: 0.8, fontSize: 14 }}>No workouts in the last 7 days.</div>
                 ) : (
-                  pastKeys.map((k) => <DateGroup key={k} label={formatStackDate(k)} items={feedByDate[k] ?? []} onOpen={(it) => setOpenItem(it)} />)
+                  pastKeys.map((k) => (
+                    <DateGroup key={k} label={formatStackDate(k)} items={feedByDate[k] ?? []} onOpen={(it) => setOpenItem(it)} />
+                  ))
                 )}
               </div>
             )}
@@ -661,7 +892,9 @@ export default function CommunityPage() {
                 {futureKeys.length === 0 ? (
                   <div style={{ opacity: 0.8, fontSize: 14 }}>No upcoming workouts.</div>
                 ) : (
-                  futureKeys.map((k) => <DateGroup key={k} label={formatStackDate(k)} items={feedByDate[k] ?? []} onOpen={(it) => setOpenItem(it)} />)
+                  futureKeys.map((k) => (
+                    <DateGroup key={k} label={formatStackDate(k)} items={feedByDate[k] ?? []} onOpen={(it) => setOpenItem(it)} />
+                  ))
                 )}
               </div>
             )}
@@ -694,14 +927,13 @@ export default function CommunityPage() {
               overflow: "hidden",
               borderRadius: 18,
               border: BORDER,
-              background: "#2f343f", // ✅ brand grey card
+              background: "#2f343f",
               color: "var(--text)",
               display: "flex",
               flexDirection: "column",
               boxShadow: "0 20px 60px rgba(0,0,0,0.35)",
             }}
           >
-            {/* Header */}
             <div
               style={{
                 padding: "14px 16px",
@@ -715,7 +947,7 @@ export default function CommunityPage() {
             >
               <div style={{ minWidth: 0 }}>
                 <div style={{ opacity: 0.9, fontWeight: 750, wordBreak: "break-word" }}>
-                  {openItem.email ? clampEmail(openItem.email) : openItem.user_id} • {formatStackDate(openItem.date_key)}
+                  {formatDisplayName(openItem)} • {formatStackDate(openItem.date_key)}
                 </div>
                 <div style={{ fontSize: 22, fontWeight: 900, marginTop: 6, wordBreak: "break-word" }}>
                   {openItem.title || "Workout"}
@@ -742,7 +974,6 @@ export default function CommunityPage() {
               </button>
             </div>
 
-            {/* Content */}
             <div style={{ padding: 16, overflowY: "auto" }}>
               <div style={{ marginTop: 2, display: "grid", gap: 10 }}>
                 {(Array.isArray(openItem.entries) ? openItem.entries : []).slice(0, 6).map((e: any, idx: number) => {
@@ -764,7 +995,6 @@ export default function CommunityPage() {
                         overflow: "hidden",
                       }}
                     >
-                      {/* entry title (keep, but visually lighter so the modal title isn't “repeated”) */}
                       {t && (
                         <div style={{ fontWeight: 850, fontSize: 16, marginBottom: 6, wordBreak: "break-word" }}>
                           {t}
@@ -794,15 +1024,7 @@ export default function CommunityPage() {
                               />
                             )
                           ) : (
-                            <div
-                              style={{
-                                opacity: 0.85,
-                                fontSize: 13,
-                                display: "inline-flex",
-                                gap: 8,
-                                alignItems: "center",
-                              }}
-                            >
+                            <div style={{ opacity: 0.85, fontSize: 13, display: "inline-flex", gap: 8, alignItems: "center" }}>
                               <span style={{ color: "var(--accent)", fontWeight: 900 }}>●</span>
                               Media loading…
                             </div>
@@ -880,26 +1102,28 @@ function SectionToggle(props: { title: string; open: boolean; onToggle: () => vo
   );
 }
 
-function DateGroup(props: {
-  label: string;
-  items: (WorkoutDayRow & { email?: string })[];
-  onOpen: (it: WorkoutDayRow & { email?: string }) => void;
-}) {
+function DateGroup(props: { label: string; items: FeedItem[]; onOpen: (it: FeedItem) => void }) {
   return (
     <div>
       <div style={{ fontWeight: 900, opacity: 0.9, marginBottom: 8 }}>{props.label}</div>
       <div style={{ display: "grid", gap: 8 }}>
         {props.items.map((it) => (
-          <FeedRow key={`${it.user_id}-${it.date_key}-${it.updated_at}`} item={it} onOpen={() => props.onOpen(it)} />
+          <FeedRow
+            key={`${it.user_id}-${it.date_key}-${it.updated_at}`}
+            item={it}
+            onOpen={() => props.onOpen(it)}
+          />
         ))}
       </div>
     </div>
   );
 }
 
-function FeedRow(props: { item: WorkoutDayRow & { email?: string }; onOpen: () => void }) {
+function FeedRow(props: { item: FeedItem; onOpen: () => void }) {
   const it = props.item;
   const title = it.title || "Workout";
+  const displayName = formatDisplayName(it);
+  const badge = badgeLetterFor(it);
 
   return (
     <button
@@ -912,38 +1136,33 @@ function FeedRow(props: { item: WorkoutDayRow & { email?: string }; onOpen: () =
         background: "rgba(255,255,255,0.06)",
         color: "var(--text)",
         display: "flex",
-        gap: 10,
-        alignItems: "center",
+        gap: 12,
+        alignItems: "flex-start",
         justifyContent: "space-between",
         minWidth: 0,
       }}
     >
+      <div
+        aria-hidden="true"
+        style={{
+          width: 34,
+          height: 34,
+          borderRadius: 12,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontWeight: 900,
+          background: "rgba(255,255,255,0.08)",
+          border: "1px solid rgba(0,0,0,0.10)",
+          flex: "0 0 auto",
+        }}
+      >
+        {badge}
+      </div>
+
       <div style={{ minWidth: 0, flex: "1 1 auto" }}>
-        <div
-          style={{
-            display: "flex",
-            gap: 8,
-            alignItems: "center",
-            minWidth: 0,
-          }}
-        >
-          <span
-            style={{
-              fontWeight: 800,
-              minWidth: 0,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-              opacity: 0.92,
-            }}
-            title={it.email ?? it.user_id}
-          >
-            {it.email ?? it.user_id}
-          </span>
-
-          <span style={{ opacity: 0.55 }}>•</span>
-
-          <span
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, minWidth: 0 }}>
+          <div
             style={{
               fontWeight: 900,
               minWidth: 0,
@@ -954,47 +1173,63 @@ function FeedRow(props: { item: WorkoutDayRow & { email?: string }; onOpen: () =
             title={title}
           >
             {title}
-          </span>
-        </div>
-      </div>
+          </div>
 
-      <div style={{ display: "inline-flex", gap: 8, flex: "0 0 auto", alignItems: "center" }}>
-        {it.has_photo && (
-          <span
-            title="Photo"
-            style={{
-              width: 24,
-              height: 24,
-              borderRadius: 999,
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              border: "1px solid rgba(0,0,0,0.12)",
-              background: "rgba(255,255,255,0.08)",
-              fontSize: 13,
-            }}
-          >
-            📷
-          </span>
-        )}
-        {it.has_video && (
-          <span
-            title="Video"
-            style={{
-              width: 24,
-              height: 24,
-              borderRadius: 999,
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              border: "1px solid rgba(0,0,0,0.12)",
-              background: "rgba(255,255,255,0.08)",
-              fontSize: 13,
-            }}
-          >
-            🎥
-          </span>
-        )}
+          <div style={{ display: "inline-flex", gap: 8, flex: "0 0 auto", alignItems: "center" }}>
+            {it.has_photo && (
+              <span
+                title="Photo"
+                style={{
+                  width: 24,
+                  height: 24,
+                  borderRadius: 999,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  border: "1px solid rgba(0,0,0,0.12)",
+                  background: "rgba(255,255,255,0.08)",
+                  fontSize: 13,
+                }}
+              >
+                📷
+              </span>
+            )}
+            {it.has_video && (
+              <span
+                title="Video"
+                style={{
+                  width: 24,
+                  height: 24,
+                  borderRadius: 999,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  border: "1px solid rgba(0,0,0,0.12)",
+                  background: "rgba(255,255,255,0.08)",
+                  fontSize: 13,
+                }}
+              >
+                🎥
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div
+          style={{
+            marginTop: 4,
+            opacity: 0.82,
+            fontWeight: 750,
+            fontSize: 13,
+            minWidth: 0,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+          title={displayName}
+        >
+          {displayName}
+        </div>
       </div>
     </button>
   );

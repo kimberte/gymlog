@@ -233,11 +233,9 @@ export default function WorkoutCalendar({
       ? "1 workout this month"
       : `${monthWorkoutCount} workouts this month`;
 
-  const today = useMemo(() => new Date(), []);
-  const isCurrentMonth =
-    cursor.getFullYear() === today.getFullYear() &&
-    cursor.getMonth() === today.getMonth();
-
+  const today = new Date();
+  const isCurrentMonth = cursor.getFullYear() === today.getFullYear() && cursor.getMonth() === today.getMonth();
+  
   function jumpToToday() {
     const t = new Date();
     setCursor(new Date(t.getFullYear(), t.getMonth(), 1));

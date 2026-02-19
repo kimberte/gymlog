@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { getWorkoutMediaSignedUrl } from "../lib/workoutMedia";
 import { isCommunityShareEnabled, setCommunityShareEnabled } from "../lib/communityShare";
@@ -78,15 +78,10 @@ function formatStackDate(dateKey: string) {
 
 function clampEmail(email: string) {
   if (email.length <= 34) return email;
-  return `${email.slice(0, 16)}…${email.slice(-14)}`;
+  return `${email.slice(0, 16)}...${email.slice(-14)}`;
 }
 
-function formatDisplayName(it: {
-  first_name?: any;
-  last_name?: any;
-  email?: any;
-  user_id?: any;
-}) {
+function formatDisplayName(it: { first_name?: any; last_name?: any; email?: any; user_id?: any }) {
   const first = String(it?.first_name ?? "").trim();
   const last = String(it?.last_name ?? "").trim();
 
@@ -200,11 +195,7 @@ export default function CommunityPage() {
     (async () => {
       if (!sessionUserId) return;
       try {
-        const { data } = await supabase
-          .from("profiles")
-          .select("first_name,last_name")
-          .eq("id", sessionUserId)
-          .maybeSingle();
+        const { data } = await supabase.from("profiles").select("first_name,last_name").eq("id", sessionUserId).maybeSingle();
 
         setFirstName(String((data as any)?.first_name ?? ""));
         setLastName(String((data as any)?.last_name ?? ""));
@@ -274,12 +265,7 @@ export default function CommunityPage() {
       const outReq = (reqs ?? []).filter((r: any) => r.from_user === sessionUserId);
 
       // Map IDs -> profile (email + name)
-      const needIds = Array.from(
-        new Set([
-          ...inReq.map((r: any) => String(r.from_user)),
-          ...outReq.map((r: any) => String(r.to_user)),
-        ])
-      );
+      const needIds = Array.from(new Set([...inReq.map((r: any) => String(r.from_user)), ...outReq.map((r: any) => String(r.to_user))]));
 
       let map: Record<string, Profile> = {};
       if (needIds.length) {
@@ -429,13 +415,13 @@ export default function CommunityPage() {
         .eq("friend_id", targetId)
         .maybeSingle();
 
-      if (frErr && frErr.code !== "PGRST116") throw frErr;
+      if (frErr && (frErr as any).code !== "PGRST116") throw frErr;
       if (fr) {
         showToast("You're Friends");
         return;
       }
     } catch {
-      // If the check fails, continue to request flow (we'll still catch duplicates)
+      // continue
     }
 
     try {
@@ -452,12 +438,8 @@ export default function CommunityPage() {
 
       if (ex) {
         if (ex.status === "pending") {
-          // Pending either direction
-          if (String(ex.from_user) === String(sessionUserId)) {
-            showToast("Request Pending");
-          } else {
-            showToast("They already requested you");
-          }
+          if (String(ex.from_user) === String(sessionUserId)) showToast("Request Pending");
+          else showToast("They already requested you");
           return;
         }
 
@@ -466,7 +448,7 @@ export default function CommunityPage() {
           return;
         }
 
-        // Declined or any other non-pending status: remove the old row so a new request can be sent
+        // declined/other: remove old row so user can request again
         await supabase.from("friend_requests").delete().eq("id", ex.id);
       }
 
@@ -485,13 +467,10 @@ export default function CommunityPage() {
     } catch (e: any) {
       const msg = String(e?.message || "");
       const code = String(e?.code || "");
-
       if (code === "23505" || msg.toLowerCase().includes("duplicate key")) {
-        // Fallback if our pre-check missed something
         showToast("Request Pending");
         return;
       }
-
       showToast(e?.message || "Request failed");
     }
   }
@@ -618,20 +597,14 @@ export default function CommunityPage() {
             </a>
 
             <div className="brand" style={{ minWidth: 0 }}>
-              <img
-                src="/icons/gym-app-logo-color-40x40.png"
-                alt="Gym Log"
-                className="brand-logo"
-                width={20}
-                height={20}
-              />
+              <img src="/icons/gym-app-logo-color-40x40.png" alt="Gym Log" className="brand-logo" width={20} height={20} />
               <h1 style={{ whiteSpace: "nowrap" }}>Gym Log</h1>
             </div>
           </div>
 
           <div style={{ textAlign: "right" }}>
             <div style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.1 }}>Community</div>
-            <div style={{ opacity: 0.8, fontSize: 13, marginTop: 2 }}>Friends only • Today ± 7 days</div>
+            <div style={{ opacity: 0.8, fontSize: 13, marginTop: 2 }}>Friends only - Today +/- 7 days</div>
           </div>
         </header>
 
@@ -695,11 +668,13 @@ export default function CommunityPage() {
             overflow: "hidden",
           }}
         >
-          {([
-            ["feed", "Feed"],
-            ["friends", "Friends"],
-            ["requests", "Requests"],
-          ] as Array<[Tab, string]>).map(([k, label], idx) => (
+          {(
+            [
+              ["feed", "Feed"],
+              ["friends", "Friends"],
+              ["requests", "Requests"],
+            ] as Array<[Tab, string]>
+          ).map(([k, label], idx) => (
             <button
               key={k}
               onClick={() => setTab(k)}
@@ -732,9 +707,7 @@ export default function CommunityPage() {
                 marginBottom: 12,
               }}
             >
-              <div style={{ fontWeight: 900, marginBottom: 6, opacity: 0.95 }}>
-                Your display name (optional)
-              </div>
+              <div style={{ fontWeight: 900, marginBottom: 6, opacity: 0.95 }}>Your display name (optional)</div>
               <div style={{ opacity: 0.82, fontSize: 13, marginBottom: 10 }}>
                 Friends will see this instead of your email (ex: <b>John S.</b>). Search and requests still use email.
               </div>
@@ -784,7 +757,7 @@ export default function CommunityPage() {
                     flex: "0 0 auto",
                   }}
                 >
-                  {nameBusy ? "Saving…" : "Save"}
+                  {nameBusy ? "Saving..." : "Save"}
                 </button>
               </div>
             </div>
@@ -823,7 +796,12 @@ export default function CommunityPage() {
                   <div style={{ opacity: 0.8, fontSize: 14 }}>No workouts in the last 7 days.</div>
                 ) : (
                   pastKeys.map((k) => (
-                    <DateGroup key={k} label={formatStackDate(k)} items={feedByDate[k] ?? []} onOpen={(it) => setOpenItem(it)} />
+                    <DateGroup
+                      key={k}
+                      label={formatStackDate(k)}
+                      items={feedByDate[k] ?? []}
+                      onOpen={(it) => setOpenItem(it)}
+                    />
                   ))
                 )}
               </div>
@@ -836,7 +814,12 @@ export default function CommunityPage() {
                   <div style={{ opacity: 0.8, fontSize: 14 }}>No upcoming workouts.</div>
                 ) : (
                   futureKeys.map((k) => (
-                    <DateGroup key={k} label={formatStackDate(k)} items={feedByDate[k] ?? []} onOpen={(it) => setOpenItem(it)} />
+                    <DateGroup
+                      key={k}
+                      label={formatStackDate(k)}
+                      items={feedByDate[k] ?? []}
+                      onOpen={(it) => setOpenItem(it)}
+                    />
                   ))
                 )}
               </div>
@@ -876,7 +859,7 @@ export default function CommunityPage() {
                     flex: "0 0 auto",
                   }}
                 >
-                  {searchBusy ? "Searching…" : "Search"}
+                  {searchBusy ? "Searching..." : "Search"}
                 </button>
               </div>
 
@@ -895,9 +878,7 @@ export default function CommunityPage() {
                   }}
                 >
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ fontWeight: 900, overflow: "hidden", textOverflow: "ellipsis" }}>
-                      {searchResult.email}
-                    </div>
+                    <div style={{ fontWeight: 900, overflow: "hidden", textOverflow: "ellipsis" }}>{searchResult.email}</div>
                     <div style={{ opacity: 0.8, fontSize: 13 }}>Send friend request?</div>
                   </div>
                   <button
@@ -999,11 +980,7 @@ export default function CommunityPage() {
                         }}
                       >
                         <div style={{ minWidth: 0, flex: "1 1 auto" }}>
-                          <PersonRow
-                            profile={prof}
-                            compact
-                            subtitle="Incoming • Pending"
-                          />
+                          <PersonRow profile={prof} compact subtitle="Incoming - Pending" />
                         </div>
 
                         <div style={{ display: "flex", gap: 8, flex: "0 0 auto" }}>
@@ -1066,22 +1043,26 @@ export default function CommunityPage() {
                           padding: 12,
                         }}
                       >
-                        <PersonRow profile={prof} subtitle="Sent • Pending" right={
-                          <button
-                            onClick={() => withdrawRequest(r.id)}
-                            style={{
-                              padding: "9px 12px",
-                              borderRadius: 12,
-                              border: BORDER,
-                              background: BRAND_GREY_CARD_STRONG,
-                              color: "var(--text)",
-                              fontWeight: 750,
-                              flex: "0 0 auto",
-                            }}
-                          >
-                            Withdraw
-                          </button>
-                        } />
+                        <PersonRow
+                          profile={prof}
+                          subtitle="Sent - Pending"
+                          right={
+                            <button
+                              onClick={() => withdrawRequest(r.id)}
+                              style={{
+                                padding: "9px 12px",
+                                borderRadius: 12,
+                                border: BORDER,
+                                background: BRAND_GREY_CARD_STRONG,
+                                color: "var(--text)",
+                                fontWeight: 750,
+                                flex: "0 0 auto",
+                              }}
+                            >
+                              Withdraw
+                            </button>
+                          }
+                        />
                       </div>
                     );
                   })}
@@ -1134,14 +1115,7 @@ export default function CommunityPage() {
                 flex: "0 0 auto",
               }}
             >
-              <div
-                style={{
-                  minWidth: 0,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 12,
-                }}
-              >
+              <div style={{ minWidth: 0, display: "flex", alignItems: "center", gap: 12 }}>
                 <div
                   aria-hidden="true"
                   style={{
@@ -1219,14 +1193,7 @@ export default function CommunityPage() {
             </div>
 
             <div style={{ padding: 16, overflowY: "auto" }}>
-              <div
-                style={{
-                  fontSize: 26,
-                  fontWeight: 950,
-                  margin: "2px 0 10px",
-                  wordBreak: "break-word",
-                }}
-              >
+              <div style={{ fontSize: 26, fontWeight: 950, margin: "2px 0 10px", wordBreak: "break-word" }}>
                 {openItem.title || "Workout"}
               </div>
 
@@ -1251,55 +1218,29 @@ export default function CommunityPage() {
                         overflow: "hidden",
                       }}
                     >
-                      {t &&
-                        t !== dayTitle && (
-                          <div style={{ fontWeight: 850, fontSize: 16, marginBottom: 6, wordBreak: "break-word" }}>
-                            {t}
-                          </div>
-                        )}
+                      {t && t !== dayTitle && (
+                        <div style={{ fontWeight: 850, fontSize: 16, marginBottom: 6, wordBreak: "break-word" }}>{t}</div>
+                      )}
 
                       {kind && path && (
                         <div style={{ marginTop: t && t !== dayTitle ? 10 : 2 }}>
                           {url ? (
                             kind === "image" ? (
-                              <img
-                                src={url}
-                                alt="Workout photo"
-                                style={{ width: "100%", borderRadius: 12, maxHeight: 420, objectFit: "cover" }}
-                              />
+                              <img src={url} alt="Workout photo" style={{ width: "100%", borderRadius: 12, maxHeight: 420, objectFit: "cover" }} />
                             ) : (
-                              <video
-                                src={url}
-                                controls
-                                style={{ width: "100%", borderRadius: 12, maxHeight: 420 }}
-                              />
+                              <video src={url} controls style={{ width: "100%", borderRadius: 12, maxHeight: 420 }} />
                             )
                           ) : (
-                            <div
-                              style={{
-                                opacity: 0.85,
-                                fontSize: 13,
-                                display: "inline-flex",
-                                gap: 8,
-                                alignItems: "center",
-                              }}
-                            >
+                            <div style={{ opacity: 0.85, fontSize: 13, display: "inline-flex", gap: 8, alignItems: "center" }}>
                               <span style={{ color: "var(--accent)", fontWeight: 900 }}>●</span>
-                              Media loading…
+                              Media loading...
                             </div>
                           )}
                         </div>
                       )}
 
                       {notes && (
-                        <div
-                          style={{
-                            marginTop: kind && path ? 10 : 0,
-                            whiteSpace: "pre-wrap",
-                            opacity: 0.92,
-                            wordBreak: "break-word",
-                          }}
-                        >
+                        <div style={{ marginTop: kind && path ? 10 : 0, whiteSpace: "pre-wrap", opacity: 0.92, wordBreak: "break-word" }}>
                           {notes}
                         </div>
                       )}
@@ -1309,9 +1250,7 @@ export default function CommunityPage() {
               </div>
 
               {(Array.isArray(openItem.entries) ? openItem.entries : []).length > 6 && (
-                <div style={{ marginTop: 12, opacity: 0.8, fontSize: 13 }}>
-                  Showing first 6 entries…
-                </div>
+                <div style={{ marginTop: 12, opacity: 0.8, fontSize: 13 }}>Showing first 6 entries...</div>
               )}
             </div>
           </div>
@@ -1366,9 +1305,7 @@ function SectionToggle(props: { title: string; open: boolean; onToggle: () => vo
       }}
     >
       <span>{props.title}</span>
-      <span style={{ opacity: 0.8, color: "var(--accent)", fontWeight: 900 }}>
-        {props.open ? "Hide" : "Tap to load"}
-      </span>
+      <span style={{ opacity: 0.8, color: "var(--accent)", fontWeight: 900 }}>{props.open ? "Hide" : "Tap to load"}</span>
     </button>
   );
 }
@@ -1390,27 +1327,14 @@ function DateGroup(props: {
   );
 }
 
-function PersonRow(props: {
-  profile: Profile;
-  right?: React.ReactNode;
-  subtitle?: string;
-  compact?: boolean;
-}) {
+function PersonRow(props: { profile: Profile; right?: ReactNode; subtitle?: string; compact?: boolean }) {
   const { profile } = props;
   const display = formatDisplayName(profile);
   const letter = badgeLetterFor(profile);
   const email = String(profile.email ?? "").trim();
 
   return (
-    <div
-      style={{
-        display: "flex",
-        gap: 12,
-        alignItems: "center",
-        justifyContent: "space-between",
-        minWidth: 0,
-      }}
-    >
+    <div style={{ display: "flex", gap: 12, alignItems: "center", justifyContent: "space-between", minWidth: 0 }}>
       <div style={{ display: "flex", gap: 12, alignItems: "center", minWidth: 0, flex: "1 1 auto" }}>
         <div
           aria-hidden="true"
@@ -1432,16 +1356,7 @@ function PersonRow(props: {
         </div>
 
         <div style={{ minWidth: 0 }}>
-          <div
-            style={{
-              fontWeight: 950,
-              minWidth: 0,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-            title={display}
-          >
+          <div style={{ fontWeight: 950, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={display}>
             {display}
           </div>
 
@@ -1461,11 +1376,7 @@ function PersonRow(props: {
             {email}
           </div>
 
-          {props.subtitle && (
-            <div style={{ marginTop: 6, fontSize: 12, fontWeight: 900, opacity: 0.82 }}>
-              {props.subtitle}
-            </div>
-          )}
+          {props.subtitle && <div style={{ marginTop: 6, fontSize: 12, fontWeight: 900, opacity: 0.82 }}>{props.subtitle}</div>}
         </div>
       </div>
 
@@ -1481,7 +1392,35 @@ function FeedRow(props: { item: FeedItem; onOpen: () => void }) {
   const displayName = formatDisplayName(it);
   const letter = badgeLetterFor(it);
   const when = timeAgoShort(it.updated_at);
-  const mediaIcon = it.has_video ? "🎥" : it.has_photo ? "📷" : "";
+
+  const showMedia = !!(it.has_photo || it.has_video);
+  const mediaKind: "photo" | "video" | null = it.has_video ? "video" : it.has_photo ? "photo" : null;
+
+  const MediaIcon = ({ kind }: { kind: "photo" | "video" }) => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      style={{ width: 14, height: 14 }}
+      aria-hidden="true"
+    >
+      {kind === "photo" ? (
+        <>
+          <path d="M6.75 7.5h2.25l1.5-2.25h3l1.5 2.25h2.25A2.25 2.25 0 0 1 21 9.75v7.5A2.25 2.25 0 0 1 18.75 19.5H6.75A2.25 2.25 0 0 1 4.5 17.25v-7.5A2.25 2.25 0 0 1 6.75 7.5Z" />
+          <path d="M12 10.5a3 3 0 1 0 0 6a3 3 0 0 0 0-6Z" />
+        </>
+      ) : (
+        <>
+          <path d="M3.75 7.5A2.25 2.25 0 0 1 6 5.25h9A2.25 2.25 0 0 1 17.25 7.5v9A2.25 2.25 0 0 1 15 18.75H6A2.25 2.25 0 0 1 3.75 16.5v-9Z" />
+          <path d="M17.25 10.2l3-1.7v7l-3-1.7v-1.9" />
+        </>
+      )}
+    </svg>
+  );
 
   return (
     <button
@@ -1537,16 +1476,24 @@ function FeedRow(props: { item: FeedItem; onOpen: () => void }) {
               </div>
             </div>
 
-            <div style={{ display: "inline-flex",         🎥
-                </span>
-              )}
-              {when && (
-                <span style={{ fontSize: 12, opacity: 0.7, fontWeight: 900, display: "inline-flex", alignItems: "center", gap: 6 }} title={it.updated_at}>
-                  {mediaIcon ? <span aria-hidden="true">{mediaIcon}</span> : null}
-                  {when}
-                </span>
-              )}
-            </div>
+            {when ? (
+              <span
+                style={{
+                  fontSize: 12,
+                  opacity: 0.7,
+                  fontWeight: 900,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  whiteSpace: "nowrap",
+                  flex: "0 0 auto",
+                }}
+                title={it.updated_at}
+              >
+                {showMedia && mediaKind ? <MediaIcon kind={mediaKind} /> : null}
+                {when}
+              </span>
+            ) : null}
           </div>
 
           <div

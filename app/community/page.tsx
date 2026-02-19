@@ -854,26 +854,36 @@ export default function CommunityPage() {
                     .slice()
                     .sort((a, b) => (a.email || "").localeCompare(b.email || ""))
                     .map((f) => (
-                      <PersonRow
+                      <div
                         key={f.id}
-                        profile={f}
-                        right={
-                          <button
-                            onClick={() => removeFriend(f.id)}
-                            style={{
-                              padding: "9px 12px",
-                              borderRadius: 12,
-                              border: BORDER,
-                              background: BRAND_GREY_CARD_STRONG,
-                              color: "var(--text)",
-                              fontWeight: 750,
-                              flex: "0 0 auto",
-                            }}
-                          >
-                            Remove
-                          </button>
-                        }
-                      />
+                        style={{
+                          border: "1px solid rgba(255,255,255,0.12)",
+                          borderRadius: 16,
+                          background: "rgba(255,255,255,0.06)",
+                          padding: 12,
+                        }}
+                      >
+                        <PersonRow
+                          profile={f}
+                          compact
+                          right={
+                            <button
+                              onClick={() => removeFriend(f.id)}
+                              style={{
+                                padding: "9px 12px",
+                                borderRadius: 12,
+                                border: BORDER,
+                                background: BRAND_GREY_CARD_STRONG,
+                                color: "var(--text)",
+                                fontWeight: 750,
+                                flex: "0 0 auto",
+                              }}
+                            >
+                              Remove
+                            </button>
+                          }
+                        />
+                      </div>
                     ))}
                 </div>
               )}
@@ -1029,7 +1039,7 @@ export default function CommunityPage() {
                 padding: "14px 16px",
                 borderBottom: "1px solid rgba(255,255,255,0.10)",
                 display: "flex",
-                alignItems: "center",
+                alignItems: "flex-start",
                 justifyContent: "space-between",
                 gap: 12,
                 flex: "0 0 auto",
@@ -1061,27 +1071,40 @@ export default function CommunityPage() {
                   {badgeLetterFor(openItem)}
                 </div>
 
-                <div style={{ minWidth: 0 }}>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "baseline",
-                      justifyContent: "space-between",
-                      gap: 10,
-                    }}
-                  >
-                    <div style={{ fontWeight: 900, fontSize: 18, minWidth: 0, wordBreak: "break-word" }}>
+                <div style={{ minWidth: 0, paddingTop: 1 }}>
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 10, minWidth: 0 }}>
+                    <div
+                      style={{
+                        fontWeight: 950,
+                        fontSize: 16,
+                        minWidth: 0,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                      title={formatDisplayName(openItem)}
+                    >
                       {formatDisplayName(openItem)}
                     </div>
-                    <div style={{ opacity: 0.85, fontWeight: 800, whiteSpace: "nowrap" }}>
+                    <div style={{ opacity: 0.78, fontWeight: 850, whiteSpace: "nowrap", fontSize: 13 }}>
                       {formatStackDate(openItem.date_key)}
                     </div>
                   </div>
-                  <div style={{ opacity: 0.86, fontWeight: 750, wordBreak: "break-word" }}>
+
+                  <div
+                    style={{
+                      marginTop: 4,
+                      opacity: 0.8,
+                      fontWeight: 750,
+                      fontSize: 13,
+                      minWidth: 0,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                    title={openItem.email ? openItem.email : openItem.user_id}
+                  >
                     {openItem.email ? clampEmail(openItem.email) : openItem.user_id}
-                  </div>
-                  <div style={{ fontSize: 22, fontWeight: 950, marginTop: 6, wordBreak: "break-word" }}>
-                    {openItem.title || "Workout"}
                   </div>
                 </div>
               </div>
@@ -1107,7 +1130,18 @@ export default function CommunityPage() {
             </div>
 
             <div style={{ padding: 16, overflowY: "auto" }}>
-              <div style={{ marginTop: 2, display: "grid", gap: 10 }}>
+              <div
+                style={{
+                  fontSize: 26,
+                  fontWeight: 950,
+                  margin: "2px 0 10px",
+                  wordBreak: "break-word",
+                }}
+              >
+                {openItem.title || "Workout"}
+              </div>
+
+              <div style={{ display: "grid", gap: 10 }}>
                 {(Array.isArray(openItem.entries) ? openItem.entries : []).slice(0, 6).map((e: any, idx: number) => {
                   const t = String(e?.title ?? "").trim();
                   const dayTitle = String(openItem.title ?? "").trim();
@@ -1414,11 +1448,6 @@ function FeedRow(props: { item: FeedItem; onOpen: () => void }) {
             </div>
 
             <div style={{ display: "inline-flex", gap: 8, flex: "0 0 auto", alignItems: "center" }}>
-              {when && (
-                <span style={{ fontSize: 12, opacity: 0.7, fontWeight: 900 }} title={it.updated_at}>
-                  {when}
-                </span>
-              )}
               {it.has_photo && (
                 <span
                   title="Photo"
@@ -1453,6 +1482,11 @@ function FeedRow(props: { item: FeedItem; onOpen: () => void }) {
                   }}
                 >
                   🎥
+                </span>
+              )}
+              {when && (
+                <span style={{ fontSize: 12, opacity: 0.7, fontWeight: 900 }} title={it.updated_at}>
+                  {when}
                 </span>
               )}
             </div>

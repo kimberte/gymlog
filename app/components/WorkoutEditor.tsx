@@ -222,14 +222,16 @@ export default function WorkoutEditor({
     };
   }, []);
 
-  // Keep in sync when date changes (close/reopen)
+  // Keep in sync when DATE changes (close/reopen).
+  // IMPORTANT: Don't reset local editor state just because `workouts` changed
+  // (e.g., after pressing Save). That would wipe UI state like the media preview.
   useEffect(() => {
     setEntries(initialEntries);
     setActiveIdx(0);
-
     setMediaUrl(null);
     setMediaOpen(false);
-  }, [initialEntries]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [date]);
 
   const active = entries[activeIdx] ?? entries[0];
 
@@ -803,7 +805,7 @@ export default function WorkoutEditor({
               borderRadius: 12,
               border: "1px solid rgba(255,255,255,0.12)",
               background: "rgba(0,0,0,0.10)",
-              maxHeight: 260,
+              maxHeight: 170,
               overflowY: "auto",
             }}
           >
@@ -836,7 +838,45 @@ export default function WorkoutEditor({
                         {mediaOpen ? "Hide" : "Show"}
                       </button>
                     )}
-                  </div>
+                  
+                    {mediaUrl && (
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        {mediaKind === "video" ? (
+                          <div
+                            style={{
+                              width: 44,
+                              height: 44,
+                              borderRadius: 12,
+                              border: "1px solid rgba(255,255,255,0.12)",
+                              background: "rgba(0,0,0,0.18)",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: 14,
+                              color: "rgba(255,255,255,0.9)",
+                            }}
+                            title="Video attached"
+                            aria-label="Video attached"
+                          >
+                            ▶
+                          </div>
+                        ) : (
+                          <img
+                            src={mediaUrl}
+                            alt="Highlight thumbnail"
+                            style={{
+                              width: 44,
+                              height: 44,
+                              borderRadius: 12,
+                              border: "1px solid rgba(255,255,255,0.12)",
+                              objectFit: "cover",
+                              display: "block",
+                            }}
+                          />
+                        )}
+                      </div>
+                    )}
+</div>
 
                   {!sessionUserId && (
                     <div style={{ fontSize: 12, opacity: 0.65, marginTop: 2 }}>
@@ -845,7 +885,7 @@ export default function WorkoutEditor({
                   )}
                   {sessionUserId && (
                     <div style={{ fontSize: 12, opacity: 0.65, marginTop: 2 }}>
-                      Add a highlight image or short video (max 30s)
+                      Add image or short video (max 30s)
                     </div>
                   )}
                 </div>
@@ -968,75 +1008,8 @@ export default function WorkoutEditor({
               </div>
             </div>
 
-            {/* Collapsed preview */}
-            {mediaUrl && !mediaOpen && (
-              <button
-                type="button"
-                onClick={() => setMediaOpen(true)}
-                disabled={mediaBusy}
-                aria-label="Show media"
-                style={{
-                  marginTop: 10,
-                  width: "100%",
-                  padding: 0,
-                  border: 0,
-                  background: "transparent",
-                  cursor: mediaBusy ? "not-allowed" : "pointer",
-                  position: "relative",
-                  textAlign: "left",
-                  opacity: mediaBusy ? 0.6 : 1,
-                }}
-              >
-                {mediaKind === "video" ? (
-                  <div
-                    style={{
-                      width: "100%",
-                      height: 110,
-                      borderRadius: 12,
-                      border: "1px solid rgba(255,255,255,0.10)",
-                      background: "rgba(0,0,0,0.18)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      color: "rgba(255,255,255,0.9)",
-                      fontSize: 13,
-                    }}
-                  >
-                    ▶ Tap to view video
-                  </div>
-                ) : (
-                  <img
-                    src={mediaUrl}
-                    alt="Workout media"
-                    style={{
-                      width: "100%",
-                      height: 110,
-                      objectFit: "cover",
-                      borderRadius: 12,
-                      border: "1px solid rgba(255,255,255,0.10)",
-                      display: "block",
-                    }}
-                  />
-                )}
-
-                <div
-                  style={{
-                    position: "absolute",
-                    right: 10,
-                    bottom: 10,
-                    fontSize: 12,
-                    padding: "6px 10px",
-                    borderRadius: 999,
-                    background: "rgba(0,0,0,0.45)",
-                    color: "rgba(255,255,255,0.9)",
-                  }}
-                >
-                  Tap to view
-                </div>
-              </button>
-            )}
-
             {/* Expanded preview */}
+
             {mediaUrl && mediaOpen && (
               <div style={{ marginTop: 10 }}>
                 {mediaKind === "video" ? (
@@ -1047,7 +1020,7 @@ export default function WorkoutEditor({
                     preload="metadata"
                     style={{
                       width: "100%",
-                      maxHeight: 260,
+                      maxHeight: 160,
                       borderRadius: 12,
                       border: "1px solid rgba(255,255,255,0.10)",
                       display: "block",
@@ -1060,7 +1033,7 @@ export default function WorkoutEditor({
                     alt="Workout media"
                     style={{
                       width: "100%",
-                      maxHeight: 240,
+                      maxHeight: 160,
                       objectFit: "contain",
                       borderRadius: 12,
                       border: "1px solid rgba(255,255,255,0.10)",

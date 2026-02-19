@@ -406,8 +406,8 @@ export async function shareWorkoutVerticalImage(options: {
     const sx = (iw - sw) / 2;
     const sy = (ih - sh) / 2;
 
-    // @ts-expect-error CanvasImageSource overloads include HTMLImageElement/HTMLCanvasElement
-    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, W, topH);
+    ctx.drawImage(img as any, sx, sy, sw, sh, 0, 0, W, topH);
+
   };
 
   const drawBrandFallback = () => {

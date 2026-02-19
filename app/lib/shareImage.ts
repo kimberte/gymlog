@@ -407,7 +407,6 @@ export async function shareWorkoutVerticalImage(options: {
     const sy = (ih - sh) / 2;
 
     ctx.drawImage(img as any, sx, sy, sw, sh, 0, 0, W, topH);
-
   };
 
   const drawBrandFallback = () => {

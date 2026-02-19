@@ -418,17 +418,81 @@ export default function CommunityPage() {
 
   async function sendRequest() {
     if (!sessionUserId || !searchResult) return;
+
+    const targetId = String(searchResult.id);
+
+    // Already friends?
     try {
+      const { data: fr, error: frErr } = await supabase
+        .from("friendships")
+        .select("friend_id")
+        .eq("user_id", sessionUserId)
+        .eq("friend_id", targetId)
+        .maybeSingle();
+
+      if (frErr && frErr.code !== "PGRST116") throw frErr;
+      if (fr) {
+        showToast("You're Friends");
+        return;
+      }
+    } catch {
+      // If the check fails, continue to request flow (we'll still catch duplicates)
+    }
+
+    try {
+      // Check any existing request between these two users (either direction)
+      const { data: existing, error: exErr } = await supabase
+        .from("friend_requests")
+        .select("id,from_user,to_user,status")
+        .or(`and(from_user.eq.${sessionUserId},to_user.eq.${targetId}),and(from_user.eq.${targetId},to_user.eq.${sessionUserId})`)
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (exErr) throw exErr;
+      const ex = (existing ?? [])[0] as any | undefined;
+
+      if (ex) {
+        if (ex.status === "pending") {
+          // Pending either direction
+          if (String(ex.from_user) === String(sessionUserId)) {
+            showToast("Request Pending");
+          } else {
+            showToast("They already requested you");
+          }
+          return;
+        }
+
+        if (ex.status === "accepted") {
+          showToast("You're Friends");
+          return;
+        }
+
+        // Declined or any other non-pending status: remove the old row so a new request can be sent
+        await supabase.from("friend_requests").delete().eq("id", ex.id);
+      }
+
       const { error } = await supabase.from("friend_requests").insert({
         from_user: sessionUserId,
-        to_user: searchResult.id,
+        to_user: targetId,
+        status: "pending",
       });
+
       if (error) throw error;
+
       showToast("Request sent");
       setSearchResult(null);
       setSearchEmail("");
       await loadFriendsAndRequests();
     } catch (e: any) {
+      const msg = String(e?.message || "");
+      const code = String(e?.code || "");
+
+      if (code === "23505" || msg.toLowerCase().includes("duplicate key")) {
+        // Fallback if our pre-check missed something
+        showToast("Request Pending");
+        return;
+      }
+
       showToast(e?.message || "Request failed");
     }
   }
@@ -452,6 +516,17 @@ export default function CommunityPage() {
     await supabase.from("friend_requests").update({ status: "declined" }).eq("id", reqId);
     showToast("Declined");
     await loadFriendsAndRequests();
+  }
+
+  async function withdrawRequest(reqId: number) {
+    try {
+      const { error } = await supabase.from("friend_requests").delete().eq("id", reqId);
+      if (error) throw error;
+      showToast("Request withdrawn");
+      await loadFriendsAndRequests();
+    } catch (e: any) {
+      showToast(e?.message || "Could not withdraw");
+    }
   }
 
   async function removeFriend(friendId: string) {
@@ -992,7 +1067,22 @@ export default function CommunityPage() {
                           padding: 12,
                         }}
                       >
-                        <PersonRow profile={prof} subtitle="Sent • Pending" />
+                        <PersonRow profile={prof} subtitle="Sent • Pending" right={
+                          <button
+                            onClick={() => withdrawRequest(r.id)}
+                            style={{
+                              padding: "9px 12px",
+                              borderRadius: 12,
+                              border: BORDER,
+                              background: BRAND_GREY_CARD_STRONG,
+                              color: "var(--text)",
+                              fontWeight: 750,
+                              flex: "0 0 auto",
+                            }}
+                          >
+                            Withdraw
+                          </button>
+                        } />
                       </div>
                     );
                   })}
@@ -1392,6 +1482,7 @@ function FeedRow(props: { item: FeedItem; onOpen: () => void }) {
   const displayName = formatDisplayName(it);
   const letter = badgeLetterFor(it);
   const when = timeAgoShort(it.updated_at);
+  const mediaIcon = it.has_video ? "🎥" : it.has_photo ? "📷" : "";
 
   return (
     <button
@@ -1447,45 +1538,12 @@ function FeedRow(props: { item: FeedItem; onOpen: () => void }) {
               </div>
             </div>
 
-            <div style={{ display: "inline-flex", gap: 8, flex: "0 0 auto", alignItems: "center" }}>
-              {it.has_photo && (
-                <span
-                  title="Photo"
-                  style={{
-                    width: 24,
-                    height: 24,
-                    borderRadius: 999,
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    border: "1px solid rgba(0,0,0,0.12)",
-                    background: "rgba(255,255,255,0.08)",
-                    fontSize: 13,
-                  }}
-                >
-                  📷
-                </span>
-              )}
-              {it.has_video && (
-                <span
-                  title="Video"
-                  style={{
-                    width: 24,
-                    height: 24,
-                    borderRadius: 999,
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    border: "1px solid rgba(0,0,0,0.12)",
-                    background: "rgba(255,255,255,0.08)",
-                    fontSize: 13,
-                  }}
-                >
-                  🎥
+            <div style={{ display: "inline-flex",         🎥
                 </span>
               )}
               {when && (
-                <span style={{ fontSize: 12, opacity: 0.7, fontWeight: 900 }} title={it.updated_at}>
+                <span style={{ fontSize: 12, opacity: 0.7, fontWeight: 900, display: "inline-flex", alignItems: "center", gap: 6 }} title={it.updated_at}>
+                  {mediaIcon ? <span aria-hidden="true">{mediaIcon}</span> : null}
                   {when}
                 </span>
               )}

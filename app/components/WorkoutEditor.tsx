@@ -8,6 +8,8 @@ import {
 import { WorkoutEntry, WorkoutMap, getDayEntries } from "../lib/storage";
 import { getSessionUser } from "../lib/backup";
 import { compressImageToWebp } from "../lib/imageCompress";
+import { shareWorkoutVerticalImage } from "../lib/shareImage";
+
 
 // NEW: per-workout media (image OR video)
 import {

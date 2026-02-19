@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useMemo, useState } from "react";
 import { toDateKey } from "../lib/date";
 import { getDayEntries, WorkoutEntry, WorkoutMap } from "../lib/storage";

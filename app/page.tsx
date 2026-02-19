@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useRef, useState } from "react";
 import WorkoutCalendar from "./components/WorkoutCalendar";
 import WorkoutEditor from "./components/WorkoutEditor";

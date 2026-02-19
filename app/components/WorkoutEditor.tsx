@@ -1,6 +1,4 @@
-// app/components/WorkoutEditor.tsx
 "use client";
-
 import {
   useEffect,
   useMemo,
@@ -713,7 +711,49 @@ export default function WorkoutEditor({
   const mediaKind =
     activeMedia?.kind === "video" ? "video" : activeMedia?.kind === "image" ? "image" : null;
 
-  return (
+  
+  async function handleShare() {
+    try {
+      const t = String(active?.title ?? "").trim() || "Workout";
+      const n = String(active?.notes ?? "").trim();
+      const dateLabel = formatDisplayDate(date);
+
+      let media: { kind: "image" | "video"; url: string } | null = null;
+      const m = (active as any)?.media as WorkoutMediaMeta | null | undefined;
+
+      if (m?.path && (m.kind === "image" || m.kind === "video")) {
+        let url = mediaUrl;
+        if (!url) {
+          try {
+            url = await getWorkoutMediaSignedUrl(m.path);
+          } catch {
+            url = null;
+          }
+        }
+        if (url) media = { kind: m.kind, url };
+      }
+
+      const safe = t.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+      const filename = `gym-log-${date}-${safe || "workout"}.png`;
+
+      const res = await shareWorkoutVerticalImage({
+        filename,
+        dateLabel,
+        title: t,
+        notes: n,
+        media,
+      });
+
+      if (res.kind === "shared") toast("Shared");
+      else if (res.kind === "downloaded") toast("Downloaded");
+      else toast("Sharing not supported");
+    } catch {
+      toast("Could not share");
+    }
+  }
+
+
+return (
     <div className="overlay">
       <div className="editor editor-full" onMouseDown={(e) => e.stopPropagation()}>
         <button className="close" onClick={onClose} aria-label="Close">
@@ -1078,6 +1118,10 @@ export default function WorkoutEditor({
 
           <button onClick={deleteActiveWorkout} className="secondary">
             Delete
+          </button>
+
+          <button onClick={handleShare} className="secondary">
+            Share
           </button>
 
           <button onClick={handleSave} className="primary">

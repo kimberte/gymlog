@@ -1,5 +1,4 @@
 "use client";
-
 import { supabase } from "./supabaseClient";
 import { uploadWorkoutMedia } from "./workoutMedia";
 

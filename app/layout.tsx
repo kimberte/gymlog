@@ -3,8 +3,8 @@ import { Poppins } from "next/font/google";
 
 export const metadata = {
   title: "Gym Log",
-  themeColor: "#1f2937",
 };
+export const viewport = { themeColor: "#1f2937" };
 
 const poppins = Poppins({
   subsets: ["latin"],

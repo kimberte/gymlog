@@ -115,17 +115,8 @@ async function renderFinalPngBlob(dataUrl: string) {
 
     ctx.fillStyle = accent;
 
-     ctx.drawImage(
-      logo,
-      xStart,
-      yMid - logoSize / 2,
-      logoSize,
-      logoSize
-    );
-
+    ctx.drawImage(logo, xStart, yMid - logoSize / 2, logoSize, logoSize);
     ctx.fillText(text, xStart + logoSize + gap, yMid);
-
-
   } catch {
     // If logo fails to load, still show brand text centered
     const text = "Gym Log";
@@ -149,9 +140,10 @@ async function renderFinalPngBlob(dataUrl: string) {
   return blob;
 }
 
-
-
-async function loadVideoFrame(src: string, atSec: number = 0.1): Promise<HTMLCanvasElement> {
+async function loadVideoFrame(
+  src: string,
+  atSec: number = 0.1
+): Promise<HTMLCanvasElement> {
   return new Promise((resolve, reject) => {
     const video = document.createElement("video");
     video.crossOrigin = "anonymous";
@@ -172,7 +164,10 @@ async function loadVideoFrame(src: string, atSec: number = 0.1): Promise<HTMLCan
     });
 
     video.addEventListener("loadedmetadata", () => {
-      const target = Math.min(Math.max(atSec, 0), Math.max(0, (video.duration || 0) - 0.05));
+      const target = Math.min(
+        Math.max(atSec, 0),
+        Math.max(0, (video.duration || 0) - 0.05)
+      );
       try {
         video.currentTime = target;
       } catch {
@@ -207,7 +202,15 @@ async function loadVideoFrame(src: string, atSec: number = 0.1): Promise<HTMLCan
   });
 }
 
-function wrapText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxWidth: number, lineHeight: number, maxLines: number) {
+function wrapText(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  maxWidth: number,
+  lineHeight: number,
+  maxLines: number
+) {
   const words = String(text || "").split(/\s+/).filter(Boolean);
   let line = "";
   let lines: string[] = [];
@@ -224,6 +227,133 @@ function wrapText(ctx: CanvasRenderingContext2D, text: string, x: number, y: num
     }
   }
   if (lines.length < maxLines && line) lines.push(line);
+
+  for (let i = 0; i < lines.length; i++) {
+    ctx.fillText(lines[i], x, y + i * lineHeight);
+  }
+
+  return lines.length;
+}
+
+function wrapTextWithEllipsis(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  maxWidth: number,
+  lineHeight: number,
+  maxLines: number
+) {
+  const words = String(text || "").split(/\s+/).filter(Boolean);
+  let line = "";
+  let lines: string[] = [];
+  let truncated = false;
+
+  for (const w of words) {
+    const test = line ? line + " " + w : w;
+    const m = ctx.measureText(test).width;
+    if (m > maxWidth && line) {
+      lines.push(line);
+      line = w;
+      if (lines.length >= maxLines) {
+        truncated = true;
+        break;
+      }
+    } else {
+      line = test;
+    }
+  }
+
+  if (!truncated && line) lines.push(line);
+
+  if (lines.length > maxLines) {
+    lines = lines.slice(0, maxLines);
+    truncated = true;
+  }
+
+  if (truncated && lines.length) {
+    // Ellipsize the last line to fit
+    let last = lines[lines.length - 1];
+    const ell = "…";
+    while (last && ctx.measureText(last + ell).width > maxWidth) {
+      last = last.slice(0, -1);
+    }
+    lines[lines.length - 1] = (last || "").trimEnd() + ell;
+  }
+
+  for (let i = 0; i < lines.length; i++) {
+    ctx.fillText(lines[i], x, y + i * lineHeight);
+  }
+
+  return lines.length;
+}
+
+function wrapTextPreserveNewlinesWithEllipsis(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  maxWidth: number,
+  lineHeight: number,
+  maxLines: number
+) {
+  // Split into paragraphs by newlines, but preserve blank lines.
+  const paragraphs = String(text || "")
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n")
+    .split("\n");
+
+  let truncated = false;
+  const lines: string[] = [];
+
+  const pushLine = (line: string) => {
+    if (lines.length >= maxLines) {
+      truncated = true;
+      return;
+    }
+    lines.push(line);
+  };
+
+  for (let p = 0; p < paragraphs.length; p++) {
+    if (lines.length >= maxLines) {
+      truncated = true;
+      break;
+    }
+
+    const raw = paragraphs[p];
+
+    // Blank line
+    if (!raw.trim()) {
+      pushLine(" ");
+      continue;
+    }
+
+    const words = raw.split(/\s+/).filter(Boolean);
+    let line = "";
+
+    for (const w of words) {
+      const test = line ? line + " " + w : w;
+      const m = ctx.measureText(test).width;
+      if (m > maxWidth && line) {
+        pushLine(line);
+        line = w;
+        if (lines.length >= maxLines) break;
+      } else {
+        line = test;
+      }
+    }
+
+    if (lines.length < maxLines && line) pushLine(line);
+  }
+
+  if (truncated && lines.length) {
+    const ell = "…";
+    let candidate = (lines[lines.length - 1] || "").trimEnd();
+    while (candidate && ctx.measureText(candidate + ell).width > maxWidth) {
+      candidate = candidate.slice(0, -1);
+    }
+    lines[lines.length - 1] = (candidate || "").trimEnd() + ell;
+  }
 
   for (let i = 0; i < lines.length; i++) {
     ctx.fillText(lines[i], x, y + i * lineHeight);
@@ -250,7 +380,14 @@ export async function shareWorkoutVerticalImage(options: {
 
   const W = 1080;
   const H = 1920;
-  const topH = 1080; // ~top half
+  const hasMedia = !!media?.url;
+
+  // If there's no image/video, reclaim vertical space for the workout text.
+  // We still show a stock image, but keep the media area smaller so text gets more room.
+  const topH = hasMedia ? 1080 : 640;
+
+  // Stock fallback (public/empty-gym.png -> /empty-gym.png)
+  const stockSrc = "/empty-gym.png";
 
   const canvas = document.createElement("canvas");
   canvas.width = W;
@@ -262,47 +399,18 @@ export async function shareWorkoutVerticalImage(options: {
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, W, H);
 
-  // --- Top media area ---
-  if (media?.url) {
-    try {
-      if (media.kind === "image") {
-        const img = await loadImage(media.url);
-        const iw = img.naturalWidth || img.width;
-        const ih = img.naturalHeight || img.height;
+  const drawCoverFromImage = (img: CanvasImageSource, iw: number, ih: number) => {
+    const scale = Math.max(W / iw, topH / ih);
+    const sw = W / scale;
+    const sh = topH / scale;
+    const sx = (iw - sw) / 2;
+    const sy = (ih - sh) / 2;
 
-        // cover crop into W x topH
-        const scale = Math.max(W / iw, topH / ih);
-        const sw = W / scale;
-        const sh = topH / scale;
-        const sx = (iw - sw) / 2;
-        const sy = (ih - sh) / 2;
+    // @ts-expect-error CanvasImageSource overloads include HTMLImageElement/HTMLCanvasElement
+    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, W, topH);
+  };
 
-        ctx.drawImage(img, sx, sy, sw, sh, 0, 0, W, topH);
-      } else {
-        const frame = await loadVideoFrame(media.url, 0.1);
-        const iw = frame.width;
-        const ih = frame.height;
-
-        const scale = Math.max(W / iw, topH / ih);
-        const sw = W / scale;
-        const sh = topH / scale;
-        const sx = (iw - sw) / 2;
-        const sy = (ih - sh) / 2;
-
-        ctx.drawImage(frame, sx, sy, sw, sh, 0, 0, W, topH);
-      }
-    } catch {
-      // fallback: brand block if media fails
-      ctx.fillStyle = bg;
-      ctx.fillRect(0, 0, W, topH);
-      ctx.fillStyle = accent;
-      ctx.font = `900 120px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText("Gym Log", W / 2, topH / 2);
-    }
-  } else {
-    // no media: show brand in top
+  const drawBrandFallback = () => {
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, W, topH);
     ctx.fillStyle = accent;
@@ -310,6 +418,44 @@ export async function shareWorkoutVerticalImage(options: {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText("Gym Log", W / 2, topH / 2);
+  };
+
+  const tryDrawStock = async () => {
+    const img = await loadImage(stockSrc);
+    const iw = img.naturalWidth || img.width;
+    const ih = img.naturalHeight || img.height;
+    drawCoverFromImage(img, iw, ih);
+  };
+
+  // --- Top media area ---
+  if (hasMedia && media?.url) {
+    try {
+      if (media.kind === "image") {
+        const img = await loadImage(media.url);
+        const iw = img.naturalWidth || img.width;
+        const ih = img.naturalHeight || img.height;
+        drawCoverFromImage(img, iw, ih);
+      } else {
+        const frame = await loadVideoFrame(media.url, 0.1);
+        const iw = frame.width;
+        const ih = frame.height;
+        drawCoverFromImage(frame, iw, ih);
+      }
+    } catch {
+      // If user media fails, fall back to stock image; if that fails, brand.
+      try {
+        await tryDrawStock();
+      } catch {
+        drawBrandFallback();
+      }
+    }
+  } else {
+    // No user media: use stock image instead of the "Gym Log" block.
+    try {
+      await tryDrawStock();
+    } catch {
+      drawBrandFallback();
+    }
   }
 
   // Divider line
@@ -322,30 +468,62 @@ export async function shareWorkoutVerticalImage(options: {
 
   // --- Text area ---
   const padX = 84;
-  let y = topH + 80;
+  let y = topH + 84;
+
+  // Brand favicon next to date
+  const logoSrc = "/icons/gym-app-logo-color-40x40.png";
+  const dateIcon = 44;
+  const dateGap = 14;
 
   // Date
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
   ctx.fillStyle = "rgba(255,255,255,0.85)";
   ctx.font = `600 44px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
-  ctx.fillText(dateLabel, padX, y);
+  try {
+    const logo = await loadImage(logoSrc);
+    ctx.drawImage(logo, padX, y - dateIcon + 6, dateIcon, dateIcon);
+    ctx.fillText(dateLabel, padX + dateIcon + dateGap, y);
+  } catch {
+    ctx.fillText(dateLabel, padX, y);
+  }
 
   // Title
   y += 110;
   ctx.fillStyle = "rgba(255,255,255,0.95)";
-  ctx.font = `800 92px ui-serif, Georgia, 'Times New Roman', Times, serif`;
-  const titleLines = wrapText(ctx, title || "-", padX, y, W - padX * 2, 104, 3);
-  y += titleLines * 104 + 40;
+  ctx.font = `800 76px ui-serif, Georgia, 'Times New Roman', Times, serif`;
+  const titleLines = wrapText(ctx, title || "-", padX, y, W - padX * 2, 88, 3);
+  y += titleLines * 88 + 52;
 
   // Notes (single dash if empty)
-  const noteText = String(notes || "").trim() || "–";
+  const noteText =
+    String(notes || "")
+      .replace(/\r\n/g, "\n")
+      .replace(/\r/g, "\n")
+      .trim()
+      .replace(/\n{3,}/g, "\n\n") || "–";
   ctx.fillStyle = "rgba(255,255,255,0.70)";
-  ctx.font = `500 52px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
-  wrapText(ctx, noteText, padX, y, W - padX * 2, 64, 6);
+  ctx.font = `500 50px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
+
+  // Truncate notes so they never collide with the footer.
+  const footerY = H - 270;
+  const gapToFooter = 80; // extra breathing room above "Find My Workout On"
+  const available = Math.max(0, footerY - gapToFooter - y);
+  const lineH = 62;
+  const maxLines = Math.max(2, Math.min(10, Math.floor(available / lineH)));
+
+  // Preserve user-entered line breaks (and still wrap/ellipsis within each line).
+  wrapTextPreserveNewlinesWithEllipsis(
+    ctx,
+    noteText,
+    padX,
+    y,
+    W - padX * 2,
+    lineH,
+    maxLines
+  );
 
   // --- Footer watermark ---
-  const footerY = H - 250;
   ctx.fillStyle = "rgba(255,255,255,0.75)";
   ctx.font = `500 46px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
   ctx.fillText("Find My Workout On", padX, footerY);
@@ -359,7 +537,10 @@ export async function shareWorkoutVerticalImage(options: {
   ctx.fillText("gymlogapp.com", padX, footerY + 200);
 
   const blob: Blob = await new Promise((resolve, reject) => {
-    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Failed to encode PNG"))), "image/png");
+    canvas.toBlob(
+      (b) => (b ? resolve(b) : reject(new Error("Failed to encode PNG"))),
+      "image/png"
+    );
   });
 
   const file = blobToFile(blob, filename);

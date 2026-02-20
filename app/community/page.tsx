@@ -523,6 +523,17 @@ export default function CommunityPage() {
     try {
       const rpc = await supabase.rpc("accept_friend_request", { req_id: reqId });
       if ((rpc as any)?.error) throw (rpc as any).error;
+
+      // Always ensure mutual friendship rows exist.
+      // Some backends/RPCs may only mark the request as accepted (or insert one direction),
+      // but the app treats friends as mutual and the feed depends on it.
+      await supabase.from("friendships").upsert(
+        [
+          { user_id: sessionUserId, friend_id: fromUser },
+          { user_id: fromUser, friend_id: sessionUserId },
+        ],
+        { onConflict: "user_id,friend_id" } as any
+      );
       showToast("Friend added");
     } catch {
       await supabase.from("friend_requests").update({ status: "accepted" }).eq("id", reqId);

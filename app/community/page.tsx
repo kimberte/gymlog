@@ -241,27 +241,6 @@ export default function CommunityPage() {
   async function loadFriendsAndRequests() {
     if (!sessionUserId) return;
     try {
-      // Friends
-      const { data: fr, error: frErr } = await supabase.from("friendships").select("friend_id").eq("user_id", sessionUserId);
-      if (frErr) throw frErr;
-      const ids = (fr ?? []).map((r: any) => String(r.friend_id));
-
-      // Only treat as "friends" when the relationship is mutual.
-      // This protects against any one-way rows that might exist due to partial/failed flows.
-      let mutualIds = ids;
-      if (ids.length) {
-        const { data: back } = await supabase.from("friendships").select("user_id").eq("friend_id", sessionUserId).in("user_id", ids);
-        const backSet = new Set((back ?? []).map((r: any) => String(r.user_id)));
-        mutualIds = ids.filter((id) => backSet.has(String(id)));
-      }
-
-      if (mutualIds.length) {
-        const { data: ps } = await supabase.from("profiles").select("id,email,first_name,last_name").in("id", mutualIds);
-        setFriends((ps ?? []) as any);
-      } else {
-        setFriends([]);
-      }
-
       // Requests incoming/outgoing
       const { data: reqs, error: rErr } = await supabase
         .from("friend_requests")
@@ -272,6 +251,36 @@ export default function CommunityPage() {
 
       const inReq = (reqs ?? []).filter((r: any) => r.to_user === sessionUserId);
       const outReq = (reqs ?? []).filter((r: any) => r.from_user === sessionUserId);
+
+      // Friends can be represented either by explicit friendships rows OR by accepted requests.
+      // (We keep this resilient because different Supabase policies/RPC implementations may
+      // write one but not the other.)
+      const accepted = (reqs ?? []).filter((r: any) => r.status === "accepted");
+
+      // friendships may be missing depending on DB/RLS, so treat them as optional.
+      let friendshipIds: string[] = [];
+      try {
+        const { data: fr, error: frErr } = await supabase
+          .from("friendships")
+          .select("friend_id")
+          .eq("user_id", sessionUserId);
+        if (!frErr) friendshipIds = (fr ?? []).map((r: any) => String(r.friend_id));
+      } catch {
+        // ignore
+      }
+
+      const acceptedIds = accepted.map((r: any) =>
+        String(r.from_user) === String(sessionUserId) ? String(r.to_user) : String(r.from_user)
+      );
+
+      const friendIds = Array.from(new Set([...friendshipIds, ...acceptedIds])).filter(Boolean);
+
+      if (friendIds.length) {
+        const { data: ps } = await supabase.from("profiles").select("id,email,first_name,last_name").in("id", friendIds);
+        setFriends((ps ?? []) as any);
+      } else {
+        setFriends([]);
+      }
 
       // Map IDs -> profile (email + name)
       const needIds = Array.from(new Set([...inReq.map((r: any) => String(r.from_user)), ...outReq.map((r: any) => String(r.to_user))]));
@@ -320,22 +329,28 @@ export default function CommunityPage() {
   async function loadFeed() {
     if (!sessionUserId) return;
     try {
-      // Feed should be mutual friends only (same rule as Friends tab)
-      const { data: fr } = await supabase.from("friendships").select("friend_id").eq("user_id", sessionUserId);
-      const ids = (fr ?? []).map((r: any) => String(r.friend_id));
+      // Determine friends from accepted requests (and optionally friendships rows if present)
+      const { data: reqs } = await supabase
+        .from("friend_requests")
+        .select("from_user,to_user,status")
+        .or(`to_user.eq.${sessionUserId},from_user.eq.${sessionUserId}`);
 
-      let mutualIds = ids;
-      if (ids.length) {
-        const { data: back } = await supabase
-          .from("friendships")
-          .select("user_id")
-          .eq("friend_id", sessionUserId)
-          .in("user_id", ids);
-        const backSet = new Set((back ?? []).map((r: any) => String(r.user_id)));
-        mutualIds = ids.filter((id) => backSet.has(String(id)));
+      const accepted = (reqs ?? []).filter((r: any) => r.status === "accepted");
+      const acceptedIds = accepted.map((r: any) =>
+        String(r.from_user) === String(sessionUserId) ? String(r.to_user) : String(r.from_user)
+      );
+
+      let friendshipIds: string[] = [];
+      try {
+        const { data: fr } = await supabase.from("friendships").select("friend_id").eq("user_id", sessionUserId);
+        friendshipIds = (fr ?? []).map((r: any) => String(r.friend_id));
+      } catch {
+        // ignore
       }
 
-      if (!mutualIds.length) {
+      const ids = Array.from(new Set([...friendshipIds, ...acceptedIds])).filter(Boolean);
+
+      if (!ids.length) {
         setFeed([]);
         return;
       }
@@ -347,7 +362,7 @@ export default function CommunityPage() {
       const { data, error } = await supabase
         .from("workout_days")
         .select("user_id,date_key,title,entries,has_photo,has_video,updated_at")
-        .in("user_id", mutualIds)
+        .in("user_id", ids)
         .gte("date_key", start)
         .lte("date_key", end)
         .order("date_key", { ascending: true })
@@ -428,17 +443,17 @@ export default function CommunityPage() {
 
     const targetId = String(searchResult.id);
 
-    // Already friends? (mutual only)
+    // Already friends?
     try {
-      const { data: rows, error: frErr } = await supabase
+      const { data: fr, error: frErr } = await supabase
         .from("friendships")
-        .select("user_id,friend_id")
-        .or(`and(user_id.eq.${sessionUserId},friend_id.eq.${targetId}),and(user_id.eq.${targetId},friend_id.eq.${sessionUserId})`);
+        .select("friend_id")
+        .eq("user_id", sessionUserId)
+        .eq("friend_id", targetId)
+        .maybeSingle();
 
-      if (frErr) throw frErr;
-      const set = new Set((rows ?? []).map((r: any) => `${String(r.user_id)}->${String(r.friend_id)}`));
-      const mutual = set.has(`${sessionUserId}->${targetId}`) && set.has(`${targetId}->${sessionUserId}`);
-      if (mutual) {
+      if (frErr && (frErr as any).code !== "PGRST116") throw frErr;
+      if (fr) {
         showToast("You're Friends");
         return;
       }
@@ -466,29 +481,8 @@ export default function CommunityPage() {
         }
 
         if (ex.status === "accepted") {
-          // Only block if they are truly mutual friends.
-          // If a user removed a friend later (or only one-way rows exist),
-          // we allow re-request by deleting the stale accepted request.
-          try {
-            const { data: rows } = await supabase
-              .from("friendships")
-              .select("user_id,friend_id")
-              .or(
-                `and(user_id.eq.${sessionUserId},friend_id.eq.${targetId}),and(user_id.eq.${targetId},friend_id.eq.${sessionUserId})`
-              );
-
-            const set = new Set((rows ?? []).map((r: any) => `${String(r.user_id)}->${String(r.friend_id)}`));
-            const mutual = set.has(`${sessionUserId}->${targetId}`) && set.has(`${targetId}->${sessionUserId}`);
-            if (mutual) {
-              showToast("You're Friends");
-              return;
-            }
-          } catch {
-            // ignore
-          }
-
-          // stale accepted row
-          await supabase.from("friend_requests").delete().eq("id", ex.id);
+          showToast("You're Friends");
+          return;
         }
 
         // declined/other: remove old row so user can request again
@@ -520,33 +514,29 @@ export default function CommunityPage() {
 
   async function acceptRequest(reqId: number, fromUser: string) {
     if (!sessionUserId) return;
+    // Always mark accepted in friend_requests, and attempt to ensure a friendship row exists
+    // for the current user (so Friends tab + Feed work even if RPC doesn't write friendships).
     try {
       const rpc = await supabase.rpc("accept_friend_request", { req_id: reqId });
       if ((rpc as any)?.error) throw (rpc as any).error;
-
-      // Always ensure mutual friendship rows exist.
-      // Some backends/RPCs may only mark the request as accepted (or insert one direction),
-      // but the app treats friends as mutual and the feed depends on it.
-      await supabase.from("friendships").upsert(
-        [
-          { user_id: sessionUserId, friend_id: fromUser },
-          { user_id: fromUser, friend_id: sessionUserId },
-        ],
-        { onConflict: "user_id,friend_id" } as any
-      );
-      showToast("Friend added");
     } catch {
-      await supabase.from("friend_requests").update({ status: "accepted" }).eq("id", reqId);
-      // Ensure mutual friendship rows even if RPC isn't available
-      await supabase.from("friendships").upsert(
-        [
-          { user_id: sessionUserId, friend_id: fromUser },
-          { user_id: fromUser, friend_id: sessionUserId },
-        ],
-        { onConflict: "user_id,friend_id" } as any
-      );
-      showToast("Accepted (ask friend to add you back if needed)");
+      // ignore RPC failures; we still proceed with client-side acceptance below
     }
+
+    // Make sure request is accepted
+    await supabase.from("friend_requests").update({ status: "accepted" }).eq("id", reqId);
+
+    // Best-effort create the local friendship row (me -> other). If your RLS blocks this,
+    // accepted requests will still power Friends/Feed (see loaders above).
+    try {
+      await supabase
+        .from("friendships")
+        .upsert({ user_id: sessionUserId, friend_id: fromUser }, { onConflict: "user_id,friend_id" } as any);
+    } catch {
+      // ignore
+    }
+
+    showToast("Friend added");
     await loadFriendsAndRequests();
     await loadFeed();
   }
@@ -557,22 +547,10 @@ export default function CommunityPage() {
     await loadFriendsAndRequests();
   }
 
-  async function withdrawRequest(reqId: number, otherUserId?: string) {
+  async function withdrawRequest(reqId: number) {
     try {
       const { error } = await supabase.from("friend_requests").delete().eq("id", reqId);
       if (error) throw error;
-
-      // Defensive cleanup: if any one-way friendship rows were created accidentally,
-      // remove them so the users can re-request cleanly.
-      if (sessionUserId && otherUserId) {
-        await supabase
-          .from("friendships")
-          .delete()
-          .or(
-            `and(user_id.eq.${sessionUserId},friend_id.eq.${otherUserId}),and(user_id.eq.${otherUserId},friend_id.eq.${sessionUserId})`
-          );
-      }
-
       showToast("Request withdrawn");
       await loadFriendsAndRequests();
     } catch (e: any) {
@@ -587,11 +565,15 @@ export default function CommunityPage() {
       if ((rpc as any)?.error) throw (rpc as any).error;
       showToast("Removed");
     } catch {
+      await supabase.from("friendships").delete().eq("user_id", sessionUserId).eq("friend_id", friendId);
+      // Also remove any accepted friend request row (either direction) so we don't keep treating as friends.
       await supabase
-        .from("friendships")
+        .from("friend_requests")
         .delete()
-        .or(`and(user_id.eq.${sessionUserId},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${sessionUserId})`);
-      showToast("Removed");
+        .or(
+          `and(from_user.eq.${sessionUserId},to_user.eq.${friendId},status.eq.accepted),and(from_user.eq.${friendId},to_user.eq.${sessionUserId},status.eq.accepted)`
+        );
+      showToast("Removed (may be one-way without RPC)");
     }
     await loadFriendsAndRequests();
     await loadFeed();
@@ -1124,7 +1106,7 @@ export default function CommunityPage() {
                           subtitle="Sent - Pending"
                           right={
                             <button
-                              onClick={() => withdrawRequest(r.id, r.to_user)}
+                              onClick={() => withdrawRequest(r.id)}
                               style={{
                                 padding: "9px 12px",
                                 borderRadius: 12,

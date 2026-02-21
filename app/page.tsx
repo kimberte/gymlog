@@ -6,6 +6,7 @@ import SettingsModal from "./components/SettingsModal";
 import { loadWorkouts, saveWorkouts } from "./lib/storage";
 import { supabase } from "./lib/supabaseClient";
 import { upsertBackup } from "./lib/backup";
+import { getProStatus } from "./lib/entitlements";
 import { shareNodeAsPng } from "./lib/shareImage";
 
 type WeekStart = "sunday" | "monday";
@@ -143,6 +144,7 @@ export default function HomePage() {
   const [weekStart, setWeekStart] = useState<WeekStart>("sunday");
 
   const [isSignedIn, setIsSignedIn] = useState(false);
+  const [isPro, setIsPro] = useState(false);
   const [lastBackupAt, setLastBackupAt] = useState<string | null>(null);
 
   const lastBackupHashRef = useRef<string>("");
@@ -182,8 +184,33 @@ export default function HomePage() {
       const { data } = await supabase.auth.getSession();
       setIsSignedIn(Boolean(data.session?.user));
 
-      unsub = supabase.auth.onAuthStateChange((_event, session) => {
+      const uid = data.session?.user?.id ?? null;
+      const email = data.session?.user?.email ?? null;
+      if (uid) {
+        try {
+          const ps = await getProStatus(supabase as any, uid, email);
+          setIsPro(Boolean(ps.isPro));
+        } catch {
+          setIsPro(false);
+        }
+      } else {
+        setIsPro(false);
+      }
+
+      unsub = supabase.auth.onAuthStateChange(async (_event, session) => {
         setIsSignedIn(Boolean(session?.user));
+        const uid2 = session?.user?.id ?? null;
+        const email2 = session?.user?.email ?? null;
+        if (uid2) {
+          try {
+            const ps2 = await getProStatus(supabase as any, uid2, email2);
+            setIsPro(Boolean(ps2.isPro));
+          } catch {
+            setIsPro(false);
+          }
+        } else {
+          setIsPro(false);
+        }
       });
     }
 
@@ -197,7 +224,7 @@ export default function HomePage() {
   }, []);
 
   async function requestBackup(nextWorkouts: Record<string, any>) {
-    if (!isSignedIn) return;
+    if (!isSignedIn || !isPro) return;
     if (!didLoadRef.current) return;
     if (backupBusyRef.current) return;
 

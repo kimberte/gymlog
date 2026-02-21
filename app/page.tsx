@@ -143,6 +143,11 @@ export default function HomePage() {
   const [weekStart, setWeekStart] = useState<WeekStart>("sunday");
 
   const [isSignedIn, setIsSignedIn] = useState(false);
+  const [sessionToken, setSessionToken] = useState<string | null>(null);
+  const [isPro, setIsPro] = useState(false);
+  const [proStatus, setProStatus] = useState<string | null>(null);
+  const [trialEnd, setTrialEnd] = useState<string | null>(null);
+  const [entitlementsTick, setEntitlementsTick] = useState(0);
   const [lastBackupAt, setLastBackupAt] = useState<string | null>(null);
 
   const lastBackupHashRef = useRef<string>("");
@@ -181,9 +186,11 @@ export default function HomePage() {
     async function init() {
       const { data } = await supabase.auth.getSession();
       setIsSignedIn(Boolean(data.session?.user));
+      setSessionToken(data.session?.access_token ?? null);
 
       unsub = supabase.auth.onAuthStateChange((_event, session) => {
         setIsSignedIn(Boolean(session?.user));
+        setSessionToken(session?.access_token ?? null);
       });
     }
 
@@ -196,8 +203,57 @@ export default function HomePage() {
     };
   }, []);
 
+  // Load Pro entitlements (server-truth via Stripe webhooks)
+  useEffect(() => {
+    async function loadEntitlements() {
+      if (!sessionToken) {
+        setIsPro(false);
+        setProStatus(null);
+        setTrialEnd(null);
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/me/entitlements", {
+          headers: { Authorization: `Bearer ${sessionToken}` },
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json?.error || "Failed");
+        setIsPro(Boolean(json?.isPro));
+        setProStatus(json?.status ?? null);
+        setTrialEnd(json?.trialEnd ?? null);
+      } catch {
+        // If entitlements fail to load, default to free (safe)
+        setIsPro(false);
+        setProStatus(null);
+        setTrialEnd(null);
+      }
+    }
+
+    loadEntitlements();
+  }, [sessionToken, entitlementsTick]);
+
+  // If returning from Stripe Checkout, refresh entitlements once.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const sp = new URLSearchParams(window.location.search);
+    const checkout = sp.get("checkout");
+    if (checkout === "success" || checkout === "cancel") {
+      setEntitlementsTick((n) => n + 1);
+      // Clean the URL
+      sp.delete("checkout");
+      const next = `${window.location.pathname}${sp.toString() ? `?${sp.toString()}` : ""}`;
+      window.history.replaceState({}, "", next);
+    }
+  }, []);
+
+  function refreshEntitlements() {
+    setEntitlementsTick((n) => n + 1);
+  }
+
   async function requestBackup(nextWorkouts: Record<string, any>) {
     if (!isSignedIn) return;
+    if (!isPro) return; // ✅ Pro-only
     if (!didLoadRef.current) return;
     if (backupBusyRef.current) return;
 
@@ -320,6 +376,7 @@ export default function HomePage() {
           onSaved={(next) => requestBackup(next)}
           onClose={() => setSelectedDate(null)}
           toast={showToast}
+          isPro={isPro}
         />
       )}
 
@@ -333,6 +390,12 @@ export default function HomePage() {
           weekStart={weekStart}
           setWeekStart={setWeekStart}
           lastBackupAt={lastBackupAt}
+          isSignedIn={isSignedIn}
+          sessionToken={sessionToken}
+          isPro={isPro}
+          proStatus={proStatus}
+          trialEnd={trialEnd}
+          refreshEntitlements={refreshEntitlements}
         />
       )}
 

@@ -43,6 +43,14 @@ type Props = {
 
   // from page (kept fresh by auto-backup)
   lastBackupAt: string | null;
+
+  // auth + entitlements (passed down from HomePage)
+  isSignedIn: boolean;
+  sessionToken: string | null;
+  isPro: boolean;
+  proStatus: string | null;
+  trialEnd: string | null;
+  refreshEntitlements?: () => void;
 };
 
 export default function SettingsModal({
@@ -54,13 +62,19 @@ export default function SettingsModal({
   weekStart,
   setWeekStart,
   lastBackupAt,
+  isSignedIn,
+  sessionToken,
+  isPro,
+  proStatus,
+  trialEnd,
+  refreshEntitlements,
 }: Props) {
   const fileRef = useRef<HTMLInputElement | null>(null);
 
   const [closing, setClosing] = useState(false);
 
   const [sessionEmail, setSessionEmail] = useState<string | null>(null);
-  const [sessionToken, setSessionToken] = useState<string | null>(null);
+  const [authToken, setAuthToken] = useState<string | null>(null);
 
   const [authLoading, setAuthLoading] = useState(false);
   const [email, setEmail] = useState("");
@@ -82,6 +96,10 @@ export default function SettingsModal({
   const [serverBackupAt, setServerBackupAt] = useState<string | null>(null);
   const [backupLoading, setBackupLoading] = useState(false);
 
+  // Billing (Stripe)
+  const [billingPlan, setBillingPlan] = useState<"monthly" | "yearly">("monthly");
+  const [billingBusy, setBillingBusy] = useState(false);
+
   // Restore flow
   const [showRestoreConfirm, setShowRestoreConfirm] = useState(false);
   const [restoreBusy, setRestoreBusy] = useState(false);
@@ -93,7 +111,9 @@ export default function SettingsModal({
     );
   }, []);
 
-  const isPro = Boolean(sessionEmail);
+  // Signed-in is based on actual session email in this modal.
+  // Pro entitlement is passed from HomePage (server-truth via webhooks).
+  const signedInHere = Boolean(sessionEmail);
   const workoutCount = useMemo(() => {
     let total = 0;
     Object.values(workouts ?? {}).forEach((day: any) => {
@@ -165,7 +185,7 @@ export default function SettingsModal({
 
       if (!supabaseConfigured) {
         setSessionEmail(null);
-        setSessionToken(null);
+        setAuthToken(null);
         return;
       }
 
@@ -174,11 +194,11 @@ export default function SettingsModal({
         const userEmail = data.session?.user?.email ?? null;
         const token = data.session?.access_token ?? null;
         setSessionEmail(userEmail);
-        setSessionToken(token);
+        setAuthToken(token);
 
         unsub = supabase.auth.onAuthStateChange((event, newSession) => {
           setSessionEmail(newSession?.user?.email ?? null);
-          setSessionToken(newSession?.access_token ?? null);
+          setAuthToken(newSession?.access_token ?? null);
           if (event === "PASSWORD_RECOVERY") {
             setAuthMode("updatepw");
             setAuthMessage("Set a new password to finish resetting your account.");
@@ -186,7 +206,7 @@ export default function SettingsModal({
         });
       } catch {
         setSessionEmail(null);
-        setSessionToken(null);
+        setAuthToken(null);
         setAuthError("Could not load auth session.");
       }
     }
@@ -396,7 +416,7 @@ async function updatePassword() {
   // ---- PRO ACTIONS (gated) ----
   function handleExport() {
     if (!isPro) {
-      toast("Sign in to unlock Pro features");
+      toast("Upgrade to Pro to use this feature");
       return;
     }
 
@@ -406,7 +426,7 @@ async function updatePassword() {
 
   function downloadTemplate() {
     if (!isPro) {
-      toast("Sign in to unlock Pro features");
+      toast("Upgrade to Pro to use this feature");
       return;
     }
 
@@ -429,7 +449,7 @@ async function updatePassword() {
 
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     if (!isPro) {
-      toast("Sign in to unlock Pro features");
+      toast("Upgrade to Pro to use this feature");
       if (fileRef.current) fileRef.current.value = "";
       return;
     }
@@ -443,7 +463,7 @@ async function updatePassword() {
 
   async function handleConfirmImport() {
     if (!isPro) {
-      toast("Sign in to unlock Pro features");
+      toast("Upgrade to Pro to use this feature");
       return;
     }
 
@@ -479,7 +499,7 @@ async function updatePassword() {
   // ---- RESTORE FROM AUTO-BACKUP ----
   async function beginRestore() {
     if (!isPro) {
-      toast("Sign in to unlock Pro features");
+      toast("Upgrade to Pro to use this feature");
       return;
     }
 
@@ -495,7 +515,7 @@ async function updatePassword() {
 
   async function confirmRestore() {
     if (!isPro) {
-      toast("Sign in to unlock Pro features");
+      toast("Upgrade to Pro to use this feature");
       return;
     }
 
@@ -551,7 +571,7 @@ async function updatePassword() {
   }
 
   async function confirmDeleteAccount() {
-    if (!isPro || !sessionToken) {
+    if (!isSignedIn || !sessionToken) {
       toast("Sign in to delete your account");
       return;
     }
@@ -592,6 +612,71 @@ async function updatePassword() {
     } catch {
       toast("Delete failed");
       setDeleteBusy(false);
+    }
+  }
+
+  function formatMaybeIso(iso: string | null) {
+    if (!iso) return null;
+    try {
+      return new Date(iso).toLocaleString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      });
+    } catch {
+      return iso;
+    }
+  }
+
+  async function startProTrial() {
+    if (!isSignedIn || !sessionToken) {
+      toast("Sign in first");
+      return;
+    }
+    setBillingBusy(true);
+    try {
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${sessionToken}`,
+        },
+        body: JSON.stringify({ plan: billingPlan }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || "Checkout failed");
+      if (json?.url) window.location.href = String(json.url);
+      else throw new Error("No checkout url");
+    } catch (e: any) {
+      toast(e?.message || "Checkout failed");
+    } finally {
+      setBillingBusy(false);
+    }
+  }
+
+  async function openBillingPortal() {
+    if (!isSignedIn || !sessionToken) {
+      toast("Sign in first");
+      return;
+    }
+    setBillingBusy(true);
+    try {
+      const res = await fetch("/api/stripe/portal", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${sessionToken}`,
+        },
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || "Portal failed");
+      if (json?.url) window.location.href = String(json.url);
+      else throw new Error("No portal url");
+    } catch (e: any) {
+      toast(e?.message || "Portal failed");
+    } finally {
+      setBillingBusy(false);
     }
   }
 
@@ -849,6 +934,143 @@ async function updatePassword() {
           {sessionEmail ? (
             <div style={{ marginTop: 8, fontSize: 13 }}>
               Signed in as <strong>{sessionEmail}</strong>
+
+              <div
+                style={{
+                  marginTop: 10,
+                  padding: 10,
+                  borderRadius: 10,
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  background: "rgba(255,255,255,0.04)",
+                }}
+              >
+                <div style={{ fontSize: 12, opacity: 0.85 }}>
+                  <strong>Plan</strong>
+                </div>
+                <div style={{ marginTop: 6 }}>
+                  {isPro ? (
+                    <>
+                      <strong>Pro</strong>
+                      {proStatus ? (
+                        <span style={{ opacity: 0.85 }}> — {String(proStatus)}</span>
+                      ) : null}
+                      {trialEnd ? (
+                        <div style={{ marginTop: 4, opacity: 0.85 }}>
+                          Trial ends: {formatMaybeIso(trialEnd)}
+                        </div>
+                      ) : null}
+                    </>
+                  ) : (
+                    <>
+                      <strong>Free</strong>
+                      <div style={{ marginTop: 4, opacity: 0.85 }}>
+                        Start a 7‑day Pro trial (no card required).
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {!isPro && (
+                  <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+                    <button
+                      type="button"
+                      onClick={() => setBillingPlan("monthly")}
+                      disabled={billingBusy}
+                      style={{
+                        flex: 1,
+                        padding: 10,
+                        borderRadius: 10,
+                        border: "1px solid rgba(255,255,255,0.15)",
+                        background:
+                          billingPlan === "monthly"
+                            ? "rgba(255,87,33,0.14)"
+                            : "transparent",
+                        color: "white",
+                        cursor: billingBusy ? "not-allowed" : "pointer",
+                      }}
+                    >
+                      Monthly
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setBillingPlan("yearly")}
+                      disabled={billingBusy}
+                      style={{
+                        flex: 1,
+                        padding: 10,
+                        borderRadius: 10,
+                        border: "1px solid rgba(255,255,255,0.15)",
+                        background:
+                          billingPlan === "yearly"
+                            ? "rgba(255,87,33,0.14)"
+                            : "transparent",
+                        color: "white",
+                        cursor: billingBusy ? "not-allowed" : "pointer",
+                      }}
+                    >
+                      Yearly
+                    </button>
+                  </div>
+                )}
+
+                <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+                  {!isPro && (
+                    <button
+                      type="button"
+                      onClick={startProTrial}
+                      disabled={billingBusy}
+                      style={{
+                        flex: 1,
+                        padding: 10,
+                        borderRadius: 10,
+                        border: "1px solid rgba(255,255,255,0.15)",
+                        background: "rgba(255,87,33,0.18)",
+                        color: "white",
+                        cursor: billingBusy ? "not-allowed" : "pointer",
+                      }}
+                    >
+                      {billingBusy ? "Loading…" : "Start 7‑day trial"}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={openBillingPortal}
+                    disabled={billingBusy}
+                    style={{
+                      flex: 1,
+                      padding: 10,
+                      borderRadius: 10,
+                      border: "1px solid rgba(255,255,255,0.15)",
+                      background: "transparent",
+                      color: "white",
+                      cursor: billingBusy ? "not-allowed" : "pointer",
+                    }}
+                  >
+                    Manage billing
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => refreshEntitlements?.()}
+                  disabled={billingBusy}
+                  style={{
+                    width: "100%",
+                    marginTop: 8,
+                    padding: 10,
+                    borderRadius: 10,
+                    border: "1px solid rgba(255,255,255,0.15)",
+                    background: "transparent",
+                    color: "rgba(255,255,255,0.9)",
+                    cursor: billingBusy ? "not-allowed" : "pointer",
+                    opacity: refreshEntitlements ? 1 : 0.6,
+                  }}
+                  title={refreshEntitlements ? "" : "Close and reopen settings to refresh"}
+                >
+                  Refresh status
+                </button>
+              </div>
+
               <button
                 onClick={signOut}
                 style={{
@@ -870,12 +1092,12 @@ async function updatePassword() {
 <>
   <div style={{ marginTop: 8, fontSize: 13, opacity: 0.9 }}>
     {authMode === "signup"
-      ? "Create an account to unlock Pro features."
+      ? "Create an account to access Community and start a Pro trial."
       : authMode === "reset"
       ? "Send yourself a password reset email."
       : authMode === "updatepw"
       ? "Set a new password to finish your reset."
-      : "Sign in to unlock CSV import/export (and auto-backup)."}
+      : "Sign in to access your account and manage Pro."}
   </div>
 
   <div style={{ display: "flex", gap: 8, marginTop: 10 }}>

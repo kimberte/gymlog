@@ -47,7 +47,6 @@ type Props = {
   onSaved?: (nextWorkouts: WorkoutMap) => void;
   onClose: () => void;
   toast: (msg: string) => void;
-  isPro: boolean;
 };
 
 function hasContent(e: { title?: string; notes?: string }) {
@@ -123,7 +122,6 @@ export default function WorkoutEditor({
   onSaved,
   onClose,
   toast,
-  isPro,
 }: Props) {
   const initialPb = useMemo(() => Boolean((workouts as any)?.[date]?.pb), [workouts, date]);
 
@@ -247,7 +245,6 @@ export default function WorkoutEditor({
 
       const media = (active as any)?.media as WorkoutMediaMeta;
       if (!sessionUserId || !media?.path) return;
-      if (!isPro) return; // ✅ Pro-only to view media
 
       try {
         const url = await getWorkoutMediaSignedUrl(String(media.path), 3600);
@@ -263,7 +260,7 @@ export default function WorkoutEditor({
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionUserId, activeIdx, date, isPro]);
+  }, [sessionUserId, activeIdx, date]);
 
   function updateActive(patch: Partial<EntryWithMedia>) {
     setEntries((prev) =>
@@ -426,10 +423,6 @@ export default function WorkoutEditor({
       toast("Sign in to upload");
       return;
     }
-    if (!isPro) {
-      toast("Upgrade to Pro to add media");
-      return;
-    }
     if (!file) return;
 
     const activeEntryId = String(active?.id || `w${activeIdx + 1}`);
@@ -586,10 +579,6 @@ export default function WorkoutEditor({
   async function handleRemoveMedia() {
     if (!sessionUserId) {
       toast("Sign in to manage media");
-      return;
-    }
-    if (!isPro) {
-      toast("Upgrade to Pro to manage media");
       return;
     }
     const media = (active as any)?.media as WorkoutMediaMeta;
@@ -980,7 +969,7 @@ return (
                     setPickKind("image");
                     mediaInputRef.current?.click();
                   }}
-                  disabled={!sessionUserId || !isPro || mediaBusy || (hasMedia && mediaKind === "video")}
+                  disabled={!sessionUserId || mediaBusy || (hasMedia && mediaKind === "video")}
                   style={{
                     background: !sessionUserId
                       ? "rgba(255,255,255,0.08)"
@@ -1006,7 +995,7 @@ return (
                     whiteSpace: "nowrap",
                     flex: "0 0 auto",
                   }}
-                  title={!sessionUserId ? "Sign in to upload" : !isPro ? "Upgrade to Pro to upload" : hasMedia && mediaKind === "video" ? "Remove the video to upload an image" : "Upload image"}
+                  title={hasMedia && mediaKind === "video" ? "Remove the video to upload an image" : "Upload image"}
                 >
                   {hasMedia && mediaKind === "image" ? "Replace image" : "Upload image"}
                 </button>
@@ -1017,7 +1006,7 @@ return (
                     setPickKind("video");
                     mediaInputRef.current?.click();
                   }}
-                  disabled={!sessionUserId || !isPro || mediaBusy || (hasMedia && mediaKind === "image")}
+                  disabled={!sessionUserId || mediaBusy || (hasMedia && mediaKind === "image")}
                   style={{
                     background: !sessionUserId
                       ? "rgba(255,255,255,0.08)"
@@ -1043,7 +1032,7 @@ return (
                     whiteSpace: "nowrap",
                     flex: "0 0 auto",
                   }}
-                  title={!sessionUserId ? "Sign in to upload" : !isPro ? "Upgrade to Pro to upload" : hasMedia && mediaKind === "image" ? "Remove the image to upload a video" : "Upload video"}
+                  title={hasMedia && mediaKind === "image" ? "Remove the image to upload a video" : "Upload video"}
                 >
                   {hasMedia && mediaKind === "video" ? "Replace video" : "Upload video"}
                 </button>

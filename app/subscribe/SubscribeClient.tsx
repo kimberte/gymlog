@@ -301,7 +301,7 @@ export default function SubscribeClient() {
               className={`btn btnSoft`}
               style={{ pointerEvents: yearlyUrl ? "auto" : "none", opacity: yearlyUrl ? 1 : 0.6 }}
             >
-              Subscribe Yearly $49.99
+              Subscribe Yearly $49.99 CAD
             </a>
           </div>
 

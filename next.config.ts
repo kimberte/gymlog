@@ -1,17 +1,27 @@
-// next.config.js
-// @ts-check
+import type { NextConfig } from "next";
 
-const nextPwaMod = require("next-pwa");
-const withPWA = (nextPwaMod?.default ?? nextPwaMod)({
-  dest: "public",
-  register: true,
-  skipWaiting: true,
-  disable: process.env.NODE_ENV === "development",
-});
+let withPWA = (config: NextConfig) => config;
 
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+try {
+  const mod = require("next-pwa");
+  const factory = mod?.default ?? mod;
+
+  if (typeof factory === "function") {
+    withPWA = factory({
+      dest: "public",
+      register: true,
+      skipWaiting: true,
+      disable: process.env.NODE_ENV === "development",
+    });
+  } else {
+    console.warn("next-pwa is not a function — PWA disabled.");
+  }
+} catch (err) {
+  console.warn("next-pwa failed to load — PWA disabled.");
+}
+
+const nextConfig: NextConfig = {
   reactStrictMode: true,
 };
 
-module.exports = withPWA(nextConfig);
+export default withPWA(nextConfig);

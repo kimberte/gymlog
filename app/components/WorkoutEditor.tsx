@@ -7,11 +7,9 @@ import {
 } from "react";
 import { WorkoutEntry, WorkoutMap, getDayEntries } from "../lib/storage";
 import { getSessionUser } from "../lib/backup";
-import { supabase } from "../lib/supabaseClient";
-import { getProStatus } from "../lib/entitlements";
 import { compressImageToWebp } from "../lib/imageCompress";
 import { shareWorkoutVerticalImage } from "../lib/shareImage";
-
+import { ensureTrialStarted, getProStatus, type ProStatus } from "../lib/entitlements";
 
 // NEW: per-workout media (image OR video)
 import {
@@ -151,7 +149,7 @@ export default function WorkoutEditor({
 
   // Pro gating
   const [sessionUserId, setSessionUserId] = useState<string | null>(null);
-  const [isPro, setIsPro] = useState(false);
+  const [proStatus, setProStatus] = useState<ProStatus>({ isPro: false, reason: "signed_out" });
 
   // Media UI state (per active workout)
   const [mediaUrl, setMediaUrl] = useState<string | null>(null);
@@ -218,26 +216,33 @@ export default function WorkoutEditor({
     (async () => {
       const user = await getSessionUser();
       if (cancelled) return;
-      const uid = user?.id ?? null;
-      setSessionUserId(uid);
-
-      try {
-        const { data } = await supabase.auth.getSession();
-        const email = data.session?.user?.email ?? null;
-        if (uid) {
-          const ps = await getProStatus(supabase as any, uid, email);
-          setIsPro(Boolean(ps.isPro));
-        } else {
-          setIsPro(false);
-        }
-      } catch {
-        setIsPro(false);
-      }
+      setSessionUserId(user?.id ?? null);
     })();
     return () => {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (!sessionUserId) {
+      setProStatus({ isPro: false, reason: "signed_out" });
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        await ensureTrialStarted(sessionUserId);
+        const st = await getProStatus(sessionUserId);
+        if (!cancelled) setProStatus(st);
+      } catch {
+        if (!cancelled) setProStatus({ isPro: false, reason: "free" });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [sessionUserId]);
+
 
   // Keep in sync when DATE changes (close/reopen).
   // IMPORTANT: Don't reset local editor state just because `workouts` changed
@@ -437,12 +442,7 @@ export default function WorkoutEditor({
 
   async function handlePickFile(file: File) {
     if (!sessionUserId) {
-      toast("Sign in to start your free Pro trial to add media");
-      return;
-    }
-
-    if (!isPro) {
-      toast("Pro required: upgrade to add media");
+      toast("Sign in to upload");
       return;
     }
     if (!file) return;
@@ -600,12 +600,12 @@ export default function WorkoutEditor({
 
   async function handleRemoveMedia() {
     if (!sessionUserId) {
-      toast("Sign in to start your free Pro trial to manage media");
+      toast("Sign in to manage media");
       return;
     }
-
-    if (!isPro) {
-      toast("Pro required: upgrade to manage media");
+    if (!proStatus.isPro) {
+      toast("Pro feature locked. Get Pro in Settings.");
+      try { window.location.href = "/subscribe"; } catch {}
       return;
     }
     const media = (active as any)?.media as WorkoutMediaMeta;
@@ -996,29 +996,29 @@ return (
                     setPickKind("image");
                     mediaInputRef.current?.click();
                   }}
-                  disabled={!sessionUserId || !isPro || mediaBusy || (hasMedia && mediaKind === "video")}
+                  disabled={!sessionUserId || mediaBusy || (hasMedia && mediaKind === "video")}
                   style={{
-                    background: !sessionUserId || !isPro
+                    background: !sessionUserId
                       ? "rgba(255,255,255,0.08)"
                       : hasMedia && mediaKind === "video"
                         ? "rgba(255,255,255,0.08)"
                         : "var(--accent)",
-                    border: !sessionUserId || !isPro || (hasMedia && mediaKind === "video")
+                    border: !sessionUserId || (hasMedia && mediaKind === "video")
                       ? "1px solid rgba(255,255,255,0.12)"
                       : "none",
-                    color: !sessionUserId || !isPro || (hasMedia && mediaKind === "video")
+                    color: !sessionUserId || (hasMedia && mediaKind === "video")
                       ? "rgba(255,255,255,0.75)"
                       : "white",
                     borderRadius: 10,
                     padding: "8px 12px",
                     fontWeight: 600,
                     cursor:
-                      !sessionUserId || !isPro || mediaBusy || (hasMedia && mediaKind === "video")
+                      !sessionUserId || mediaBusy || (hasMedia && mediaKind === "video")
                         ? "not-allowed"
                         : "pointer",
                     fontSize: 13,
                     opacity:
-                      !sessionUserId || !isPro || mediaBusy || (hasMedia && mediaKind === "video") ? 0.55 : 1,
+                      !sessionUserId || mediaBusy || (hasMedia && mediaKind === "video") ? 0.55 : 1,
                     whiteSpace: "nowrap",
                     flex: "0 0 auto",
                   }}
@@ -1033,29 +1033,29 @@ return (
                     setPickKind("video");
                     mediaInputRef.current?.click();
                   }}
-                  disabled={!sessionUserId || !isPro || mediaBusy || (hasMedia && mediaKind === "image")}
+                  disabled={!sessionUserId || mediaBusy || (hasMedia && mediaKind === "image")}
                   style={{
-                    background: !sessionUserId || !isPro
+                    background: !sessionUserId
                       ? "rgba(255,255,255,0.08)"
                       : hasMedia && mediaKind === "image"
                         ? "rgba(255,255,255,0.08)"
                         : "var(--accent)",
-                    border: !sessionUserId || !isPro || (hasMedia && mediaKind === "image")
+                    border: !sessionUserId || (hasMedia && mediaKind === "image")
                       ? "1px solid rgba(255,255,255,0.12)"
                       : "none",
-                    color: !sessionUserId || !isPro || (hasMedia && mediaKind === "image")
+                    color: !sessionUserId || (hasMedia && mediaKind === "image")
                       ? "rgba(255,255,255,0.75)"
                       : "white",
                     borderRadius: 10,
                     padding: "8px 12px",
                     fontWeight: 600,
                     cursor:
-                      !sessionUserId || !isPro || mediaBusy || (hasMedia && mediaKind === "image")
+                      !sessionUserId || mediaBusy || (hasMedia && mediaKind === "image")
                         ? "not-allowed"
                         : "pointer",
                     fontSize: 13,
                     opacity:
-                      !sessionUserId || !isPro || mediaBusy || (hasMedia && mediaKind === "image") ? 0.55 : 1,
+                      !sessionUserId || mediaBusy || (hasMedia && mediaKind === "image") ? 0.55 : 1,
                     whiteSpace: "nowrap",
                     flex: "0 0 auto",
                   }}

@@ -1,0 +1,123 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { supabase } from "../lib/supabaseClient";
+import { ensureTrialStarted, getProStatus } from "../lib/entitlements";
+
+function fmtDate(iso?: string | null) {
+  if (!iso) return "";
+  try {
+    return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+  } catch {
+    return "";
+  }
+}
+
+export default function ProConfirmedPage() {
+  const [loading, setLoading] = useState(true);
+  const [msg, setMsg] = useState<string>("Confirming your subscription…");
+  const [isPro, setIsPro] = useState<boolean>(false);
+  const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
+
+  async function refresh() {
+    setLoading(true);
+    try {
+      const { data } = await supabase.auth.getSession();
+      const user = data.session?.user ?? null;
+      if (!user?.id) {
+        setMsg("Please sign in to confirm your subscription.");
+        setIsPro(false);
+        return;
+      }
+
+      await ensureTrialStarted(user.id);
+      const st = await getProStatus(user.id);
+      setIsPro(Boolean(st.isPro));
+      setTrialEndsAt(st.trialEndsAt ?? null);
+
+      if (st.isPro && (st.reason === "active" || st.reason === "trialing")) {
+        setMsg("✅ Subscription confirmed. Pro is now unlocked.");
+      } else if (st.isPro && st.reason === "trial") {
+        setMsg("✅ You’re in your 7‑day trial. Pro is unlocked.");
+      } else {
+        setMsg("We didn’t see an active Pro subscription yet. If you just paid, click refresh in a moment.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <main
+      style={{
+        padding: 18,
+        maxWidth: 760,
+        margin: "0 auto",
+        lineHeight: 1.65,
+      }}
+    >
+      <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>Pro confirmed</h1>
+      <p style={{ margin: "10px 0 0", opacity: 0.9 }}>{msg}</p>
+
+      {trialEndsAt ? (
+        <p style={{ margin: "10px 0 0", opacity: 0.85, fontSize: 13 }}>
+          Trial ends: <b>{fmtDate(trialEndsAt)}</b>
+        </p>
+      ) : null}
+
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 14 }}>
+        <a
+          href="/"
+          style={{
+            display: "inline-block",
+            padding: "10px 12px",
+            borderRadius: 12,
+            border: "1px solid rgba(255,255,255,0.18)",
+            textDecoration: "none",
+          }}
+        >
+          Back to app
+        </a>
+
+        <a
+          href="/subscribe"
+          style={{
+            display: "inline-block",
+            padding: "10px 12px",
+            borderRadius: 12,
+            border: "1px solid rgba(255,255,255,0.18)",
+            textDecoration: "none",
+          }}
+        >
+          Manage Pro
+        </a>
+
+        <button
+          onClick={refresh}
+          disabled={loading}
+          style={{
+            padding: "10px 12px",
+            borderRadius: 12,
+            border: "1px solid rgba(255,255,255,0.18)",
+            background: "rgba(255,255,255,0.08)",
+            cursor: loading ? "default" : "pointer",
+          }}
+        >
+          {loading ? "Refreshing…" : "Refresh status"}
+        </button>
+      </div>
+
+      {!isPro ? (
+        <p style={{ marginTop: 14, opacity: 0.8, fontSize: 13 }}>
+          If your trial is expired, you can still use Lite features. Pro unlocks once Stripe webhooks update your
+          subscription in Supabase.
+        </p>
+      ) : null}
+    </main>
+  );
+}

@@ -6,8 +6,8 @@ import SettingsModal from "./components/SettingsModal";
 import { loadWorkouts, saveWorkouts } from "./lib/storage";
 import { supabase } from "./lib/supabaseClient";
 import { upsertBackup } from "./lib/backup";
-import { getProStatus } from "./lib/entitlements";
 import { shareNodeAsPng } from "./lib/shareImage";
+import { ensureTrialStarted, getProStatus, type ProStatus } from "./lib/entitlements";
 
 type WeekStart = "sunday" | "monday";
 
@@ -144,7 +144,8 @@ export default function HomePage() {
   const [weekStart, setWeekStart] = useState<WeekStart>("sunday");
 
   const [isSignedIn, setIsSignedIn] = useState(false);
-  const [isPro, setIsPro] = useState(false);
+  const [sessionUserId, setSessionUserId] = useState<string | null>(null);
+  const [proStatus, setProStatus] = useState<ProStatus>({ isPro: false, reason: "signed_out" });
   const [lastBackupAt, setLastBackupAt] = useState<string | null>(null);
 
   const lastBackupHashRef = useRef<string>("");
@@ -183,33 +184,33 @@ export default function HomePage() {
     async function init() {
       const { data } = await supabase.auth.getSession();
       setIsSignedIn(Boolean(data.session?.user));
-
-      const uid = data.session?.user?.id ?? null;
-      const email = data.session?.user?.email ?? null;
-      if (uid) {
+      setSessionUserId(data.session?.user?.id ?? null);
+      if (data.session?.user?.id) {
         try {
-          const ps = await getProStatus(supabase as any, uid, email);
-          setIsPro(Boolean(ps.isPro));
+          await ensureTrialStarted(data.session.user.id);
+          const st = await getProStatus(data.session.user.id);
+          setProStatus(st);
         } catch {
-          setIsPro(false);
+          setProStatus({ isPro: false, reason: "free" });
         }
       } else {
-        setIsPro(false);
+        setProStatus({ isPro: false, reason: "signed_out" });
       }
 
       unsub = supabase.auth.onAuthStateChange(async (_event, session) => {
         setIsSignedIn(Boolean(session?.user));
-        const uid2 = session?.user?.id ?? null;
-        const email2 = session?.user?.email ?? null;
-        if (uid2) {
+        const uid = session?.user?.id ?? null;
+        setSessionUserId(uid);
+        if (uid) {
           try {
-            const ps2 = await getProStatus(supabase as any, uid2, email2);
-            setIsPro(Boolean(ps2.isPro));
+            await ensureTrialStarted(uid);
+            const st = await getProStatus(uid);
+            setProStatus(st);
           } catch {
-            setIsPro(false);
+            setProStatus({ isPro: false, reason: "free" });
           }
         } else {
-          setIsPro(false);
+          setProStatus({ isPro: false, reason: "signed_out" });
         }
       });
     }
@@ -224,7 +225,8 @@ export default function HomePage() {
   }, []);
 
   async function requestBackup(nextWorkouts: Record<string, any>) {
-    if (!isSignedIn || !isPro) return;
+    if (!isSignedIn) return;
+    if (!proStatus.isPro) return;
     if (!didLoadRef.current) return;
     if (backupBusyRef.current) return;
 

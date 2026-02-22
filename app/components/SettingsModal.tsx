@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { exportCSV, importCSV } from "../lib/csv";
 import { supabase } from "../lib/supabaseClient";
 import { fetchLatestBackup, formatBackupDate } from "../lib/backup";
-import { getProStatus, type ProStatus } from "../lib/entitlements";
+import { ensureTrialStarted, getProStatus, type ProStatus } from "../lib/entitlements";
 
 type WeekStart = "sunday" | "monday";
 
@@ -64,8 +64,6 @@ export default function SettingsModal({
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [sessionUserId, setSessionUserId] = useState<string | null>(null);
 
-  const [proStatus, setProStatus] = useState<ProStatus>({ isSignedIn: false, isPro: false });
-
   const [authLoading, setAuthLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -97,12 +95,30 @@ export default function SettingsModal({
     );
   }, []);
 
-  const isSignedIn = Boolean(sessionEmail && sessionUserId);
-  const isPro = Boolean(proStatus.isPro);
-  const trialEndsAt = proStatus.trialEndsAt ?? null;
-  const trialActive = Boolean(trialEndsAt && Date.now() < new Date(trialEndsAt).getTime());
-  const paymentLinkMonthly = process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK_MONTHLY || "";
-  const paymentLinkYearly = process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK_YEARLY || "";
+  const [proStatus, setProStatus] = useState<ProStatus>({ isPro: false, reason: "signed_out" });
+
+  const isPro = Boolean(proStatus?.isPro);
+  const trialEndsAt = proStatus?.trialEndsAt ?? null;
+
+  async function refreshProStatus(uid: string | null) {
+    if (!uid) {
+      setProStatus({ isPro: false, reason: "signed_out" });
+      return;
+    }
+    try {
+      await ensureTrialStarted(uid);
+      const st = await getProStatus(uid);
+      setProStatus(st);
+    } catch {
+      setProStatus({ isPro: false, reason: "free" });
+    }
+  }
+
+  useEffect(() => {
+    refreshProStatus(sessionUserId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionUserId]);
+
   const workoutCount = useMemo(() => {
     let total = 0;
     Object.values(workouts ?? {}).forEach((day: any) => {
@@ -175,8 +191,6 @@ export default function SettingsModal({
       if (!supabaseConfigured) {
         setSessionEmail(null);
         setSessionToken(null);
-        setSessionUserId(null);
-        setProStatus({ isSignedIn: false, isPro: false });
         return;
       }
 
@@ -189,29 +203,10 @@ export default function SettingsModal({
         setSessionToken(token);
         setSessionUserId(userId);
 
-        // Load entitlement (trial/subscription)
-        if (userId) {
-          const ps = await getProStatus(supabase as any, userId, userEmail);
-          setProStatus(ps);
-        } else {
-          setProStatus({ isSignedIn: false, isPro: false });
-        }
-
         unsub = supabase.auth.onAuthStateChange((event, newSession) => {
           setSessionEmail(newSession?.user?.email ?? null);
           setSessionToken(newSession?.access_token ?? null);
           setSessionUserId(newSession?.user?.id ?? null);
-
-          // Refresh entitlements whenever auth changes
-          const uid = newSession?.user?.id ?? null;
-          const em = newSession?.user?.email ?? null;
-          if (uid) {
-            getProStatus(supabase as any, uid, em)
-              .then(setProStatus)
-              .catch(() => setProStatus({ isSignedIn: true, isPro: false }));
-          } else {
-            setProStatus({ isSignedIn: false, isPro: false });
-          }
           if (event === "PASSWORD_RECOVERY") {
             setAuthMode("updatepw");
             setAuthMessage("Set a new password to finish resetting your account.");
@@ -220,8 +215,6 @@ export default function SettingsModal({
       } catch {
         setSessionEmail(null);
         setSessionToken(null);
-        setSessionUserId(null);
-        setProStatus({ isSignedIn: false, isPro: false });
         setAuthError("Could not load auth session.");
       }
     }
@@ -431,7 +424,7 @@ async function updatePassword() {
   // ---- PRO ACTIONS (gated) ----
   function handleExport() {
     if (!isPro) {
-      toast("Sign in to unlock Pro features");
+      toast("Pro feature locked. Start Pro in Settings.");
       return;
     }
 
@@ -441,7 +434,7 @@ async function updatePassword() {
 
   function downloadTemplate() {
     if (!isPro) {
-      toast("Sign in to unlock Pro features");
+      toast("Pro feature locked. Start Pro in Settings.");
       return;
     }
 
@@ -464,7 +457,7 @@ async function updatePassword() {
 
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     if (!isPro) {
-      toast("Sign in to unlock Pro features");
+      toast("Pro feature locked. Start Pro in Settings.");
       if (fileRef.current) fileRef.current.value = "";
       return;
     }
@@ -478,7 +471,7 @@ async function updatePassword() {
 
   async function handleConfirmImport() {
     if (!isPro) {
-      toast("Sign in to unlock Pro features");
+      toast("Pro feature locked. Start Pro in Settings.");
       return;
     }
 
@@ -514,7 +507,7 @@ async function updatePassword() {
   // ---- RESTORE FROM AUTO-BACKUP ----
   async function beginRestore() {
     if (!isPro) {
-      toast("Sign in to unlock Pro features");
+      toast("Pro feature locked. Start Pro in Settings.");
       return;
     }
 
@@ -530,7 +523,7 @@ async function updatePassword() {
 
   async function confirmRestore() {
     if (!isPro) {
-      toast("Sign in to unlock Pro features");
+      toast("Pro feature locked. Start Pro in Settings.");
       return;
     }
 
@@ -660,6 +653,28 @@ async function updatePassword() {
 
         <h3>Settings</h3>
 
+        <div
+          style={{
+            border: "1px solid rgba(255,255,255,0.12)",
+            borderRadius: 12,
+            padding: 10,
+            background: "rgba(255,255,255,0.04)",
+            margin: "8px 0 14px",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+            <div style={{ fontWeight: 650 }}>
+              {proStatus.isPro ? "Pro unlocked" : trialEndsAt ? "Trial expired" : "Lite"}
+              {trialEndsAt ? (
+                <span style={{ opacity: 0.85, fontWeight: 500 }}> • Trial ends {new Date(trialEndsAt).toLocaleDateString()}</span>
+              ) : null}
+            </div>
+            <a href="/subscribe" style={{ textDecoration: "underline", opacity: 0.95 }}>
+              {proStatus.isPro ? "Manage Pro" : "Get Pro"}
+            </a>
+          </div>
+        </div>
+
         {/* PROGRESS (all-time) */}
         {(workoutCount > 0 || totalWorkoutDays > 0) && (
           <div
@@ -729,95 +744,6 @@ async function updatePassword() {
           </div>
         </div>
 
-        {/* PRO (TRIAL + BILLING) */}
-        <div
-          style={{
-            marginTop: 14,
-            padding: 12,
-            borderRadius: 12,
-            border: "1px solid rgba(255,255,255,0.12)",
-            background: "rgba(0,0,0,0.10)",
-          }}
-        >
-          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.8)" }}>
-            <strong>Pro</strong>
-          </div>
-
-          <div style={{ marginTop: 8, fontSize: 13, opacity: 0.9 }}>
-            {!isSignedIn
-              ? "Sign in to start your free 7-day Pro trial (no card required)."
-              : isPro
-              ? trialActive
-                ? `Trial active until ${new Date(trialEndsAt as string).toLocaleDateString()}`
-                : proStatus.subStatus === "active" || proStatus.subStatus === "trialing"
-                ? `Pro is active${proStatus.subPeriodEnd ? ` (renews ${new Date(proStatus.subPeriodEnd).toLocaleDateString()})` : ""}`
-                : "Pro is active."
-              : trialEndsAt
-              ? `Trial ended on ${new Date(trialEndsAt).toLocaleDateString()}`
-              : "Trial status unavailable."}
-          </div>
-
-          {isSignedIn && !isPro && (
-            <div style={{ marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <a
-                href={
-                  paymentLinkMonthly
-                    ? `${paymentLinkMonthly}?prefilled_email=${encodeURIComponent(sessionEmail ?? "")}&client_reference_id=${encodeURIComponent(sessionUserId ?? "")}`
-                    : "#"
-                }
-                target="_blank"
-                rel="noreferrer"
-                style={{
-                  flex: "1 1 180px",
-                  textAlign: "center",
-                  padding: 10,
-                  borderRadius: 10,
-                  border: "1px solid rgba(255,255,255,0.15)",
-                  background: "transparent",
-                  color: "white",
-                  textDecoration: "none",
-                  opacity: paymentLinkMonthly ? 1 : 0.6,
-                  pointerEvents: paymentLinkMonthly ? "auto" : "none",
-                }}
-                title={!paymentLinkMonthly ? "Missing NEXT_PUBLIC_STRIPE_PAYMENT_LINK_MONTHLY" : "Upgrade to Pro (Monthly)"}
-              >
-                Upgrade (Monthly)
-              </a>
-
-              <a
-                href={
-                  paymentLinkYearly
-                    ? `${paymentLinkYearly}?prefilled_email=${encodeURIComponent(sessionEmail ?? "")}&client_reference_id=${encodeURIComponent(sessionUserId ?? "")}`
-                    : "#"
-                }
-                target="_blank"
-                rel="noreferrer"
-                style={{
-                  flex: "1 1 180px",
-                  textAlign: "center",
-                  padding: 10,
-                  borderRadius: 10,
-                  border: "1px solid rgba(255,255,255,0.15)",
-                  background: "transparent",
-                  color: "white",
-                  textDecoration: "none",
-                  opacity: paymentLinkYearly ? 1 : 0.6,
-                  pointerEvents: paymentLinkYearly ? "auto" : "none",
-                }}
-                title={!paymentLinkYearly ? "Missing NEXT_PUBLIC_STRIPE_PAYMENT_LINK_YEARLY" : "Upgrade to Pro (Yearly)"}
-              >
-                Upgrade (Yearly)
-              </a>
-            </div>
-          )}
-
-          {isSignedIn && (
-            <div style={{ marginTop: 8, fontSize: 12, color: "rgba(255,255,255,0.7)" }}>
-              After purchase, return here—your Pro status updates automatically.
-            </div>
-          )}
-        </div>
-
         {/* AUTO BACKUP */}
         <div style={{ marginTop: 14 }}>
           <div
@@ -878,9 +804,7 @@ async function updatePassword() {
                   color: "rgba(255,255,255,0.7)",
                 }}
               >
-                {!isSignedIn
-                  ? "Sign in below to start your free 7-day Pro trial."
-                  : "Your trial has ended. Upgrade to Pro to enable auto-backup & restore."}
+                Sign in below to enable auto-backup & restore.
               </div>
             )}
           </div>
@@ -1001,7 +925,7 @@ async function updatePassword() {
       ? "Send yourself a password reset email."
       : authMode === "updatepw"
       ? "Set a new password to finish your reset."
-      : "Sign in to start your free 7-day Pro trial (no card required)."}
+      : "Sign in to unlock CSV import/export (and auto-backup)."}
   </div>
 
   <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
@@ -1253,9 +1177,7 @@ async function updatePassword() {
 
           {!isPro && (
             <div style={{ marginTop: 10, fontSize: 13, color: "#B0B3C0" }}>
-              {!isSignedIn
-                ? "Sign in above to start your free 7-day Pro trial."
-                : "Your trial has ended. Upgrade to Pro to unlock CSV + media + backups."}
+              Sign in above to unlock these.
             </div>
           )}
         </div>

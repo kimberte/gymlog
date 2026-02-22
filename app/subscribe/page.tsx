@@ -106,7 +106,7 @@ export default function SubscribePage() {
               },
               {
                 t: "Workout media",
-                d: "Attach photos to workouts and show them in your Friends feed — the biggest Pro upgrade.",
+                d: "Attach photos & video to workouts and show them in your Friends feed — the biggest Pro upgrade.",
                 i: "📷",
               },
             ].map((c) => (

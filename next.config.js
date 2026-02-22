@@ -1,5 +1,8 @@
+// next.config.js
 // @ts-check
-const nextPWA = require("next-pwa")({
+
+const nextPwaMod = require("next-pwa");
+const withPWA = (nextPwaMod?.default ?? nextPwaMod)({
   dest: "public",
   register: true,
   skipWaiting: true,
@@ -8,8 +11,7 @@ const nextPWA = require("next-pwa")({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // keep whatever you previously had in next.config.ts
   reactStrictMode: true,
 };
 
-module.exports = nextPWA(nextConfig);
+module.exports = withPWA(nextConfig);

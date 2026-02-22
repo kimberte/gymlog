@@ -88,6 +88,10 @@ export default function SettingsModal({
   const [showRestoreConfirm, setShowRestoreConfirm] = useState(false);
   const [restoreBusy, setRestoreBusy] = useState(false);
 
+  const portalLoginUrl = useMemo(() => {
+    return process.env.NEXT_PUBLIC_STRIPE_PORTAL_LOGIN_URL || "";
+  }, []);
+
   const supabaseConfigured = useMemo(() => {
     return Boolean(
       process.env.NEXT_PUBLIC_SUPABASE_URL &&
@@ -707,47 +711,28 @@ async function updatePassword() {
         >
           <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
             <div style={{ minWidth: 220 }}>
-              <div
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 8,
-                  border: "1px solid rgba(255,255,255,0.16)",
-                  background: "rgba(0,0,0,0.16)",
-                  borderRadius: 999,
-                  padding: "6px 10px",
-                  fontWeight: 750,
-                  fontSize: 13,
-                }}
-              >
+              <div className="badge">
                 <span aria-hidden>⚡</span>
                 {planUi.badge}
               </div>
               <div style={{ marginTop: 8, opacity: 0.85, fontSize: 13, lineHeight: 1.5 }}>{planUi.detail}</div>
             </div>
 
-            <a
-              href="/subscribe"
-              style={{
-                textDecoration: "none",
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 8,
-                padding: "10px 12px",
-                borderRadius: 12,
-                border: "1px solid rgba(255,255,255,0.18)",
-                background: "rgba(255,255,255,0.08)",
-                fontWeight: 650,
-                whiteSpace: "nowrap",
-              }}
-            >
+            <a href="/subscribe" className="btn btnPrimary">
               {planUi.cta}
               <span aria-hidden style={{ opacity: 0.9 }}>
                 →
               </span>
             </a>
           </div>
+
+          {sessionUserId && portalLoginUrl ? (
+            <div style={{ marginTop: 10, fontSize: 13, opacity: 0.9 }}>
+              <a className="app-link" href={portalLoginUrl} target="_blank" rel="noreferrer">
+                Manage subscription / cancel
+              </a>
+            </div>
+          ) : null}
         </div>
 
         {/* PROGRESS (all-time) */}

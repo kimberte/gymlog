@@ -49,26 +49,29 @@ export default function SubscribePage() {
       />
 
       <header style={{ marginBottom: 14 }}>
-        <h1 style={{ margin: 0, fontSize: 28, fontWeight: 800, letterSpacing: -0.3 }}>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+          <span className="badge"><span aria-hidden>⚡</span> Subscription + status</span>
+          <span className="badge"><span aria-hidden>☁️</span> Cloud backup</span>
+          <span className="badge"><span aria-hidden>📄</span> CSV tools</span>
+          <span className="badge"><span aria-hidden>📷</span> Workout media</span>
+        </div>
+        <h1 style={{ margin: "10px 0 0", fontSize: 30, fontWeight: 850, letterSpacing: -0.4 }}>
           Gym Log Pro
         </h1>
-        <p style={{ margin: "8px 0 0", opacity: 0.88, maxWidth: 760 }}>
-          The easiest way to keep your workout notebook safe: <b>cloud backups</b>, one‑tap restore, <b>CSV</b> tools,
-          and workout <b>media</b>. This page is also your subscription status page.
+        <p style={{ margin: "8px 0 0", opacity: 0.9, maxWidth: 820 }}>
+          A polished upgrade for power users: <b>automatic cloud backups</b>, one‑tap restore, <b>CSV</b> import/export, and workout <b>media</b>.
+          This page doubles as your <b>subscription status</b> screen.
         </p>
       </header>
 
       <div className="subscribe-grid" style={{ alignItems: "start" }}>
-        <section
-          aria-label="Pro highlights"
-          style={{
-            border: "1px solid rgba(255,255,255,0.12)",
-            borderRadius: 18,
-            padding: 16,
-            background: "rgba(0,0,0,0.10)",
-          }}
-        >
+        <section aria-label="Pro highlights" className="card cardPad subscribe-hero">
           <h2 style={{ margin: 0, fontSize: 16 }}>What you get with Pro</h2>
+          <div className="subscribe-kpis" style={{ marginTop: 12 }}>
+            <div className="subscribe-kpi"><div style={{ fontWeight: 800, fontSize: 16 }}>7‑day trial</div><div style={{ opacity: 0.82, fontSize: 13, marginTop: 4 }}>Starts on first sign‑in</div></div>
+            <div className="subscribe-kpi"><div style={{ fontWeight: 800, fontSize: 16 }}>Instant unlock</div><div style={{ opacity: 0.82, fontSize: 13, marginTop: 4 }}>Pro turns on as soon as Stripe confirms</div></div>
+            <div className="subscribe-kpi"><div style={{ fontWeight: 800, fontSize: 16 }}>Keep Lite</div><div style={{ opacity: 0.82, fontSize: 13, marginTop: 4 }}>Unlimited local logging always</div></div>
+          </div>
           <div className="subscribe-features" style={{ marginTop: 10 }}>
             {[
               {
@@ -148,6 +151,57 @@ export default function SubscribePage() {
         </div>
       </div>
 
+      
+
+      <section style={{ marginTop: 14 }} aria-label="Compare Lite vs Pro">
+        <h2 style={{ margin: "0 0 10px", fontSize: 16 }}>Compare Lite vs Pro</h2>
+        <div className="subscribe-compare">
+          <table>
+            <thead>
+              <tr>
+                <th>Feature</th>
+                <th>Lite</th>
+                <th>Pro</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Unlimited local workout logging</td>
+                <td className="subscribe-check">✓</td>
+                <td className="subscribe-check">✓</td>
+              </tr>
+              <tr>
+                <td>Workout templates + calendar</td>
+                <td className="subscribe-check">✓</td>
+                <td className="subscribe-check">✓</td>
+              </tr>
+              <tr>
+                <td>Cloud backups + one‑tap restore</td>
+                <td className="subscribe-x">—</td>
+                <td className="subscribe-check">✓</td>
+              </tr>
+              <tr>
+                <td>CSV import / export tools</td>
+                <td className="subscribe-x">—</td>
+                <td className="subscribe-check">✓</td>
+              </tr>
+              <tr>
+                <td>Workout media (photos)</td>
+                <td className="subscribe-x">—</td>
+                <td className="subscribe-check">✓</td>
+              </tr>
+              <tr>
+                <td>Priority feature updates</td>
+                <td className="subscribe-x">—</td>
+                <td className="subscribe-check">✓</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p style={{ marginTop: 10, opacity: 0.78, fontSize: 12 }}>
+          Tip: need to cancel later? Use the <b>Manage subscription</b> link in the status card (opens Stripe’s customer portal login).
+        </p>
+      </section>
       <section style={{ marginTop: 14 }} aria-label="FAQ">
         <h2 style={{ margin: "0 0 10px", fontSize: 16 }}>FAQ</h2>
         <div className="subscribe-faq">
@@ -185,8 +239,8 @@ export default function SubscribePage() {
         </div>
 
         <p style={{ marginTop: 12, opacity: 0.75, fontSize: 12 }}>
-          Looking for policies? See <a href="/privacy" style={{ textDecoration: "underline" }}>Privacy Policy</a> and{" "}
-          <a href="/terms" style={{ textDecoration: "underline" }}>Terms</a>.
+          Looking for policies? See <a href="/privacy" className="app-link">Privacy Policy</a> and{" "}
+          <a href="/terms" className="app-link">Terms</a>.
         </p>
       </section>
     </main>

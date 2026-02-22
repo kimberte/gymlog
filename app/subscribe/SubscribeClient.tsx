@@ -46,6 +46,11 @@ export default function SubscribeClient() {
     process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK_YEARLY ||
     "https://buy.stripe.com/test_dRm9ATgMMeHr5xf0ivejK01";
 
+  // Stripe Customer Portal login link (Dashboard → Customer portal → Login link)
+  const portalLoginUrl =
+    process.env.NEXT_PUBLIC_STRIPE_PORTAL_LOGIN_URL ||
+    "";
+
   useEffect(() => {
     let cancelled = false;
 
@@ -115,29 +120,12 @@ export default function SubscribeClient() {
   return (
     <section
       aria-labelledby="subscribe-status"
-      style={{
-        border: "1px solid rgba(255,255,255,0.12)",
-        borderRadius: 18,
-        padding: 16,
-        background: "linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0.05))",
-      }}
+      className="card cardPad subscribe-hero"
     >
       <div style={{ display: "flex", justifyContent: "space-between", gap: 14, flexWrap: "wrap" }}>
         <div>
           <div id="subscribe-status" style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-            <span
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                border: "1px solid rgba(255,255,255,0.16)",
-                background: "rgba(0,0,0,0.18)",
-                borderRadius: 999,
-                padding: "6px 10px",
-                fontWeight: 650,
-                fontSize: 13,
-              }}
-            >
+            <span className="badge">
               <span aria-hidden>⚡</span>
               {loading ? "Checking…" : statusLabel}
             </span>
@@ -190,8 +178,16 @@ export default function SubscribeClient() {
               <div style={{ fontWeight: 650 }}>{sessionEmail}</div>
             </>
           ) : null}
+
+          {!loading && userId && portalLoginUrl ? (
+            <div style={{ marginTop: 8, fontSize: 13 }}>
+              <a className="app-link" href={portalLoginUrl} target="_blank" rel="noreferrer">
+                Manage subscription / cancel
+              </a>
+            </div>
+          ) : null}
           {!loading && !userId ? (
-            <a href="/" style={{ textDecoration: "underline", opacity: 0.95, fontSize: 13 }}>
+            <a href="/" className="app-link" style={{ fontSize: 13 }}>
               Back to app
             </a>
           ) : null}
@@ -302,16 +298,8 @@ export default function SubscribeClient() {
             <a
               href={monthlyUrl || "#"}
               aria-disabled={!monthlyUrl}
-              style={{
-                display: "inline-block",
-                padding: "10px 12px",
-                borderRadius: 12,
-                border: "1px solid rgba(255,255,255,0.22)",
-                background: "rgba(255,255,255,0.10)",
-                textDecoration: "none",
-                pointerEvents: monthlyUrl ? "auto" : "none",
-                opacity: monthlyUrl ? 1 : 0.6,
-              }}
+              className={`btn btnPrimary`}
+              style={{ pointerEvents: monthlyUrl ? "auto" : "none", opacity: monthlyUrl ? 1 : 0.6 }}
             >
               Subscribe Monthly
             </a>
@@ -319,16 +307,8 @@ export default function SubscribeClient() {
             <a
               href={yearlyUrl || "#"}
               aria-disabled={!yearlyUrl}
-              style={{
-                display: "inline-block",
-                padding: "10px 12px",
-                borderRadius: 12,
-                border: "1px solid rgba(255,255,255,0.22)",
-                background: "rgba(255,255,255,0.10)",
-                textDecoration: "none",
-                pointerEvents: yearlyUrl ? "auto" : "none",
-                opacity: yearlyUrl ? 1 : 0.6,
-              }}
+              className={`btn btnSoft`}
+              style={{ pointerEvents: yearlyUrl ? "auto" : "none", opacity: yearlyUrl ? 1 : 0.6 }}
             >
               Subscribe Yearly
             </a>

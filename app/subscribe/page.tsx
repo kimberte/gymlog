@@ -41,7 +41,7 @@ export default function SubscribePage() {
   };
 
   return (
-    <main style={{ padding: 18, maxWidth: 980, margin: "0 auto", lineHeight: 1.65 }}>
+    <main className="subscribe-page" style={{ padding: 18, maxWidth: 980, margin: "0 auto", lineHeight: 1.65 }}>
       <script
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger
@@ -49,7 +49,22 @@ export default function SubscribePage() {
       />
 
       <header style={{ marginBottom: 14 }}>
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+          <a
+            href="/"
+            aria-label="Gym Log home"
+            style={{ display: "inline-flex", alignItems: "center", gap: 10, textDecoration: "none", color: "inherit" }}
+          >
+            <img
+              src="/favicon.ico"
+              alt="Gym Log"
+              width={28}
+              height={28}
+              style={{ borderRadius: 8, border: "1px solid rgba(255,255,255,0.16)" }}
+            />
+            <span style={{ fontWeight: 800, letterSpacing: -0.2, opacity: 0.95 }}>Gym Log</span>
+          </a>
+
           <span className="badge"><span aria-hidden>⚡</span> Subscription + status</span>
           <span className="badge"><span aria-hidden>☁️</span> Cloud backup</span>
           <span className="badge"><span aria-hidden>📄</span> CSV tools</span>
@@ -91,7 +106,7 @@ export default function SubscribePage() {
               },
               {
                 t: "Workout media",
-                d: "Attach photos to workouts and keep a visual training log.",
+                d: "Attach photos to workouts and show them in your Friends feed — the biggest Pro upgrade.",
                 i: "📷",
               },
             ].map((c) => (
@@ -146,9 +161,7 @@ export default function SubscribePage() {
           </div>
         </section>
 
-        <div>
-          <SubscribeClient />
-        </div>
+        <SubscribeClient />
       </div>
 
       
@@ -176,6 +189,11 @@ export default function SubscribePage() {
                 <td className="subscribe-check">✓</td>
               </tr>
               <tr>
+                <td>Community friends feed + sharing</td>
+                <td className="subscribe-check">✓</td>
+                <td className="subscribe-check">✓</td>
+              </tr>
+              <tr>
                 <td>Cloud backups + one‑tap restore</td>
                 <td className="subscribe-x">—</td>
                 <td className="subscribe-check">✓</td>
@@ -186,7 +204,7 @@ export default function SubscribePage() {
                 <td className="subscribe-check">✓</td>
               </tr>
               <tr>
-                <td>Workout media (photos)</td>
+                <td>Workout media (photos) + show media in friends feed</td>
                 <td className="subscribe-x">—</td>
                 <td className="subscribe-check">✓</td>
               </tr>

@@ -866,7 +866,8 @@ return (
             placeholder="Workout notes"
           />
 
-          {/* ✅ Media per workout (image OR video) */}
+          {/* ✅ Media per workout (image OR video) — Pro only (trial counts) */}
+          {proStatus.isPro ? (
           <div
             style={{
               marginTop: 10,
@@ -1114,6 +1115,7 @@ return (
               </div>
             )}
           </div>
+          ) : null}
 
 
 

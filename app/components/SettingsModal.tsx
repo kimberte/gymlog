@@ -735,203 +735,6 @@ async function updatePassword() {
           ) : null}
         </div>
 
-        {/* PROGRESS (all-time) */}
-        {(workoutCount > 0 || totalWorkoutDays > 0) && (
-          <div
-            style={{
-              marginTop: 12,
-              padding: 12,
-              borderRadius: 12,
-              border: "1px solid rgba(255,255,255,0.12)",
-              background: "rgba(0,0,0,0.12)",
-              fontSize: 13,
-              opacity: 0.95,
-            }}
-          >
-            <strong>Progress</strong>
-            <div style={{ marginTop: 6 }}>🏆 Best streak: {bestStreak} days</div>
-            <div>📌 Total workouts: {workoutCount}</div>
-            <div>📆 Total workout days: {totalWorkoutDays}</div>
-            <div>⏱ Last workout: {lastWorkoutDisplay}</div>
-          </div>
-        )}
-
-        {/* GENERAL (NON-PRO) */}
-        <div
-          style={{
-            marginTop: 10,
-            padding: 12,
-            borderRadius: 12,
-            border: "1px solid rgba(255,255,255,0.12)",
-            background: "rgba(0,0,0,0.10)",
-          }}
-        >
-          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.8)" }}>
-            <strong>General</strong>
-          </div>
-
-          <div style={{ marginTop: 10, fontSize: 13, opacity: 0.9 }}>
-            Week starts on
-          </div>
-
-          <select
-            value={weekStart}
-            onChange={(e) => setWeekStart(e.target.value as WeekStart)}
-            style={{
-              width: "100%",
-              marginTop: 8,
-              background: "rgba(0,0,0,0.18)",
-              border: "1px solid rgba(255,255,255,0.15)",
-              color: "white",
-              borderRadius: 10,
-              padding: 10,
-              fontFamily: "inherit",
-              cursor: "pointer",
-            }}
-          >
-            <option value="sunday">Sunday</option>
-            <option value="monday">Monday</option>
-          </select>
-
-          <div
-            style={{
-              marginTop: 8,
-              fontSize: 12,
-              color: "rgba(255,255,255,0.7)",
-            }}
-          >
-            Saved on this device.
-          </div>
-        </div>
-
-        {/* AUTO BACKUP */}
-        <div style={{ marginTop: 14 }}>
-          <div
-            style={{
-              fontSize: 13,
-              color: "rgba(255,255,255,0.75)",
-              marginBottom: 8,
-            }}
-          >
-            Auto-backup
-          </div>
-
-          <div
-            style={{
-              padding: 12,
-              borderRadius: 12,
-              border: "1px solid rgba(255,255,255,0.12)",
-              background: "rgba(0,0,0,0.10)",
-              ...(isPro ? {} : proDisabledStyle),
-            }}
-          >
-            <div style={{ fontSize: 13, opacity: 0.95 }}>
-              {backupLoading ? (
-                "Loading backup status…"
-              ) : prettyBackup ? (
-                <>
-                  Last Backup {prettyBackup} ({workoutCount} workout logs)
-                </>
-              ) : (
-                "No backup yet"
-              )}
-            </div>
-
-            <button
-              onClick={beginRestore}
-              style={{
-                width: "100%",
-                marginTop: 10,
-                padding: 10,
-                borderRadius: 10,
-                border: "1px solid rgba(255,255,255,0.15)",
-                background: "transparent",
-                color: "white",
-                cursor: "pointer",
-                opacity: backupIso ? 1 : 0.6,
-              }}
-              disabled={!backupIso}
-              title={!backupIso ? "No backup available yet" : "Restore from auto-backup"}
-            >
-              Restore from auto-backup
-            </button>
-
-            {!isPro && (
-              <div
-                style={{
-                  marginTop: 8,
-                  fontSize: 12,
-                  color: "rgba(255,255,255,0.7)",
-                }}
-              >
-                Sign in below to enable auto-backup & restore.
-              </div>
-            )}
-          </div>
-
-          {/* RESTORE CONFIRM */}
-          {showRestoreConfirm && (
-            <div
-              style={{
-                marginTop: 12,
-                padding: 12,
-                borderRadius: 10,
-                background: "rgba(255,87,33,0.12)",
-                fontSize: 13,
-                border: "1px solid rgba(255,87,33,0.25)",
-              }}
-            >
-              <strong>Restore from backup?</strong>
-              <p style={{ margin: "6px 0" }}>
-                This will overwrite your entire calendar with the latest cloud backup{" "}
-                {prettyBackup ? (
-                  <>
-                    from <strong>{prettyBackup}</strong>
-                  </>
-                ) : (
-                  "from your latest backup"
-                )}
-                . We recommend exporting CSV first.
-              </p>
-
-              <button
-                onClick={confirmRestore}
-                disabled={restoreBusy}
-                style={{
-                  width: "100%",
-                  marginTop: 8,
-                  background: "#FF5721",
-                  color: "#fff",
-                  border: "none",
-                  padding: 10,
-                  borderRadius: 10,
-                  cursor: "pointer",
-                  opacity: restoreBusy ? 0.8 : 1,
-                }}
-              >
-                {restoreBusy ? "Restoring…" : "Confirm restore"}
-              </button>
-
-              <button
-                onClick={cancelRestore}
-                disabled={restoreBusy}
-                style={{
-                  width: "100%",
-                  marginTop: 8,
-                  background: "transparent",
-                  color: "#fff",
-                  border: "1px solid rgba(255,255,255,0.15)",
-                  padding: 10,
-                  borderRadius: 10,
-                  cursor: "pointer",
-                }}
-              >
-                Cancel
-              </button>
-            </div>
-          )}
-        </div>
-
         {/* AUTH SECTION */}
         <div
           style={{
@@ -1204,6 +1007,205 @@ async function updatePassword() {
     </div>
   )}
 </>
+          )}
+        </div>
+
+
+
+        {/* PROGRESS (all-time) */}
+        {(workoutCount > 0 || totalWorkoutDays > 0) && (
+          <div
+            style={{
+              marginTop: 12,
+              padding: 12,
+              borderRadius: 12,
+              border: "1px solid rgba(255,255,255,0.12)",
+              background: "rgba(0,0,0,0.12)",
+              fontSize: 13,
+              opacity: 0.95,
+            }}
+          >
+            <strong>Progress</strong>
+            <div style={{ marginTop: 6 }}>🏆 Best streak: {bestStreak} days</div>
+            <div>📌 Total workouts: {workoutCount}</div>
+            <div>📆 Total workout days: {totalWorkoutDays}</div>
+            <div>⏱ Last workout: {lastWorkoutDisplay}</div>
+          </div>
+        )}
+
+        {/* GENERAL (NON-PRO) */}
+        <div
+          style={{
+            marginTop: 10,
+            padding: 12,
+            borderRadius: 12,
+            border: "1px solid rgba(255,255,255,0.12)",
+            background: "rgba(0,0,0,0.10)",
+          }}
+        >
+          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.8)" }}>
+            <strong>General</strong>
+          </div>
+
+          <div style={{ marginTop: 10, fontSize: 13, opacity: 0.9 }}>
+            Week starts on
+          </div>
+
+          <select
+            value={weekStart}
+            onChange={(e) => setWeekStart(e.target.value as WeekStart)}
+            style={{
+              width: "100%",
+              marginTop: 8,
+              background: "rgba(0,0,0,0.18)",
+              border: "1px solid rgba(255,255,255,0.15)",
+              color: "white",
+              borderRadius: 10,
+              padding: 10,
+              fontFamily: "inherit",
+              cursor: "pointer",
+            }}
+          >
+            <option value="sunday">Sunday</option>
+            <option value="monday">Monday</option>
+          </select>
+
+          <div
+            style={{
+              marginTop: 8,
+              fontSize: 12,
+              color: "rgba(255,255,255,0.7)",
+            }}
+          >
+            Saved on this device.
+          </div>
+        </div>
+
+        {/* AUTO BACKUP */}
+        <div style={{ marginTop: 14 }}>
+          <div
+            style={{
+              fontSize: 13,
+              color: "rgba(255,255,255,0.75)",
+              marginBottom: 8,
+            }}
+          >
+            Auto-backup
+          </div>
+
+          <div
+            style={{
+              padding: 12,
+              borderRadius: 12,
+              border: "1px solid rgba(255,255,255,0.12)",
+              background: "rgba(0,0,0,0.10)",
+              ...(isPro ? {} : proDisabledStyle),
+            }}
+          >
+            <div style={{ fontSize: 13, opacity: 0.95 }}>
+              {backupLoading ? (
+                "Loading backup status…"
+              ) : prettyBackup ? (
+                <>
+                  Last Backup {prettyBackup} ({workoutCount} workout logs)
+                </>
+              ) : (
+                "No backup yet"
+              )}
+            </div>
+
+            <button
+              onClick={beginRestore}
+              style={{
+                width: "100%",
+                marginTop: 10,
+                padding: 10,
+                borderRadius: 10,
+                border: "1px solid rgba(255,255,255,0.15)",
+                background: "transparent",
+                color: "white",
+                cursor: "pointer",
+                opacity: backupIso ? 1 : 0.6,
+              }}
+              disabled={!backupIso}
+              title={!backupIso ? "No backup available yet" : "Restore from auto-backup"}
+            >
+              Restore from auto-backup
+            </button>
+
+            {!isPro && (
+              <div
+                style={{
+                  marginTop: 8,
+                  fontSize: 12,
+                  color: "rgba(255,255,255,0.7)",
+                }}
+              >
+                Sign in below to enable auto-backup & restore.
+              </div>
+            )}
+          </div>
+
+          {/* RESTORE CONFIRM */}
+          {showRestoreConfirm && (
+            <div
+              style={{
+                marginTop: 12,
+                padding: 12,
+                borderRadius: 10,
+                background: "rgba(255,87,33,0.12)",
+                fontSize: 13,
+                border: "1px solid rgba(255,87,33,0.25)",
+              }}
+            >
+              <strong>Restore from backup?</strong>
+              <p style={{ margin: "6px 0" }}>
+                This will overwrite your entire calendar with the latest cloud backup{" "}
+                {prettyBackup ? (
+                  <>
+                    from <strong>{prettyBackup}</strong>
+                  </>
+                ) : (
+                  "from your latest backup"
+                )}
+                . We recommend exporting CSV first.
+              </p>
+
+              <button
+                onClick={confirmRestore}
+                disabled={restoreBusy}
+                style={{
+                  width: "100%",
+                  marginTop: 8,
+                  background: "#FF5721",
+                  color: "#fff",
+                  border: "none",
+                  padding: 10,
+                  borderRadius: 10,
+                  cursor: "pointer",
+                  opacity: restoreBusy ? 0.8 : 1,
+                }}
+              >
+                {restoreBusy ? "Restoring…" : "Confirm restore"}
+              </button>
+
+              <button
+                onClick={cancelRestore}
+                disabled={restoreBusy}
+                style={{
+                  width: "100%",
+                  marginTop: 8,
+                  background: "transparent",
+                  color: "#fff",
+                  border: "1px solid rgba(255,255,255,0.15)",
+                  padding: 10,
+                  borderRadius: 10,
+                  cursor: "pointer",
+                }}
+              >
+                Cancel
+              </button>
+            </div>
           )}
         </div>
 

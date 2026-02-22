@@ -229,16 +229,7 @@ export default function SubscribeClient() {
             <li>Community features (signed‑in)</li>
           </ul>
           <div style={{ marginTop: 12 }}>
-            <a
-              href="/"
-              style={{
-                display: "inline-block",
-                padding: "10px 12px",
-                borderRadius: 12,
-                border: "1px solid rgba(255,255,255,0.18)",
-                textDecoration: "none",
-              }}
-            >
+            <a href="/" className="btn btnOutline">
               Continue with Lite
             </a>
           </div>
@@ -290,7 +281,7 @@ export default function SubscribeClient() {
           <ul style={{ margin: "10px 0 0", paddingLeft: 18, opacity: 0.95 }}>
             <li>Cloud backups + restore</li>
             <li>CSV upload / download</li>
-            <li>Workout media (photos)</li>
+            <li>Workout media (photos) — shows in Friends feed</li>
             <li>Priority feature updates</li>
           </ul>
 
@@ -324,7 +315,7 @@ export default function SubscribeClient() {
       </div>
 
       <p style={{ marginTop: 14, opacity: 0.8, fontSize: 13 }}>
-        After purchase you’ll be redirected to <code>/pro-confirmed</code>. If your subscription doesn’t show instantly, refresh — webhooks can take a moment.
+        If your subscription doesn’t show instantly, refresh — webhooks can take a moment. Contact <a className="app-link" href="mailto:info@gymlogapp.com">info@gymlogapp.com</a> for any issues.
       </p>
     </section>
   );

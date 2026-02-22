@@ -638,6 +638,49 @@ async function updatePassword() {
 
   const backupIso = serverBackupAt ?? lastBackupAt;
 
+  const planUi = useMemo(() => {
+    const ends = trialEndsAt ? new Date(trialEndsAt) : null;
+    const endsLabel = ends && isFinite(ends.getTime()) ? ends.toLocaleDateString() : null;
+
+    if (!sessionUserId) {
+      return {
+        badge: "Signed out",
+        detail: "Sign in to start your 7‑day trial and enable Pro features.",
+        cta: "Get Pro",
+      };
+    }
+
+    if (proStatus.isPro) {
+      if (proStatus.reason === "active") {
+        return {
+          badge: "Pro Active",
+          detail: "Cloud backup, restore, CSV tools & media are unlocked.",
+          cta: "Manage Pro",
+        };
+      }
+      // trialing (Stripe) or app trial
+      return {
+        badge: "Pro Trial",
+        detail: endsLabel ? `Trial ends ${endsLabel}.` : "Trial active.",
+        cta: "View Pro",
+      };
+    }
+
+    if (trialEndsAt) {
+      return {
+        badge: "Trial ended",
+        detail: endsLabel ? `Trial ended ${endsLabel}. Upgrade to keep backups + CSV.` : "Your trial has ended.",
+        cta: "Upgrade",
+      };
+    }
+
+    return {
+      badge: "Lite",
+      detail: "Unlimited local logging. Upgrade for cloud backups + CSV tools.",
+      cta: "Get Pro",
+    };
+  }, [isPro, proStatus.isPro, proStatus.reason, sessionUserId, trialEndsAt]);
+
   function requestClose() {
     if (closing) return;
     setClosing(true);
@@ -656,21 +699,53 @@ async function updatePassword() {
         <div
           style={{
             border: "1px solid rgba(255,255,255,0.12)",
-            borderRadius: 12,
-            padding: 10,
-            background: "rgba(255,255,255,0.04)",
+            borderRadius: 14,
+            padding: 12,
+            background: "linear-gradient(180deg, rgba(255,255,255,0.06), rgba(0,0,0,0.06))",
             margin: "8px 0 14px",
           }}
         >
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
-            <div style={{ fontWeight: 650 }}>
-              {proStatus.isPro ? "Pro unlocked" : trialEndsAt ? "Trial expired" : "Lite"}
-              {trialEndsAt ? (
-                <span style={{ opacity: 0.85, fontWeight: 500 }}> • Trial ends {new Date(trialEndsAt).toLocaleDateString()}</span>
-              ) : null}
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+            <div style={{ minWidth: 220 }}>
+              <div
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  border: "1px solid rgba(255,255,255,0.16)",
+                  background: "rgba(0,0,0,0.16)",
+                  borderRadius: 999,
+                  padding: "6px 10px",
+                  fontWeight: 750,
+                  fontSize: 13,
+                }}
+              >
+                <span aria-hidden>⚡</span>
+                {planUi.badge}
+              </div>
+              <div style={{ marginTop: 8, opacity: 0.85, fontSize: 13, lineHeight: 1.5 }}>{planUi.detail}</div>
             </div>
-            <a href="/subscribe" style={{ textDecoration: "underline", opacity: 0.95 }}>
-              {proStatus.isPro ? "Manage Pro" : "Get Pro"}
+
+            <a
+              href="/subscribe"
+              style={{
+                textDecoration: "none",
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+                padding: "10px 12px",
+                borderRadius: 12,
+                border: "1px solid rgba(255,255,255,0.18)",
+                background: "rgba(255,255,255,0.08)",
+                fontWeight: 650,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {planUi.cta}
+              <span aria-hidden style={{ opacity: 0.9 }}>
+                →
+              </span>
             </a>
           </div>
         </div>

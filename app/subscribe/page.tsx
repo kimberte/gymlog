@@ -1,266 +1,194 @@
-"use client";
+import type { Metadata } from "next";
+import SubscribeClient from "./SubscribeClient";
 
-import { useEffect, useMemo, useState } from "react";
-import { supabase } from "../lib/supabaseClient";
-import { ensureTrialStarted, getProStatus, type ProStatus } from "../lib/entitlements";
-
-function fmtDate(iso?: string | null) {
-  if (!iso) return "";
-  try {
-    return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
-  } catch {
-    return "";
-  }
-}
-
-function withParams(base: string, params: Record<string, string>) {
-  const u = new URL(base);
-  Object.entries(params).forEach(([k, v]) => u.searchParams.set(k, v));
-  return u.toString();
-}
+export const metadata: Metadata = {
+  title: "Gym Log Pro — Cloud Backup, CSV Tools & Workout Media",
+  description:
+    "Upgrade to Gym Log Pro for automatic cloud backups, one‑tap restore, CSV import/export, and workout media. This page also shows your current subscription status.",
+  alternates: {
+    canonical: "/subscribe",
+  },
+  openGraph: {
+    title: "Gym Log Pro — Upgrade Your Workout Notebook",
+    description:
+      "Get cloud backups, restore, CSV tools, and workout media. View your subscription status and start a 7‑day trial.",
+    type: "website",
+    url: "/subscribe",
+  },
+  twitter: {
+    card: "summary",
+    title: "Gym Log Pro",
+    description:
+      "Unlock cloud backups, CSV tools, and workout media. View subscription status and upgrade.",
+  },
+};
 
 export default function SubscribePage() {
-  const [loading, setLoading] = useState(true);
-  const [sessionEmail, setSessionEmail] = useState<string | null>(null);
-  const [userId, setUserId] = useState<string | null>(null);
-  const [pro, setPro] = useState<ProStatus | null>(null);
-
-  const monthlyBase = process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK_MONTHLY || "https://buy.stripe.com/test_3cI00j8ggfLv9NvghtejK00";
-  const yearlyBase = process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK_YEARLY || "https://buy.stripe.com/test_dRm9ATgMMeHr5xf0ivejK01";
-
-  useEffect(() => {
-    let cancelled = false;
-
-    (async () => {
-      try {
-        const { data } = await supabase.auth.getSession();
-        const user = data.session?.user ?? null;
-        if (cancelled) return;
-
-        setSessionEmail(user?.email ?? null);
-        setUserId(user?.id ?? null);
-
-        if (user?.id) {
-          await ensureTrialStarted(user.id);
-          const st = await getProStatus(user.id);
-          if (!cancelled) setPro(st);
-        } else {
-          setPro({ isPro: false, reason: "signed_out" });
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const expired = useMemo(() => {
-    if (!pro) return false;
-    return pro.reason === "free" && Boolean(pro.trialEndsAt);
-  }, [pro]);
-
-  const monthlyUrl = useMemo(() => {
-    if (!monthlyBase) return "";
-    if (!sessionEmail || !userId) return monthlyBase;
-    return withParams(monthlyBase, {
-      // Stripe Payment Link URL params
-      prefilled_email: sessionEmail,
-      client_reference_id: userId,
-      // return path (Stripe may ignore for some configs; you can set success redirect in dashboard too)
-      redirect_url: "https://gymlogapp.com/pro-confirmed",
-    });
-  }, [monthlyBase, sessionEmail, userId]);
-
-  const yearlyUrl = useMemo(() => {
-    if (!yearlyBase) return "";
-    if (!sessionEmail || !userId) return yearlyBase;
-    return withParams(yearlyBase, {
-      prefilled_email: sessionEmail,
-      client_reference_id: userId,
-      redirect_url: "https://gymlogapp.com/pro-confirmed",
-    });
-  }, [yearlyBase, sessionEmail, userId]);
+  const ld = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: "Gym Log Pro",
+    description: "Subscription upgrade for Gym Log with cloud backups, CSV tools, and workout media.",
+    brand: { "@type": "Brand", name: "Gym Log" },
+    offers: [
+      {
+        "@type": "Offer",
+        priceCurrency: "USD",
+        availability: "https://schema.org/InStock",
+        category: "SoftwareApplication",
+      },
+    ],
+  };
 
   return (
-    <main
-      style={{
-        padding: 18,
-        maxWidth: 880,
-        margin: "0 auto",
-        lineHeight: 1.65,
-      }}
-    >
+    <main style={{ padding: 18, maxWidth: 980, margin: "0 auto", lineHeight: 1.65 }}>
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }}
+      />
+
       <header style={{ marginBottom: 14 }}>
-        <h1 style={{ margin: 0, fontSize: 24, fontWeight: 700 }}>Gym Log Pro</h1>
-        <p style={{ margin: "6px 0 0", opacity: 0.85 }}>
-          Unlock backups, CSV tools, and workout media.
+        <h1 style={{ margin: 0, fontSize: 28, fontWeight: 800, letterSpacing: -0.3 }}>
+          Gym Log Pro
+        </h1>
+        <p style={{ margin: "8px 0 0", opacity: 0.88, maxWidth: 760 }}>
+          The easiest way to keep your workout notebook safe: <b>cloud backups</b>, one‑tap restore, <b>CSV</b> tools,
+          and workout <b>media</b>. This page is also your subscription status page.
         </p>
       </header>
 
-      {loading ? (
-        <p style={{ opacity: 0.8 }}>Loading…</p>
-      ) : !userId ? (
-        <div
+      <div className="subscribe-grid" style={{ alignItems: "start" }}>
+        <section
+          aria-label="Pro highlights"
           style={{
             border: "1px solid rgba(255,255,255,0.12)",
-            borderRadius: 14,
-            padding: 14,
-            background: "rgba(255,255,255,0.04)",
+            borderRadius: 18,
+            padding: 16,
+            background: "rgba(0,0,0,0.10)",
           }}
         >
-          <p style={{ margin: 0 }}>
-            Please sign in first to start your 7‑day trial or subscribe.
-          </p>
-          <p style={{ margin: "10px 0 0" }}>
-            <a href="/" style={{ textDecoration: "underline" }}>
-              Back to app
-            </a>
-          </p>
-        </div>
-      ) : (
-        <>
-          <div
-            style={{
-              border: "1px solid rgba(255,255,255,0.12)",
-              borderRadius: 14,
-              padding: 14,
-              background: "rgba(255,255,255,0.04)",
-              marginBottom: 12,
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-              <div>
-                <div style={{ fontWeight: 650 }}>
-                  Status:{" "}
-                  {pro?.isPro ? (
-                    <span>Pro</span>
-                  ) : expired ? (
-                    <span>Trial expired</span>
-                  ) : (
-                    <span>Lite</span>
-                  )}
-                </div>
-                {pro?.trialEndsAt ? (
-                  <div style={{ opacity: 0.85 }}>
-                    Trial ends: <b>{fmtDate(pro.trialEndsAt)}</b>
+          <h2 style={{ margin: 0, fontSize: 16 }}>What you get with Pro</h2>
+          <div className="subscribe-features" style={{ marginTop: 10 }}>
+            {[
+              {
+                t: "Automatic cloud backups",
+                d: "Keep your calendar safe across devices — no spreadsheets needed.",
+                i: "☁️",
+              },
+              {
+                t: "One‑tap restore",
+                d: "Recover your workouts anytime (new phone, new browser, or reinstall).",
+                i: "🛟",
+              },
+              {
+                t: "CSV import / export",
+                d: "Move your data in and out easily — perfect for power users.",
+                i: "📄",
+              },
+              {
+                t: "Workout media",
+                d: "Attach photos to workouts and keep a visual training log.",
+                i: "📷",
+              },
+            ].map((c) => (
+              <div
+                key={c.t}
+                style={{
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  borderRadius: 16,
+                  padding: 12,
+                  background: "rgba(255,255,255,0.03)",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div
+                    aria-hidden
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 12,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      background: "rgba(255,255,255,0.07)",
+                      border: "1px solid rgba(255,255,255,0.12)",
+                      fontSize: 18,
+                    }}
+                  >
+                    {c.i}
                   </div>
-                ) : (
-                  <div style={{ opacity: 0.85 }}>7‑day trial starts on first sign‑in.</div>
-                )}
+                  <div>
+                    <div style={{ fontWeight: 750 }}>{c.t}</div>
+                    <div style={{ opacity: 0.82, fontSize: 13, lineHeight: 1.5 }}>{c.d}</div>
+                  </div>
+                </div>
               </div>
-
-              <div style={{ textAlign: "right" }}>
-                <div style={{ opacity: 0.85, fontSize: 13 }}>Signed in as</div>
-                <div style={{ fontWeight: 600 }}>{sessionEmail}</div>
-              </div>
-            </div>
+            ))}
           </div>
 
-          <section
+          <div
             style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: 12,
+              marginTop: 12,
+              borderRadius: 16,
+              padding: 12,
+              border: "1px solid rgba(255,255,255,0.12)",
+              background: "linear-gradient(180deg, rgba(255,87,33,0.12), rgba(0,0,0,0.06))",
             }}
           >
+            <div style={{ fontWeight: 750 }}>Built for real‑world training</div>
+            <div style={{ opacity: 0.86, fontSize: 13, marginTop: 6 }}>
+              Log offline. Keep everything fast. Upgrade only when you want cloud convenience and power tools.
+            </div>
+          </div>
+        </section>
+
+        <div>
+          <SubscribeClient />
+        </div>
+      </div>
+
+      <section style={{ marginTop: 14 }} aria-label="FAQ">
+        <h2 style={{ margin: "0 0 10px", fontSize: 16 }}>FAQ</h2>
+        <div className="subscribe-faq">
+          {[
+            {
+              q: "Do I lose my workouts if I don’t subscribe?",
+              a: "No. Lite keeps unlimited local logging. Pro adds cloud backup/restore, CSV tools, and media.",
+            },
+            {
+              q: "When does the 7‑day trial start?",
+              a: "Your trial starts on your first sign‑in. Your exact trial end date shows above in your status card.",
+            },
+            {
+              q: "How does restore work?",
+              a: "Once Pro is active, you can restore your latest cloud backup from Settings in the app.",
+            },
+            {
+              q: "What if my Pro status doesn’t update right away?",
+              a: "Stripe webhooks can take a moment. Refresh this page or reopen Settings to re-check your status.",
+            },
+          ].map((f) => (
             <div
+              key={f.q}
               style={{
                 border: "1px solid rgba(255,255,255,0.12)",
-                borderRadius: 14,
-                padding: 14,
+                borderRadius: 16,
+                padding: 12,
                 background: "rgba(255,255,255,0.03)",
               }}
             >
-              <h2 style={{ margin: 0, fontSize: 16 }}>Lite (Free)</h2>
-              <ul style={{ margin: "10px 0 0", paddingLeft: 18, opacity: 0.9 }}>
-                <li>Local notebook + calendar</li>
-                <li>Community page (signed-in users)</li>
-                <li>Unlimited local logging</li>
-              </ul>
-              <div style={{ marginTop: 12 }}>
-                <a
-                  href="/"
-                  style={{
-                    display: "inline-block",
-                    padding: "10px 12px",
-                    borderRadius: 12,
-                    border: "1px solid rgba(255,255,255,0.18)",
-                    textDecoration: "none",
-                  }}
-                >
-                  Continue with Lite
-                </a>
-              </div>
+              <div style={{ fontWeight: 700 }}>{f.q}</div>
+              <div style={{ opacity: 0.82, fontSize: 13, marginTop: 6 }}>{f.a}</div>
             </div>
+          ))}
+        </div>
 
-            <div
-              style={{
-                border: "1px solid rgba(255,255,255,0.12)",
-                borderRadius: 14,
-                padding: 14,
-                background: "rgba(255,255,255,0.06)",
-              }}
-            >
-              <h2 style={{ margin: 0, fontSize: 16 }}>Pro</h2>
-              <ul style={{ margin: "10px 0 0", paddingLeft: 18, opacity: 0.95 }}>
-                <li>Cloud backups + restore</li>
-                <li>CSV upload/download</li>
-                <li>Add workout media</li>
-              </ul>
-
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
-                <a
-                  href={monthlyUrl || "#"}
-                  style={{
-                    display: "inline-block",
-                    padding: "10px 12px",
-                    borderRadius: 12,
-                    border: "1px solid rgba(255,255,255,0.22)",
-                    background: "rgba(255,255,255,0.10)",
-                    textDecoration: "none",
-                    pointerEvents: monthlyUrl ? "auto" : "none",
-                    opacity: monthlyUrl ? 1 : 0.6,
-                  }}
-                >
-                  Get Pro Monthly
-                </a>
-
-                <a
-                  href={yearlyUrl || "#"}
-                  style={{
-                    display: "inline-block",
-                    padding: "10px 12px",
-                    borderRadius: 12,
-                    border: "1px solid rgba(255,255,255,0.22)",
-                    background: "rgba(255,255,255,0.10)",
-                    textDecoration: "none",
-                    pointerEvents: yearlyUrl ? "auto" : "none",
-                    opacity: yearlyUrl ? 1 : 0.6,
-                  }}
-                >
-                  Get Pro Yearly
-                </a>
-              </div>
-
-              {!monthlyBase || !yearlyBase ? (
-                <p style={{ margin: "10px 0 0", opacity: 0.75, fontSize: 13 }}>
-                  Payment links are not configured. Set{" "}
-                  <code>NEXT_PUBLIC_STRIPE_PAYMENT_LINK_MONTHLY</code> and{" "}
-                  <code>NEXT_PUBLIC_STRIPE_PAYMENT_LINK_YEARLY</code>.
-                </p>
-              ) : null}
-            </div>
-          </section>
-
-          <p style={{ marginTop: 14, opacity: 0.85, fontSize: 13 }}>
-            After purchase you’ll be redirected to <code>/pro-confirmed</code>. If your subscription doesn’t show
-            instantly, refresh — webhooks can take a moment.
-          </p>
-        </>
-      )}
+        <p style={{ marginTop: 12, opacity: 0.75, fontSize: 12 }}>
+          Looking for policies? See <a href="/privacy" style={{ textDecoration: "underline" }}>Privacy Policy</a> and{" "}
+          <a href="/terms" style={{ textDecoration: "underline" }}>Terms</a>.
+        </p>
+      </section>
     </main>
   );
 }

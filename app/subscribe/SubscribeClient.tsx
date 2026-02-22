@@ -281,7 +281,7 @@ export default function SubscribeClient() {
           <ul style={{ margin: "10px 0 0", paddingLeft: 18, opacity: 0.95 }}>
             <li>Cloud backups + restore</li>
             <li>CSV upload / download</li>
-            <li>Workout media (photos) — shows in Friends feed</li>
+            <li>Workout media (photo & video) — shows in Friends feed</li>
             <li>Priority feature updates</li>
           </ul>
 

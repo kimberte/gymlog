@@ -292,7 +292,7 @@ export default function SubscribeClient() {
               className={`btn btnPrimary`}
               style={{ pointerEvents: monthlyUrl ? "auto" : "none", opacity: monthlyUrl ? 1 : 0.6 }}
             >
-              Subscribe Monthly
+              Subscribe Monthly $4.99 CAD
             </a>
 
             <a
@@ -301,7 +301,7 @@ export default function SubscribeClient() {
               className={`btn btnSoft`}
               style={{ pointerEvents: yearlyUrl ? "auto" : "none", opacity: yearlyUrl ? 1 : 0.6 }}
             >
-              Subscribe Yearly
+              Subscribe Yearly $49.99
             </a>
           </div>
 

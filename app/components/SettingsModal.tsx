@@ -19,16 +19,6 @@ function parseDateKey(key: string) {
   return new Date(y, mo - 1, d, 12, 0, 0, 0);
 }
 
-function formatKeyForDisplay(key: string | null) {
-  if (!key) return "—";
-  const dt = parseDateKey(key);
-  if (!dt) return "—";
-  return dt.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
 
 type Props = {
   workouts: Record<string, any>;
@@ -136,7 +126,7 @@ export default function SettingsModal({
   }, [workouts]);
 
   // ---- PROGRESS STATS (all-time) ----
-  const { bestStreak, totalWorkoutDays, lastWorkoutKey } = useMemo(() => {
+  const { bestStreak, totalWorkoutDays, pbCount } = useMemo(() => {
     // We count a "workout day" if any entry has title or notes.
     const activeKeys = Object.keys(workouts ?? {}).filter((key) => {
       const day: any = (workouts as any)[key];
@@ -145,6 +135,8 @@ export default function SettingsModal({
         Boolean(String(e?.title ?? "").trim() || String(e?.notes ?? "").trim())
       );
     });
+
+    const pbCount = Object.keys(workouts ?? {}).filter((key) => Boolean((workouts as any)[key]?.pb)).length;
 
     activeKeys.sort(); // YYYY-MM-DD lex sort works
 
@@ -173,16 +165,11 @@ export default function SettingsModal({
 
     best = Math.max(best, run);
 
-    const lastKey = activeKeys.length ? activeKeys[activeKeys.length - 1] : null;
-
     return {
       bestStreak: best,
       totalWorkoutDays: activeKeys.length,
-      lastWorkoutKey: lastKey,
     };
   }, [workouts]);
-
-  const lastWorkoutDisplay = formatKeyForDisplay(lastWorkoutKey);
 
   // ---- AUTH: load session + listen for changes ----
   useEffect(() => {
@@ -1029,7 +1016,7 @@ async function updatePassword() {
             <div style={{ marginTop: 6 }}>🏆 Best streak: {bestStreak} days</div>
             <div>📌 Total workouts: {workoutCount}</div>
             <div>📆 Total workout days: {totalWorkoutDays}</div>
-            <div>⏱ Last workout: {lastWorkoutDisplay}</div>
+            <div>⭐ Personal Bests (PBs): {pbCount}</div>
           </div>
         )}
 

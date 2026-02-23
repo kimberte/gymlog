@@ -286,8 +286,8 @@ export default function HomePage() {
             src="/icons/gym-app-logo-color-40x40.png"
             alt="Gym Log"
             className="brand-logo"
-            width={20}
-            height={20}
+            width={28}
+            height={28}
           />
           <h1>Gym Log</h1>
         </div>

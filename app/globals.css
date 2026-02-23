@@ -1,6 +1,8 @@
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Playfair+Display:wght@500;600&display=swap");
 
 :root {
+  --surface-rgb: 43,47,58;
+  --accent-rgb: 255,87,33;
   --bg: #373C4B;
   --surface: #2B2F3A;
   --accent: #FF5721;
@@ -82,11 +84,13 @@ body {
   font-size: 13px;
 }
 
-.card{
+.card {
   border: 1px solid rgba(255,255,255,0.12);
   border-radius: 18px;
-  background: rgba(0,0,0,0.10);
+  background: rgba(0,0,0,0.12);
+  box-shadow: 0 10px 22px rgba(0,0,0,0.18);
 }
+
 .cardPad{ padding: 16px; }
 
 
@@ -206,11 +210,19 @@ body {
 /* ---------------- HEADER ---------------- */
 
 .top-bar {
-  padding: 14px 18px;
+  padding: 12px 18px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(var(--surface-rgb), 0.78);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255,255,255,0.10);
 }
+
 
 .top-bar h1 {
   margin: 0;
@@ -242,8 +254,10 @@ body {
 }
 
 .icon-btn:active {
-  transform: scale(0.96);
+  transform: translateY(1px) scale(0.96);
+  background: rgba(255,255,255,0.08);
 }
+
 
 .icon-btn:focus-visible {
   outline: 2px solid rgba(255,255,255,0.35);
@@ -348,10 +362,12 @@ body {
     background 0.15s ease;
 }
 
-.cell:hover {
-  transform: translateY(-3px);
-  border-color: var(--accent);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+@media (hover: hover) and (pointer: fine) {
+  .cell:hover {
+    transform: translateY(-3px);
+    border-color: var(--accent);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+  }
 }
 
 .cell:focus-visible {
@@ -361,7 +377,9 @@ body {
 
 .cell.today {
   border: 2px solid var(--accent);
+  background: rgba(var(--accent-rgb), 0.10);
 }
+
 
 .cell.selected {
   box-shadow: inset 0 0 0 2px rgba(255,255,255,0.22);
@@ -1326,9 +1344,9 @@ button.secondary.danger {
 }
 
 .top-bar .brand-logo {
-  width: 20px;
-  height: 20px;
-  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
   flex: 0 0 auto;
 }
 

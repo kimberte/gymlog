@@ -126,7 +126,7 @@ export default function SettingsModal({
   }, [workouts]);
 
   // ---- PROGRESS STATS (all-time) ----
-  const { bestStreak, totalWorkoutDays, pbCount } = useMemo(() => {
+  const { bestStreak, totalWorkoutDays } = useMemo(() => {
     // We count a "workout day" if any entry has title or notes.
     const activeKeys = Object.keys(workouts ?? {}).filter((key) => {
       const day: any = (workouts as any)[key];
@@ -136,7 +136,6 @@ export default function SettingsModal({
       );
     });
 
-    const pbCount = Object.keys(workouts ?? {}).filter((key) => Boolean((workouts as any)[key]?.pb)).length;
 
     activeKeys.sort(); // YYYY-MM-DD lex sort works
 
@@ -1016,7 +1015,6 @@ async function updatePassword() {
             <div style={{ marginTop: 6 }}>🏆 Best streak: {bestStreak} days</div>
             <div>📌 Total workouts: {workoutCount}</div>
             <div>📆 Total workout days: {totalWorkoutDays}</div>
-            <div>⭐ Personal Bests (PBs): {pbCount}</div>
           </div>
         )}
 

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { ensureTrialStarted, getProStatus } from "../lib/entitlements";
+import { event as gaEvent } from "../lib/gtag";
 
 function fmtDate(iso?: string | null) {
   if (!iso) return "";
@@ -18,6 +19,7 @@ export default function ProConfirmedPage() {
   const [msg, setMsg] = useState<string>("Confirming your subscription…");
   const [isPro, setIsPro] = useState<boolean>(false);
   const [trialEndsAt, setTrialEndsAt] = useState<string | null>(null);
+  const [conversionSent, setConversionSent] = useState(false);
 
   async function refresh() {
     setLoading(true);
@@ -34,6 +36,25 @@ export default function ProConfirmedPage() {
       const st = await getProStatus(user.id);
       setIsPro(Boolean(st.isPro));
       setTrialEndsAt(st.trialEndsAt ?? null);
+
+      // Fire conversion events once.
+      // - Paid (active/trialing): purchase + subscribe
+      // - Trial-only: trial_start (optional to mark as a conversion in GA4/Ads)
+      if (!conversionSent && st.isPro) {
+        if (st.reason === "active" || st.reason === "trialing") {
+          gaEvent("purchase", {
+            currency: "CAD",
+            // value is optional; keeping it unset avoids incorrect reporting if price changes by region
+            items: [{ item_name: "Gym Log Pro" }],
+            user_id: user.id,
+          });
+          gaEvent("subscribe", { user_id: user.id });
+          setConversionSent(true);
+        } else if (st.reason === "trial") {
+          gaEvent("trial_start", { user_id: user.id });
+          setConversionSent(true);
+        }
+      }
 
       if (st.isPro && (st.reason === "active" || st.reason === "trialing")) {
         setMsg("✅ Subscription confirmed. Pro is now unlocked.");

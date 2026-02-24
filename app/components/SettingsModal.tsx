@@ -4,6 +4,7 @@ import { exportCSV, importCSV } from "../lib/csv";
 import { supabase } from "../lib/supabaseClient";
 import { fetchLatestBackup, formatBackupDate } from "../lib/backup";
 import { ensureTrialStarted, getProStatus, type ProStatus } from "../lib/entitlements";
+import { event as gaEvent } from "../lib/gtag";
 
 type WeekStart = "sunday" | "monday";
 
@@ -307,7 +308,7 @@ async function signUpPassword() {
 
   setAuthLoading(true);
   try {
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: trimmed,
       password,
     });
@@ -316,6 +317,12 @@ async function signUpPassword() {
       setAuthError(error.message);
       return;
     }
+
+    // GA4 recommended event for account creation
+    gaEvent("sign_up", {
+      method: "email",
+      user_id: data.user?.id || undefined,
+    });
 
     setAuthMessage("Check your email to confirm your account, then sign in.");
     setPassword("");

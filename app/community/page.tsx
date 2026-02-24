@@ -655,14 +655,14 @@ export default function CommunityPage() {
             </a>
 
             <div className="brand" style={{ minWidth: 0 }}>
-              <img src="/icons/gym-app-logo-color-40x40.png" alt="Gym Log" className="brand-logo" width={20} height={20} />
+              <img src="/icons/gym-app-logo-color-40x40.png" alt="Gym Log" className="brand-logo" width={28} height={28} />
               <h1 style={{ whiteSpace: "nowrap" }}>Gym Log</h1>
             </div>
           </div>
 
           <div style={{ textAlign: "right" }}>
             <div style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.1 }}>Community</div>
-            <div style={{ opacity: 0.8, fontSize: 13, marginTop: 2 }}>Friends only - Today +/- 7 days</div>
+            <div style={{ opacity: 0.8, fontSize: 13, marginTop: 2 }}>Your friends only</div>
           </div>
         </header>
 

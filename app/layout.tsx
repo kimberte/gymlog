@@ -1,5 +1,6 @@
 import "./globals.css";
 import { Poppins } from "next/font/google";
+import { Suspense } from "react";
 import Script from "next/script";
 import Analytics from "./components/Analytics";
 
@@ -46,7 +47,9 @@ export default function RootLayout({
       <body className={poppins.className}>
         {children}
         {/* Track client-side route changes */}
-        <Analytics />
+        <Suspense fallback={null}>
+          <Analytics />
+        </Suspense>
       </body>
     </html>
   );

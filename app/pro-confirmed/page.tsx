@@ -8,11 +8,25 @@ import { event as gaEvent } from "../lib/gtag";
 function fmtDate(iso?: string | null) {
   if (!iso) return "";
   try {
-    return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+    return new Date(iso).toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
   } catch {
     return "";
   }
 }
+
+const linkStyle: React.CSSProperties = {
+  display: "inline-block",
+  padding: "10px 12px",
+  borderRadius: 12,
+  border: "1px solid rgba(255,255,255,0.18)",
+  background: "rgba(255,255,255,0.08)",
+  textDecoration: "none",
+  color: "rgba(255,255,255,0.95)",
+};
 
 export default function ProConfirmedPage() {
   const [loading, setLoading] = useState(true);
@@ -83,7 +97,7 @@ export default function ProConfirmedPage() {
       }}
     >
       <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>Pro confirmed</h1>
-      <p style={{ margin: "10px 0 0", opacity: 0.9 }}>{msg}</p>
+      <p style={{ margin: "10px 0 0", opacity: 0.92 }}>{msg}</p>
 
       {trialEndsAt ? (
         <p style={{ margin: "10px 0 0", opacity: 0.85, fontSize: 13 }}>
@@ -92,29 +106,11 @@ export default function ProConfirmedPage() {
       ) : null}
 
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 14 }}>
-        <a
-          href="/"
-          style={{
-            display: "inline-block",
-            padding: "10px 12px",
-            borderRadius: 12,
-            border: "1px solid rgba(255,255,255,0.18)",
-            textDecoration: "none",
-          }}
-        >
+        <a href="/" style={linkStyle}>
           Back to app
         </a>
 
-        <a
-          href="/subscribe"
-          style={{
-            display: "inline-block",
-            padding: "10px 12px",
-            borderRadius: 12,
-            border: "1px solid rgba(255,255,255,0.18)",
-            textDecoration: "none",
-          }}
-        >
+        <a href="/subscribe" style={linkStyle}>
           Manage Pro
         </a>
 
@@ -125,7 +121,8 @@ export default function ProConfirmedPage() {
             padding: "10px 12px",
             borderRadius: 12,
             border: "1px solid rgba(255,255,255,0.18)",
-            background: "rgba(255,255,255,0.08)",
+            background: "rgba(255,255,255,0.10)",
+            color: "rgba(255,255,255,0.95)",
             cursor: loading ? "default" : "pointer",
           }}
         >
@@ -134,9 +131,9 @@ export default function ProConfirmedPage() {
       </div>
 
       {!isPro ? (
-        <p style={{ marginTop: 14, opacity: 0.8, fontSize: 13 }}>
-          If your trial is expired, you can still use Lite features. Pro unlocks once Stripe webhooks update your
-          subscription in Supabase.
+        <p style={{ marginTop: 14, opacity: 0.82, fontSize: 13 }}>
+          If your subscription doesn’t show instantly, refresh — webhooks can take a moment. Contact{' '}
+          <strong>info@gymlogapp.com</strong> for any issues.
         </p>
       ) : null}
     </main>

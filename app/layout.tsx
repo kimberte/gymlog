@@ -2,12 +2,53 @@ import "./globals.css";
 import { Poppins } from "next/font/google";
 import { Suspense } from "react";
 import Script from "next/script";
+import type { Metadata, Viewport } from "next";
 import Analytics from "./components/Analytics";
 
-export const metadata = {
-  title: "Gym Log",
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://gymlogapp.com";
+
+export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "Gym Log – Workout Calendar & Gym Tracker",
+    template: "%s | Gym Log",
+  },
+  description:
+    "A simple, fast workout calendar to log workouts, track progress, and back up your training. Optional Pro unlocks media, sharing, and more.",
+  applicationName: "Gym Log",
+  keywords: [
+    "workout log",
+    "gym log",
+    "workout calendar",
+    "gym tracker",
+    "strength training",
+    "fitness journal",
+    "PWA workout tracker",
+  ],
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    url: "/",
+    siteName: "Gym Log",
+    title: "Gym Log – Workout Calendar & Gym Tracker",
+    description:
+      "Log workouts on a calendar, track progress, and back up your training. Optional Pro unlocks media, sharing, and more.",
+  },
+  twitter: {
+    card: "summary",
+    title: "Gym Log – Workout Calendar & Gym Tracker",
+    description:
+      "Log workouts on a calendar, track progress, and back up your training. Optional Pro unlocks media, sharing, and more.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
-export const viewport = { themeColor: "#1f2937" };
+
+export const viewport: Viewport = { themeColor: "#1f2937" };
 
 const poppins = Poppins({
   subsets: ["latin"],

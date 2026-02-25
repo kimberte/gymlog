@@ -634,37 +634,36 @@ export default function CommunityPage() {
   }, [openItem]);
 
   return (
-    <div style={{ padding: 14, overflowX: "hidden" }}>
-      <div style={{ maxWidth: 980, margin: "0 auto" }}>
-        {/* Header matches calendar page (back + brand on left) */}
-        <header className="top-bar" style={{ padding: 0, marginBottom: 10 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-            <a
-              href="/"
-              className="icon-btn"
-              title="Back to calendar"
-              aria-label="Back to calendar"
-              style={{
-                textDecoration: "none",
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <span style={{ fontSize: 20, lineHeight: 1, opacity: 0.95 }}>←</span>
-            </a>
+    <div>
+      {/* Full-width header matching calendar */}
+      <header className="top-bar">
+        <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+          <a
+            href="/"
+            className="icon-btn"
+            title="Back"
+            aria-label="Back"
+            style={{
+              textDecoration: "none",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <span style={{ fontSize: 20, lineHeight: 1, opacity: 0.95 }}>←</span>
+          </a>
 
-            <div className="brand" style={{ minWidth: 0 }}>
-              <img src="/icons/gym-app-logo-color-40x40.png" alt="Gym Log" className="brand-logo" width={28} height={28} />
-              <h1 style={{ whiteSpace: "nowrap" }}>Gym Log</h1>
-            </div>
+          <div className="brand" style={{ minWidth: 0 }}>
+            <img src="/icons/gym-app-logo-color-40x40.png" alt="Gym Log" className="brand-logo" width={28} height={28} />
+            <h1 style={{ whiteSpace: "nowrap" }}>Gym Log</h1>
           </div>
+        </div>
 
-          <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.1 }}>Community</div>
-            <div style={{ opacity: 0.8, fontSize: 13, marginTop: 2 }}>Your friends only</div>
-          </div>
-        </header>
+        <div style={{ fontSize: 18, fontWeight: 800, opacity: 0.95, whiteSpace: "nowrap" }}>Your Community</div>
+      </header>
+
+      <div style={{ padding: 14, overflowX: "hidden" }}>
+        <div style={{ maxWidth: 980, margin: "0 auto" }}>
 
         {/* Share toggle */}
         <div style={{ display: "flex", justifyContent: "flex-end" }}>
@@ -1338,7 +1337,10 @@ export default function CommunityPage() {
           {toast}
         </div>
       )}
-    </div>
+
+        </div>
+
+        </div>
   );
 }
 

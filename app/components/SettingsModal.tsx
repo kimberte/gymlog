@@ -1398,6 +1398,31 @@ async function updatePassword() {
             </div>
           )}
         </div>
+
+        {/* Footer links + version */}
+        <div
+          style={{
+            marginTop: 16,
+            paddingTop: 12,
+            borderTop: "1px solid rgba(255,255,255,0.10)",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 12,
+            flexWrap: "wrap",
+          }}
+        >
+          <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+            <a className="app-link" href="/terms">
+              Terms
+            </a>
+            <a className="app-link" href="/privacy">
+              Privacy
+            </a>
+          </div>
+
+          <div style={{ fontSize: 12, opacity: 0.7, letterSpacing: 0.2 }}>V2.1</div>
+        </div>
       </div>
     </div>
   );

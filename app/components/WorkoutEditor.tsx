@@ -10,6 +10,14 @@ import { getSessionUser } from "../lib/backup";
 import { compressImageToWebp } from "../lib/imageCompress";
 import { shareWorkoutVerticalImage } from "../lib/shareImage";
 import { ensureTrialStarted, getProStatus, type ProStatus } from "../lib/entitlements";
+import {
+  compileStructuredBlock,
+  parseStructuredFromNotes,
+  removeStructuredBlock,
+  upsertStructuredBlock,
+  type StructuredWorkout,
+  type StructuredExerciseRow,
+} from "../lib/structuredNotes";
 
 // NEW: per-workout media (image OR video)
 import {
@@ -51,6 +59,93 @@ type Props = {
 
 function hasContent(e: { title?: string; notes?: string }) {
   return Boolean(String(e?.title ?? "").trim() || String(e?.notes ?? "").trim());
+}
+
+
+function structuredToNotebookText(data: StructuredWorkout, extraNotes?: string): string {
+  const rows = Array.isArray(data?.rows) ? data.rows : [];
+  const cleaned = rows
+    .map((r: any) => ({
+      name: String(r?.name ?? "").trim(),
+      reps: String(r?.reps ?? "").trim(),
+      weight: String(r?.weight ?? "").trim(),
+      completed: Boolean(r?.completed),
+    }))
+    .filter((r) => r.name || r.reps || r.weight || r.completed);
+
+  // Group rows by exercise name, preserving order of first appearance.
+  const order: string[] = [];
+  const groups = new Map<string, typeof cleaned>();
+  cleaned.forEach((r) => {
+    const key = r.name || "(Exercise)";
+    if (!groups.has(key)) {
+      groups.set(key, []);
+      order.push(key);
+    }
+    groups.get(key)!.push(r);
+  });
+
+  const lines: string[] = [];
+  order.forEach((exName) => {
+    lines.push(`${exName}`);
+    const sets = groups.get(exName) || [];
+    sets.forEach((s, idx) => {
+      const repPart = s.reps ? `${s.reps}` : "";
+      const wtPart = s.weight ? `${s.weight}` : "";
+
+      let mid = "";
+      if (repPart && wtPart) mid = `${repPart} x ${wtPart}`;
+      else if (repPart) mid = `${repPart}`;
+      else if (wtPart) mid = `${wtPart}`;
+
+      const doneLabel = s.completed ? "Done" : "Not Done";
+      const main = mid ? `: ${mid}` : ":";
+      lines.push(`- Set ${idx + 1}${main} (${doneLabel})`);
+    });
+    lines.push("");
+  });
+
+  const cleanedExtra = String(extraNotes ?? "").trim();
+  if (cleanedExtra) {
+    lines.push("Notes:");
+    lines.push(cleanedExtra);
+  }
+
+  return lines.join("\n").trim();
+}
+
+function formatCompactNumber(n: number): string {
+  const v = Math.round(n);
+  if (!Number.isFinite(v) || v <= 0) return "0";
+  if (v < 1000) return v.toLocaleString();
+  if (v < 10000) return `${(Math.round((v / 1000) * 10) / 10).toString()}k`; // 1.2k
+  return `${Math.round(v / 1000).toLocaleString()}k`;
+}
+
+function sanitizeIntInput(raw: string): string {
+  return raw.replace(/[^0-9]/g, "");
+}
+
+function sanitizeDecimalInput(raw: string): string {
+  // Allow digits and a single dot
+  const cleaned = raw.replace(/[^0-9.]/g, "");
+  const firstDot = cleaned.indexOf(".");
+  if (firstDot === -1) return cleaned;
+  return cleaned.slice(0, firstDot + 1) + cleaned.slice(firstDot + 1).replace(/\./g, "");
+}
+
+function parseFirstNumber(s: string): number | null {
+  const m = String(s || "").match(/-?\d+(?:\.\d+)?/);
+  if (!m) return null;
+  const n = Number(m[0]);
+  return Number.isFinite(n) ? n : null;
+}
+
+function weightUnitFromString(s: string): string {
+  const t = String(s || "").toLowerCase();
+  if (t.includes("kg")) return "kg";
+  if (t.includes("lb")) return "lb";
+  return "";
 }
 
 function formatDisplayDate(yyyyMMdd: string) {
@@ -139,6 +234,66 @@ export default function WorkoutEditor({
 
   const [entries, setEntries] = useState<EntryWithMedia[]>(initialEntries);
   const [activeIdx, setActiveIdx] = useState(0);
+
+  // Structured editor (stored inside notes string via structuredNotes helpers)
+  type EditorMode = "notebook" | "structured";
+  const [modeByEntryId, setModeByEntryId] = useState<Record<string, EditorMode>>({});
+  const [structuredByEntryId, setStructuredByEntryId] = useState<Record<string, StructuredWorkout>>({});
+  const [extraNotesByEntryId, setExtraNotesByEntryId] = useState<Record<string, string>>({});
+  const [collapsedByEntryId, setCollapsedByEntryId] = useState<Record<string, Record<string, boolean>>>({});
+  const lastNotesSeenRef = useRef<Record<string, string>>({});
+
+  // Initialize structured drafts from existing notes (without mutating entries)
+  useEffect(() => {
+    setModeByEntryId((prevModes) => {
+      const nextModes = { ...prevModes };
+      const nextStructured: Record<string, StructuredWorkout> = {};
+      const nextExtra: Record<string, string> = {};
+
+      entries.forEach((e) => {
+        const id = String(e.id);
+        const notes = String(e.notes ?? "");
+        const last = lastNotesSeenRef.current[id];
+
+        // Only parse when we haven't seen these notes for this entry yet
+        if (last !== notes) {
+          lastNotesSeenRef.current[id] = notes;
+
+          const parsed = parseStructuredFromNotes(notes);
+          if (parsed) {
+            nextModes[id] = "structured";
+            nextStructured[id] = parsed;
+            nextExtra[id] = removeStructuredBlock(notes);
+          } else {
+            // Keep existing mode unless it doesn't exist yet
+            if (!nextModes[id]) nextModes[id] = "notebook";
+            if (nextModes[id] === "structured") {
+              // If someone manually removed the block, fall back
+              nextModes[id] = "notebook";
+            }
+            if (nextExtra[id] == null) nextExtra[id] = notes;
+            if (!nextStructured[id]) {
+              nextStructured[id] = {
+                workoutName: String(e.title ?? "").trim(),
+                rows: [],
+              };
+            }
+          }
+        }
+      });
+
+      // Apply structured/extra drafts updates in one go (best-effort; only for entries we parsed above)
+      if (Object.keys(nextStructured).length) {
+        setStructuredByEntryId((prev) => ({ ...prev, ...nextStructured }));
+      }
+      if (Object.keys(nextExtra).length) {
+        setExtraNotesByEntryId((prev) => ({ ...prev, ...nextExtra }));
+      }
+
+      return nextModes;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entries]);
 
   // Personal Best marker (per-day)
   const [isPb, setIsPb] = useState(initialPb);
@@ -257,6 +412,316 @@ export default function WorkoutEditor({
 
   const active = entries[activeIdx] ?? entries[0];
 
+  const activeId = String(active?.id ?? "w1");
+  const activeMode: "notebook" | "structured" = modeByEntryId[activeId] ?? "notebook";
+
+  const activeStructured: StructuredWorkout =
+    structuredByEntryId[activeId] ?? {
+      workoutName: String(active?.title ?? "").trim(),
+      rows: [],
+    };
+
+  const activeExtraNotes: string = extraNotesByEntryId[activeId] ?? String(active?.notes ?? "");
+const activeRowVolumes = useMemo(
+  () => (activeStructured.rows || []).map((r) => computeRowVolume(r)),
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  [activeStructured.rows]
+);
+const activeTotalVolume = useMemo(
+  () => activeRowVolumes.reduce((sum, v) => sum + (Number(v) || 0), 0),
+  [activeRowVolumes]
+);
+
+  type PrevExerciseStats = {
+    date: string;
+    summary: string;
+    maxWeightNum: number | null;
+    unit: string;
+  };
+
+  function computeMaxWeightForIndices(rows: StructuredExerciseRow[], indices: number[]) {
+    let bestNum: number | null = null;
+    let bestRaw = "";
+    indices.forEach((idx) => {
+      const wRaw = String((rows[idx] as any)?.weight ?? "").trim();
+      const n = parseFirstNumber(wRaw);
+      if (n == null) return;
+      if (bestNum == null || n > bestNum) {
+        bestNum = n;
+        bestRaw = wRaw;
+      }
+    });
+    return { bestNum, bestRaw };
+  }
+
+  function computeCommonReps(rows: StructuredExerciseRow[], indices: number[]) {
+    // Use first non-empty reps as a simple, predictable summary.
+    for (const idx of indices) {
+      const r = String((rows[idx] as any)?.reps ?? "").trim();
+      if (r) return r;
+    }
+    return "";
+  }
+
+  const prevStatsByExerciseKey: Record<string, PrevExerciseStats> = useMemo(() => {
+    const neededGroups = groupRowsByExercise(activeStructured.rows || []);
+    const neededKeys = new Set(neededGroups.map((g) => g.key));
+    if (!neededKeys.size) return {};
+
+    const out: Record<string, PrevExerciseStats> = {};
+
+    const allDates = Object.keys(workouts || {})
+      .filter((k) => typeof k === "string" && k < date)
+      .sort()
+      .reverse();
+
+    for (const d of allDates) {
+      const dayEntries = getDayEntries(workouts, d);
+      for (const e of dayEntries) {
+        const parsed = parseStructuredFromNotes(String((e as any)?.notes ?? ""));
+        if (!parsed?.rows?.length) continue;
+        const groups = groupRowsByExercise(parsed.rows);
+        for (const g of groups) {
+          if (!neededKeys.has(g.key)) continue;
+          if (out[g.key]) continue;
+
+          const { bestNum, bestRaw } = computeMaxWeightForIndices(parsed.rows, g.indices);
+          const reps = computeCommonReps(parsed.rows, g.indices);
+          const setCount = g.indices.length;
+          const unit = weightUnitFromString(bestRaw);
+
+          // Summary like: 3×8 @225
+          const parts: string[] = [];
+          if (setCount) {
+            if (reps) parts.push(`${setCount}×${reps}`);
+            else parts.push(`${setCount} set${setCount === 1 ? "" : "s"}`);
+          }
+          if (bestRaw) parts.push(`@${bestRaw}`);
+
+          out[g.key] = {
+            date: d,
+            summary: parts.join(" ").trim(),
+            maxWeightNum: bestNum,
+            unit,
+          };
+
+          if (Object.keys(out).length === neededKeys.size) return out;
+        }
+      }
+    }
+
+    return out;
+  }, [workouts, date, activeStructured.rows]);
+
+
+  function setActiveMode(nextMode: "notebook" | "structured") {
+    setModeByEntryId((prev) => ({ ...prev, [activeId]: nextMode }));
+  }
+
+  function updateActiveStructured(patch: Partial<StructuredWorkout>) {
+    setStructuredByEntryId((prev) => ({
+      ...prev,
+      [activeId]: { ...activeStructured, ...patch },
+    }));
+  }
+
+  function updateActiveStructuredRow(idx: number, patch: Partial<StructuredExerciseRow>) {
+    const nextRows = (activeStructured.rows || []).map((r, i) =>
+      i === idx ? ({ ...r, ...patch } as any) : r
+    );
+    updateActiveStructured({ rows: nextRows });
+  }
+
+  function addActiveStructuredRow() {
+  const nextRows = [...(activeStructured.rows || [])];
+  nextRows.push({ name: "", sets: "", reps: "", weight: "", completed: false } as any);
+  updateActiveStructured({ rows: nextRows });
+}
+
+function duplicateLastStructuredRow() {
+  const rows = activeStructured.rows || [];
+  if (!rows.length) {
+    addActiveStructuredRow();
+    return;
+  }
+  const last = rows[rows.length - 1] || ({} as any);
+  const nextRows = [...rows, { ...last }];
+  updateActiveStructured({ rows: nextRows });
+}
+
+// "Add set" = duplicate last row's exercise name (and optionally reps/weight),
+// defaulting sets to 1 and clearing the note. This mimics typical trackers where each row can be a set.
+function addNextSetFromLastRow() {
+  const rows = activeStructured.rows || [];
+  if (!rows.length) {
+    addActiveStructuredRow();
+    return;
+  }
+  const last = rows[rows.length - 1] || ({} as any);
+  const next: StructuredExerciseRow = {
+    name: String((last as any)?.name ?? ""),
+    sets: "",
+    reps: String((last as any)?.reps ?? ""),
+    weight: String((last as any)?.weight ?? ""),
+    completed: false,
+  } as any;
+
+  updateActiveStructured({ rows: [...rows, next] });
+}
+
+function toggleRowCompleted(idx: number) {
+  const row = (activeStructured.rows || [])[idx] as any;
+  if (!row) return;
+  updateActiveStructuredRow(idx, { completed: !row.completed } as any);
+}
+
+function parseNumeric(val: any): number {
+  const s = String(val ?? "").replace(/,/g, "").trim();
+  const m = s.match(/-?\d*\.?\d+/);
+  return m ? Number(m[0]) : 0;
+}
+
+function computeRowVolume(r: StructuredExerciseRow): number {
+  const reps = parseNumeric((r as any)?.reps);
+  const weight = parseNumeric((r as any)?.weight);
+  const setsRaw = parseNumeric((r as any)?.sets);
+  const sets = setsRaw > 0 ? setsRaw : 1;
+  if (!reps || !weight) return 0;
+  return sets * reps * weight;
+}
+
+function normalizeExerciseKey(name: string) {
+  const base = String(name || "").trim().toLowerCase();
+  return base || "exercise";
+}
+
+type ExerciseGroup = { key: string; name: string; indices: number[] };
+
+function groupRowsByExercise(rows: StructuredExerciseRow[]): ExerciseGroup[] {
+  const order: string[] = [];
+  const map = new Map<string, { name: string; indices: number[] }>();
+
+  rows.forEach((r, idx) => {
+    const name = String((r as any)?.name ?? "").trim();
+    const key = normalizeExerciseKey(name);
+    if (!map.has(key)) {
+      map.set(key, { name: name || "Exercise", indices: [] });
+      order.push(key);
+    }
+    map.get(key)!.indices.push(idx);
+    // Keep latest non-empty display name
+    if (name) map.get(key)!.name = name;
+  });
+
+  return order.map((key) => ({ key, name: map.get(key)!.name, indices: map.get(key)!.indices }));
+}
+
+const activeCollapsed = collapsedByEntryId[activeId] ?? {};
+
+function setCollapsed(key: string, next: boolean) {
+  setCollapsedByEntryId((prev) => ({
+    ...prev,
+    [activeId]: { ...(prev[activeId] ?? {}), [key]: next },
+  }));
+}
+
+function renameExerciseInGroup(groupKey: string, nextName: string) {
+  const rows = activeStructured.rows || [];
+  const nextRows = rows.map((r) => {
+    const key = normalizeExerciseKey(String((r as any)?.name ?? ""));
+    if (key !== groupKey) return r as any;
+    return { ...(r as any), name: nextName } as any;
+  });
+  updateActiveStructured({ rows: nextRows });
+}
+
+function addExercisePrompt() {
+  const name = window.prompt("Exercise name?", "");
+  if (name == null) return;
+  const clean = String(name).trim();
+  if (!clean) return;
+
+  const setsStr = window.prompt("How many sets?", "3");
+  const setsN = Math.max(1, Math.min(20, parseInt(String(setsStr || "1"), 10) || 1));
+
+  const nextRows = [...(activeStructured.rows || [])];
+  for (let i = 0; i < setsN; i++) {
+    nextRows.push({ name: clean, sets: "", reps: "", weight: "", completed: false } as any);
+  }
+  updateActiveStructured({ rows: nextRows });
+}
+
+function addSetToExercise(groupKey: string) {
+  const rows = activeStructured.rows || [];
+  // Find last row for this exercise to copy reps/weight
+  let lastIdx = -1;
+  rows.forEach((r, idx) => {
+    const key = normalizeExerciseKey(String((r as any)?.name ?? ""));
+    if (key === groupKey) lastIdx = idx;
+  });
+
+  const last = lastIdx >= 0 ? (rows[lastIdx] as any) : null;
+  const nextRow: StructuredExerciseRow = {
+    name: last?.name ? String(last.name) : "Exercise",
+    sets: "",
+    reps: last?.reps != null ? String(last.reps) : "",
+    weight: last?.weight != null ? String(last.weight) : "",
+    completed: false,
+  } as any;
+
+  // Insert after the last row of that exercise (so sets stay grouped)
+  if (lastIdx >= 0) {
+    const nextRows = [...rows];
+    nextRows.splice(lastIdx + 1, 0, nextRow as any);
+    updateActiveStructured({ rows: nextRows });
+  } else {
+    updateActiveStructured({ rows: [...rows, nextRow as any] });
+  }
+}
+
+function exerciseGroupVolume(indices: number[]) {
+  const rows = activeStructured.rows || [];
+  return indices.reduce((sum, idx) => sum + (computeRowVolume(rows[idx] as any) || 0), 0);
+}
+
+  function removeActiveStructuredRow(idx: number) {
+    const nextRows = (activeStructured.rows || []).filter((_, i) => i !== idx);
+    updateActiveStructured({ rows: nextRows });
+  }
+
+  function updateActiveExtraNotes(next: string) {
+    setExtraNotesByEntryId((prev) => ({ ...prev, [activeId]: next }));
+  }
+
+  function canSwitchToStructured(): boolean {
+    const notes = String(active?.notes ?? "");
+    const hasStructured = Boolean(parseStructuredFromNotes(notes));
+    const stripped = removeStructuredBlock(notes).trim();
+    // Allow if already structured OR the free-text part is empty
+    return hasStructured || stripped.length === 0;
+  }
+
+  function handleConvertStructuredToNotebook() {
+    const parsed = parseStructuredFromNotes(String(active?.notes ?? ""));
+    const data = parsed || activeStructured;
+    const extra = String(extraNotesByEntryId?.[activeId] ?? "");
+    const notebook = structuredToNotebookText(data, extra);
+
+    // Remove structured block, then replace with plain notebook text (one-way)
+    updateActive({ notes: notebook });
+    lastNotesSeenRef.current[activeId] = notebook;
+
+    setModeByEntryId((prev) => ({ ...prev, [activeId]: "notebook" }));
+    setStructuredByEntryId((prev) => {
+      const next = { ...prev };
+      delete next[activeId];
+      return next;
+    });
+    setExtraNotesByEntryId((prev) => ({ ...prev, [activeId]: notebook }));
+    toast("Converted to notebook style");
+  }
+
+
   // When active workout changes, refresh media signed URL
   useEffect(() => {
     let cancelled = false;
@@ -348,11 +813,28 @@ export default function WorkoutEditor({
     // Keep any legacy day-level image meta if you still have it
     const existingImage = day?.image;
 
+    const buildNotes = (e: EntryWithMedia) => {
+      const id = String(e.id);
+      const mode = modeByEntryId[id] ?? "notebook";
+      if (mode !== "structured") return String(e.notes ?? "");
+
+      // Only exercises are shown in the UI, but we still store a structured payload
+      // inside notes to preserve round-trip without changing storage schema.
+      const draft = structuredByEntryId[id] ?? {
+        workoutName: "",
+        rows: [],
+      };
+
+      const extra = extraNotesByEntryId[id] ?? removeStructuredBlock(String(e.notes ?? ""));
+      const compiled = compileStructuredBlock(draft);
+      return upsertStructuredBlock(String(extra ?? ""), compiled);
+    };
+
     // Persist up to 3
     const merged = nextEntries.slice(0, 3).map((e, i) => ({
       id: `w${i + 1}`,
       title: String(e.title ?? ""),
-      notes: String(e.notes ?? ""),
+      notes: buildNotes(e),
       media: (e as any)?.media ?? null,
     }));
 
@@ -366,15 +848,31 @@ export default function WorkoutEditor({
   }
 
   function handleSave() {
-    const cleaned = entries
+    const buildNotes = (e: EntryWithMedia) => {
+      const id = String(e.id);
+      const mode = modeByEntryId[id] ?? "notebook";
+      if (mode !== "structured") return String(e.notes ?? "");
+
+      const draft = structuredByEntryId[id] ?? {
+        workoutName: "",
+        rows: [],
+      };
+
+      const extra = extraNotesByEntryId[id] ?? removeStructuredBlock(String(e.notes ?? ""));
+      const compiled = compileStructuredBlock(draft);
+      return upsertStructuredBlock(String(extra ?? ""), compiled);
+    };
+
+    const merged = entries
       .slice(0, 3)
       .map((e, i) => ({
         id: `w${i + 1}`,
         title: String(e.title ?? ""),
-        notes: String(e.notes ?? ""),
+        notes: buildNotes(e),
         media: (e as any)?.media ?? null,
-      }))
-      .filter((e) => hasContent(e) || (e as any)?.media?.path);
+      }));
+
+    const cleaned = merged.filter((e) => hasContent(e) || (e as any)?.media?.path);
 
     const next = { ...(workouts as any) };
     const existingImage = (next as any)?.[date]?.image; // legacy day image meta
@@ -403,7 +901,7 @@ export default function WorkoutEditor({
     // Best-effort: publish/remove community snapshot if enabled
     void publishWorkoutDay({ dateKey: date, workouts: next as any });
     toast("Saved");
-}
+  }
 
   function togglePb() {
     const nextPb = !isPb;
@@ -858,263 +1356,667 @@ return (
           ref={editorContentRef}
           style={{ paddingBottom: keyboardPad ? keyboardPad + 12 : 0 }}
         >
-          <textarea
-            ref={notesRef}
-            className="editor-notes"
-            value={active?.notes ?? ""}
-            onChange={(e) => updateActive({ notes: e.target.value })}
-            placeholder="Workout notes"
-          />
+          
+          {/* Editor mode toggle */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+              marginBottom: 10,
+            }}
+          >
+            <div
+              style={{
+                display: "inline-flex",
+                border: "1px solid rgba(255,255,255,0.14)",
+                borderRadius: 999,
+                overflow: "hidden",
+                background: "rgba(0,0,0,0.15)",
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setActiveMode("notebook")}
+                style={{
+                  padding: "8px 12px",
+                  fontSize: 12,
+                  border: "none",
+                  background: activeMode === "notebook" ? "rgba(255,255,255,0.14)" : "transparent",
+                  color: "inherit",
+                  cursor: "pointer",
+                }}
+              >
+                Notebook
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!canSwitchToStructured()) {
+                    toast("To start Structured, clear your notebook notes first (one-way).");
+                    return;
+                  }
+                  // Initialize draft from current title if needed
+                  setStructuredByEntryId((prev) => ({
+                    ...prev,
+                    [activeId]: prev[activeId] ?? {
+                      workoutName: String(active?.title ?? "").trim(),
+                      rows: [],
+                    },
+                  }));
+                  setExtraNotesByEntryId((prev) => ({
+                    ...prev,
+                    [activeId]: prev[activeId] ?? "",
+                  }));
+                  setActiveMode("structured");
+                }}
+                style={{
+                  padding: "8px 12px",
+                  fontSize: 12,
+                  border: "none",
+                  background: activeMode === "structured" ? "rgba(255,255,255,0.14)" : "transparent",
+                  color: "inherit",
+                  cursor: canSwitchToStructured() ? "pointer" : "not-allowed",
+                  opacity: canSwitchToStructured() ? 1 : 0.55,
+                }}
+                title={
+                  canSwitchToStructured()
+                    ? "Structured list editor"
+                    : "Not available for existing notebook notes (one-way conversion only)"
+                }
+              >
+                Structured
+              </button>
+            </div>
+
+            {activeMode === "structured" && (
+              <button
+                type="button"
+                onClick={handleConvertStructuredToNotebook}
+                style={{
+                  padding: "8px 10px",
+                  fontSize: 12,
+                  borderRadius: 12,
+                  border: "1px solid rgba(255,255,255,0.14)",
+                  background: "rgba(255,255,255,0.06)",
+                  color: "inherit",
+                  cursor: "pointer",
+                }}
+                title="One-way: removes structured data and turns it into notebook text."
+              >
+                Convert to Notebook (one-way)
+              </button>
+            )}
+          </div>
+
+          {activeMode === "structured" ? (
+<div
+  style={{
+    border: "1px solid rgba(255,255,255,0.12)",
+    borderRadius: 14,
+    padding: 10,
+    background: "rgba(0,0,0,0.10)",
+  }}
+>
+  <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", marginTop: 6 }}>
+    <button
+      type="button"
+      onClick={addExercisePrompt}
+      style={{
+        padding: "10px 12px",
+        borderRadius: 14,
+        border: "1px solid rgba(255,255,255,0.14)",
+        background: "rgba(255,255,255,0.06)",
+        color: "inherit",
+        cursor: "pointer",
+        fontWeight: 600,
+      }}
+    >
+      + Add exercise
+    </button>
+
+    <button
+      type="button"
+      onClick={addNextSetFromLastRow}
+      style={{
+        padding: "10px 12px",
+        borderRadius: 14,
+        border: "1px solid rgba(255,255,255,0.14)",
+        background: "rgba(255,255,255,0.06)",
+        color: "inherit",
+        cursor: "pointer",
+        fontWeight: 600,
+      }}
+      title="Adds another set for the last exercise"
+    >
+      + Add set
+    </button>
+
+    <button
+      type="button"
+      onClick={duplicateLastStructuredRow}
+      style={{
+        padding: "10px 12px",
+        borderRadius: 14,
+        border: "1px solid rgba(255,255,255,0.14)",
+        background: "rgba(255,255,255,0.06)",
+        color: "inherit",
+        cursor: "pointer",
+        fontWeight: 600,
+      }}
+    >
+      Repeat last
+    </button>
+
+    <div style={{ marginLeft: "auto", fontSize: 13, opacity: 0.9 }}>
+      <span style={{ opacity: 0.8, marginRight: 6 }}>Total volume:</span>
+      <span style={{ fontWeight: 700 }}>{Math.round(activeTotalVolume).toLocaleString()}</span>
+    </div>
+  </div>
+
+  <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+    {groupRowsByExercise(activeStructured.rows || []).map((g) => {
+      const isCollapsed = Boolean(activeCollapsed[g.key]);
+      const vol = exerciseGroupVolume(g.indices);
+      const setCount = g.indices.length;
+
+      return (
+        <div
+          key={g.key}
+          style={{
+            border: "1px solid rgba(255,255,255,0.12)",
+            borderRadius: 14,
+            overflow: "hidden",
+            background: "rgba(255,255,255,0.04)",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              padding: 10,
+              background: "rgba(0,0,0,0.12)",
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setCollapsed(g.key, !isCollapsed)}
+              style={{
+                width: 30,
+                height: 30,
+                borderRadius: 10,
+                border: "1px solid rgba(255,255,255,0.14)",
+                background: "rgba(255,255,255,0.06)",
+                color: "inherit",
+                cursor: "pointer",
+                flex: "0 0 auto",
+              }}
+              aria-label={isCollapsed ? "Expand" : "Collapse"}
+              title={isCollapsed ? "Expand" : "Collapse"}
+            >
+              {isCollapsed ? "▸" : "▾"}
+            </button>
+
+            <div style={{ flex: "1 1 auto", minWidth: 0, display: "flex", flexDirection: "column" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <input
+                  value={g.name}
+                  onChange={(e) => renameExerciseInGroup(g.key, e.target.value)}
+                  style={{
+                    flex: "1 1 auto",
+                    minWidth: 0,
+                    padding: "8px 10px",
+                    borderRadius: 12,
+                    border: "1px solid rgba(255,255,255,0.14)",
+                    background: "rgba(0,0,0,0.18)",
+                    color: "inherit",
+                    outline: "none",
+                    fontSize: 14,
+                    fontWeight: 700,
+                  }}
+                />
+
+                <button
+                  type="button"
+                  onClick={() => addSetToExercise(g.key)}
+                  style={{
+                    padding: "10px 12px",
+                    borderRadius: 12,
+                    border: "1px solid rgba(255,255,255,0.14)",
+                    background: "rgba(255,255,255,0.06)",
+                    color: "inherit",
+                    cursor: "pointer",
+                    fontWeight: 700,
+                    whiteSpace: "nowrap",
+                    flex: "0 0 auto",
+                  }}
+                  title="Add a set for this exercise"
+                >
+                  + Set
+                </button>
+              </div>
+
+              {(() => {
+                const prev = prevStatsByExerciseKey[g.key];
+                const curMax = computeMaxWeightForIndices(activeStructured.rows || [], g.indices).bestNum;
+                const prevMax = prev?.maxWeightNum ?? null;
+                const diff =
+                  curMax != null && prevMax != null && Number.isFinite(curMax) && Number.isFinite(prevMax)
+                    ? curMax - prevMax
+                    : null;
+                const unit = prev?.unit || "";
+                const diffLabel =
+                  diff == null || Math.abs(diff) < 0.0001
+                    ? ""
+                    : `${diff > 0 ? "↑" : "↓"} ${diff > 0 ? "+" : ""}${Math.round(diff)}${unit ? ` ${unit}` : ""}`;
+
+                return (
+                  <div
+                    style={{
+                      marginTop: 6,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      flexWrap: "wrap",
+                      fontSize: 12,
+                      opacity: 0.78,
+                    }}
+                  >
+                    <span style={{ whiteSpace: "nowrap" }}>
+                      {setCount} set{setCount === 1 ? "" : "s"} • Vol {Math.round(vol).toLocaleString()}
+                    </span>
+                    {prev?.summary ? (
+                      <span style={{ whiteSpace: "nowrap" }}>
+                        <span style={{ opacity: 0.85 }}>Last:</span> {prev.summary}
+                        {diffLabel ? <span style={{ marginLeft: 8, fontWeight: 700 }}>{diffLabel}</span> : null}
+                      </span>
+                    ) : null}
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+
+          {!isCollapsed && (
+            <div style={{ padding: 10 }}>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "32px 40px 72px 1fr 32px",
+                  gap: 4,
+                  alignItems: "center",
+                  fontSize: 12,
+                  opacity: 0.8,
+                  padding: "0 4px 8px 4px",
+                }}
+              >
+                <div />
+                <div>Set</div>
+                <div>Reps</div>
+                <div>Weight</div>
+                <div />
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {g.indices.map((rowIdx, pos) => {
+                  const r = (activeStructured.rows || [])[rowIdx] as any;
+                  const done = Boolean(r?.completed);
+                  const rowVol = computeRowVolume(r as any);
+
+                  return (
+                    <div
+                      key={rowIdx}
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "32px 40px 72px 1fr 32px",
+                        gap: 4,
+                        alignItems: "center",
+                      }}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => toggleRowCompleted(rowIdx)}
+                        style={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: 9,
+                          border: "1px solid rgba(255,255,255,0.14)",
+                          background: done ? "rgba(255,87,33,0.16)" : "rgba(255,255,255,0.06)",
+                          color: "inherit",
+                          cursor: "pointer",
+                          fontWeight: 800,
+                        }}
+                        aria-label={done ? "Mark incomplete" : "Mark complete"}
+                        title={done ? "Completed" : "Not completed"}
+                      >
+                        {done ? "✓" : ""}
+                      </button>
+
+                      <div style={{ fontSize: 12, opacity: 0.8 }}>#{pos + 1}</div>
+
+                      <input
+                        value={r?.reps ?? ""}
+                        onChange={(e) =>
+                          updateActiveStructuredRow(rowIdx, { reps: sanitizeIntInput(e.target.value) } as any)
+                        }
+                        placeholder="8"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        style={{
+                          width: "100%",
+                          padding: "10px 10px",
+                          borderRadius: 12,
+                          border: "1px solid rgba(255,255,255,0.14)",
+                          background: "rgba(0,0,0,0.18)",
+                          color: "inherit",
+                          outline: "none",
+                          fontSize: 14,
+                          opacity: done ? 0.7 : 1,
+                        }}
+                      />
+
+                      <div style={{ position: "relative", flex: "1 1 160px", minWidth: 0 }}>
+                        <input
+                          value={r?.weight ?? ""}
+                          onChange={(e) =>
+                            updateActiveStructuredRow(rowIdx, { weight: sanitizeDecimalInput(e.target.value) } as any)
+                          }
+                          placeholder="Weight"
+                          inputMode="decimal"
+                          pattern="[0-9.]*"
+                          style={{
+                            width: "100%",
+                            height: 40,
+                            borderRadius: 14,
+                            padding: rowVol > 0 ? "0 62px 0 12px" : "0 12px",
+                            border: "1px solid rgba(255,255,255,0.14)",
+                            background: "rgba(0,0,0,0.18)",
+                            color: "inherit",
+                            outline: "none",
+                            fontSize: 14,
+                            opacity: done ? 0.7 : 1,
+                          }}
+                        />
+                        {rowVol > 0 ? (
+                          <div
+                            style={{
+                              position: "absolute",
+                              right: 8,
+                              top: "50%",
+                              transform: "translateY(-50%)",
+                              fontSize: 10,
+                              opacity: 0.75,
+                              padding: "4px 6px",
+                              borderRadius: 999,
+                              border: "1px solid rgba(255,255,255,0.12)",
+                              background: "rgba(255,255,255,0.06)",
+                              whiteSpace: "nowrap",
+                              pointerEvents: "none",
+                            }}
+                            title="Set volume"
+                          >
+                            Vol {formatCompactNumber(rowVol)}
+                          </div>
+                        ) : null}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => removeActiveStructuredRow(rowIdx)}
+                        style={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: 9,
+                          border: "1px solid rgba(255,255,255,0.14)",
+                          background: "rgba(255,255,255,0.06)",
+                          color: "inherit",
+                          cursor: "pointer",
+                        }}
+                        title="Remove set"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    })}
+  </div>
+
+  <div style={{ marginTop: 12 }}>
+    <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 6 }}>Notes (optional)</div>
+    <textarea
+      value={activeExtraNotes}
+      onChange={(e) => updateActiveExtraNotes(e.target.value)}
+      placeholder="Extra notes for this workout…"
+      rows={3}
+      style={{
+        width: "100%",
+        padding: "8px 10px",
+        borderRadius: 12,
+        border: "1px solid rgba(255,255,255,0.14)",
+        background: "rgba(0,0,0,0.18)",
+        color: "inherit",
+        outline: "none",
+        fontSize: 14,
+        resize: "vertical",
+      }}
+    />
+  </div>
+</div>
+) : (
+            <textarea
+              ref={notesRef}
+              className="editor-notes"
+              value={active?.notes ?? ""}
+              onChange={(e) => updateActive({ notes: e.target.value })}
+              placeholder="Workout notes"
+            />
+          )}
+
 
           {/* ✅ Media per workout (image OR video) — Pro only (trial counts) */}
           {proStatus.isPro ? (
-          <div
-            style={{
-              marginTop: 10,
-              padding: 10,
-              borderRadius: 12,
-              border: "1px solid rgba(255,255,255,0.12)",
-              background: "rgba(0,0,0,0.10)",
-              maxHeight: 170,
-              overflowY: "auto",
-            }}
-          >
-            {/* ✅ Put text ABOVE buttons so nothing is squished */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-                    <div style={{ fontSize: 12, opacity: 0.85 }}>
+            <div style={{ marginTop: 10 }}>
+              <button
+                type="button"
+                onClick={() => setMediaOpen((v) => !v)}
+                disabled={mediaBusy}
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 10,
+                  padding: "10px 12px",
+                  borderRadius: 12,
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  background: "rgba(0,0,0,0.10)",
+                  color: "inherit",
+                  cursor: mediaBusy ? "not-allowed" : "pointer",
+                }}
+                aria-expanded={mediaOpen}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                  <div
+                    style={{
+                      width: 34,
+                      height: 34,
+                      borderRadius: 10,
+                      border: "1px solid rgba(255,255,255,0.12)",
+                      background: "rgba(255,255,255,0.06)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flex: "0 0 auto",
+                    }}
+                    aria-hidden
+                  >
+                    📷
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 12, opacity: 0.9, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                       Highlight {mediaKind ? `(${mediaKind})` : ""}
                     </div>
+                    <div style={{ fontSize: 12, opacity: 0.65 }}>
+                      {hasMedia ? "1 attached" : sessionUserId ? "Add image or short video (max 30s)" : "Pro feature — sign in to upload"}
+                    </div>
+                  </div>
+                  {mediaUrl ? (
+                    mediaKind === "video" ? (
+                      <div
+                        style={{
+                          width: 34,
+                          height: 34,
+                          borderRadius: 10,
+                          border: "1px solid rgba(255,255,255,0.12)",
+                          background: "rgba(0,0,0,0.18)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: 12,
+                          color: "rgba(255,255,255,0.9)",
+                          flex: "0 0 auto",
+                        }}
+                      >
+                        ▶
+                      </div>
+                    ) : (
+                      <img
+                        src={mediaUrl}
+                        alt="Highlight thumbnail"
+                        style={{ width: 34, height: 34, borderRadius: 10, border: "1px solid rgba(255,255,255,0.12)", objectFit: "cover", display: "block", flex: "0 0 auto" }}
+                      />
+                    )
+                  ) : null}
+                </div>
+                <div style={{ fontSize: 12, opacity: 0.7, flex: "0 0 auto" }}>{mediaOpen ? "▴" : "▾"}</div>
+              </button>
 
-                    {mediaUrl && (
+              {mediaOpen ? (
+                <div style={{ marginTop: 10, padding: 10, borderRadius: 12, border: "1px solid rgba(255,255,255,0.12)", background: "rgba(0,0,0,0.08)" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 10 }}>
+                    <div style={{ fontSize: 12, opacity: 0.75 }}>Add / manage highlight media</div>
+                    {hasMedia && sessionUserId ? (
                       <button
                         type="button"
-                        onClick={() => setMediaOpen((v) => !v)}
+                        onClick={handleRemoveMedia}
                         disabled={mediaBusy}
                         style={{
                           background: "transparent",
-                          border: "none",
-                          color: "rgba(255,255,255,0.78)",
-                          padding: 0,
-                          fontSize: 12,
+                          border: "1px solid rgba(255,255,255,0.18)",
+                          color: "var(--text)",
+                          borderRadius: 10,
+                          padding: "8px 10px",
+                          fontWeight: 500,
                           cursor: mediaBusy ? "not-allowed" : "pointer",
-                          textDecoration: "underline",
-                          textUnderlineOffset: 3,
-                          opacity: mediaBusy ? 0.6 : 0.85,
+                          fontSize: 13,
+                          opacity: mediaBusy ? 0.6 : 1,
+                          flex: "0 0 auto",
                         }}
                       >
-                        {mediaOpen ? "Hide" : "Show"}
+                        Remove
                       </button>
-                    )}
-                  
-                    {mediaUrl && (
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        {mediaKind === "video" ? (
-                          <div
-                            style={{
-                              width: 44,
-                              height: 44,
-                              borderRadius: 12,
-                              border: "1px solid rgba(255,255,255,0.12)",
-                              background: "rgba(0,0,0,0.18)",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              fontSize: 14,
-                              color: "rgba(255,255,255,0.9)",
-                            }}
-                            title="Video attached"
-                            aria-label="Video attached"
-                          >
-                            ▶
-                          </div>
-                        ) : (
-                          <img
-                            src={mediaUrl}
-                            alt="Highlight thumbnail"
-                            style={{
-                              width: 44,
-                              height: 44,
-                              borderRadius: 12,
-                              border: "1px solid rgba(255,255,255,0.12)",
-                              objectFit: "cover",
-                              display: "block",
-                            }}
-                          />
-                        )}
-                      </div>
-                    )}
-</div>
+                    ) : null}
+                  </div>
 
-                  {!sessionUserId && (
-                    <div style={{ fontSize: 12, opacity: 0.65, marginTop: 2 }}>
-                      Pro feature — sign in to upload
+                  <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPickKind("image");
+                        mediaInputRef.current?.click();
+                      }}
+                      disabled={!sessionUserId || mediaBusy || (hasMedia && mediaKind === "video")}
+                      style={{
+                        background: !sessionUserId
+                          ? "rgba(255,255,255,0.08)"
+                          : hasMedia && mediaKind === "video"
+                            ? "rgba(255,255,255,0.08)"
+                            : "var(--accent)",
+                        border: !sessionUserId || (hasMedia && mediaKind === "video") ? "1px solid rgba(255,255,255,0.12)" : "none",
+                        color: !sessionUserId || (hasMedia && mediaKind === "video") ? "rgba(255,255,255,0.75)" : "white",
+                        borderRadius: 10,
+                        padding: "8px 12px",
+                        fontWeight: 600,
+                        cursor: !sessionUserId || mediaBusy || (hasMedia && mediaKind === "video") ? "not-allowed" : "pointer",
+                        fontSize: 13,
+                        opacity: !sessionUserId || mediaBusy || (hasMedia && mediaKind === "video") ? 0.55 : 1,
+                        whiteSpace: "nowrap",
+                        flex: "0 0 auto",
+                      }}
+                    >
+                      {hasMedia && mediaKind === "image" ? "Replace image" : "Upload image"}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPickKind("video");
+                        mediaInputRef.current?.click();
+                      }}
+                      disabled={!sessionUserId || mediaBusy || (hasMedia && mediaKind === "image")}
+                      style={{
+                        background: !sessionUserId
+                          ? "rgba(255,255,255,0.08)"
+                          : hasMedia && mediaKind === "image"
+                            ? "rgba(255,255,255,0.08)"
+                            : "var(--accent)",
+                        border: !sessionUserId || (hasMedia && mediaKind === "image") ? "1px solid rgba(255,255,255,0.12)" : "none",
+                        color: !sessionUserId || (hasMedia && mediaKind === "image") ? "rgba(255,255,255,0.75)" : "white",
+                        borderRadius: 10,
+                        padding: "8px 12px",
+                        fontWeight: 600,
+                        cursor: !sessionUserId || mediaBusy || (hasMedia && mediaKind === "image") ? "not-allowed" : "pointer",
+                        fontSize: 13,
+                        opacity: !sessionUserId || mediaBusy || (hasMedia && mediaKind === "image") ? 0.55 : 1,
+                        whiteSpace: "nowrap",
+                        flex: "0 0 auto",
+                      }}
+                    >
+                      {hasMedia && mediaKind === "video" ? "Replace video" : "Upload video"}
+                    </button>
+
+                    <input
+                      ref={mediaInputRef}
+                      type="file"
+                      accept={pickKind === "image" ? "image/*" : "video/mp4,video/quicktime"}
+                      style={{ display: "none" }}
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) handlePickFile(f);
+                      }}
+                    />
+                  </div>
+
+                  {mediaUrl ? (
+                    <div style={{ marginTop: 10 }}>
+                      {mediaKind === "video" ? (
+                        <video
+                          src={mediaUrl}
+                          controls
+                          playsInline
+                          preload="metadata"
+                          style={{ width: "100%", maxHeight: 240, borderRadius: 12, border: "1px solid rgba(255,255,255,0.10)", display: "block", background: "rgba(0,0,0,0.18)" }}
+                        />
+                      ) : (
+                        <img
+                          src={mediaUrl}
+                          alt="Workout media"
+                          style={{ width: "100%", maxHeight: 240, objectFit: "contain", borderRadius: 12, border: "1px solid rgba(255,255,255,0.10)", display: "block", background: "rgba(0,0,0,0.18)" }}
+                        />
+                      )}
                     </div>
-                  )}
-                  {sessionUserId && (
-                    <div style={{ fontSize: 12, opacity: 0.65, marginTop: 2 }}>
-                      Add image or short video (max 30s)
-                    </div>
-                  )}
+                  ) : null}
                 </div>
-
-                {hasMedia && sessionUserId && (
-                  <button
-                    type="button"
-                    onClick={handleRemoveMedia}
-                    disabled={mediaBusy}
-                    style={{
-                      background: "transparent",
-                      border: "1px solid rgba(255,255,255,0.18)",
-                      color: "var(--text)",
-                      borderRadius: 10,
-                      padding: "8px 10px",
-                      fontWeight: 500,
-                      cursor: mediaBusy ? "not-allowed" : "pointer",
-                      fontSize: 13,
-                      opacity: mediaBusy ? 0.6 : 1,
-                      flex: "0 0 auto",
-                    }}
-                  >
-                    Remove
-                  </button>
-                )}
-              </div>
-
-              <div
-                style={{
-                  display: "flex",
-                  gap: 8,
-                  alignItems: "center",
-                  flexWrap: "wrap",
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPickKind("image");
-                    mediaInputRef.current?.click();
-                  }}
-                  disabled={!sessionUserId || mediaBusy || (hasMedia && mediaKind === "video")}
-                  style={{
-                    background: !sessionUserId
-                      ? "rgba(255,255,255,0.08)"
-                      : hasMedia && mediaKind === "video"
-                        ? "rgba(255,255,255,0.08)"
-                        : "var(--accent)",
-                    border: !sessionUserId || (hasMedia && mediaKind === "video")
-                      ? "1px solid rgba(255,255,255,0.12)"
-                      : "none",
-                    color: !sessionUserId || (hasMedia && mediaKind === "video")
-                      ? "rgba(255,255,255,0.75)"
-                      : "white",
-                    borderRadius: 10,
-                    padding: "8px 12px",
-                    fontWeight: 600,
-                    cursor:
-                      !sessionUserId || mediaBusy || (hasMedia && mediaKind === "video")
-                        ? "not-allowed"
-                        : "pointer",
-                    fontSize: 13,
-                    opacity:
-                      !sessionUserId || mediaBusy || (hasMedia && mediaKind === "video") ? 0.55 : 1,
-                    whiteSpace: "nowrap",
-                    flex: "0 0 auto",
-                  }}
-                  title={hasMedia && mediaKind === "video" ? "Remove the video to upload an image" : "Upload image"}
-                >
-                  {hasMedia && mediaKind === "image" ? "Replace image" : "Upload image"}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPickKind("video");
-                    mediaInputRef.current?.click();
-                  }}
-                  disabled={!sessionUserId || mediaBusy || (hasMedia && mediaKind === "image")}
-                  style={{
-                    background: !sessionUserId
-                      ? "rgba(255,255,255,0.08)"
-                      : hasMedia && mediaKind === "image"
-                        ? "rgba(255,255,255,0.08)"
-                        : "var(--accent)",
-                    border: !sessionUserId || (hasMedia && mediaKind === "image")
-                      ? "1px solid rgba(255,255,255,0.12)"
-                      : "none",
-                    color: !sessionUserId || (hasMedia && mediaKind === "image")
-                      ? "rgba(255,255,255,0.75)"
-                      : "white",
-                    borderRadius: 10,
-                    padding: "8px 12px",
-                    fontWeight: 600,
-                    cursor:
-                      !sessionUserId || mediaBusy || (hasMedia && mediaKind === "image")
-                        ? "not-allowed"
-                        : "pointer",
-                    fontSize: 13,
-                    opacity:
-                      !sessionUserId || mediaBusy || (hasMedia && mediaKind === "image") ? 0.55 : 1,
-                    whiteSpace: "nowrap",
-                    flex: "0 0 auto",
-                  }}
-                  title={hasMedia && mediaKind === "image" ? "Remove the image to upload a video" : "Upload video"}
-                >
-                  {hasMedia && mediaKind === "video" ? "Replace video" : "Upload video"}
-                </button>
-
-                <input
-                  ref={mediaInputRef}
-                  type="file"
-                  accept={pickKind === "image" ? "image/*" : "video/mp4,video/quicktime"}
-                  style={{ display: "none" }}
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (f) handlePickFile(f);
-                  }}
-                />
-              </div>
+              ) : null}
             </div>
-
-            {/* Expanded preview */}
-
-            {mediaUrl && mediaOpen && (
-              <div style={{ marginTop: 10 }}>
-                {mediaKind === "video" ? (
-                  <video
-                    src={mediaUrl}
-                    controls
-                    playsInline
-                    preload="metadata"
-                    style={{
-                      width: "100%",
-                      maxHeight: 160,
-                      borderRadius: 12,
-                      border: "1px solid rgba(255,255,255,0.10)",
-                      display: "block",
-                      background: "rgba(0,0,0,0.18)",
-                    }}
-                  />
-                ) : (
-                  <img
-                    src={mediaUrl}
-                    alt="Workout media"
-                    style={{
-                      width: "100%",
-                      maxHeight: 160,
-                      objectFit: "contain",
-                      borderRadius: 12,
-                      border: "1px solid rgba(255,255,255,0.10)",
-                      display: "block",
-                      background: "rgba(0,0,0,0.18)",
-                    }}
-                  />
-                )}
-              </div>
-            )}
-          </div>
           ) : null}
 
 

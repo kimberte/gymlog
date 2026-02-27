@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { getWorkoutMediaSignedUrl } from "../lib/workoutMedia";
 import { isCommunityShareEnabled, setCommunityShareEnabled } from "../lib/communityShare";
+import { parseStructuredFromNotes, removeStructuredBlock } from "../lib/structuredNotes";
 
 type Tab = "feed" | "friends" | "requests";
 
@@ -49,6 +50,49 @@ function addDays(base: Date, n: number) {
   d.setDate(d.getDate() + n);
   return d;
 }
+
+
+function formatStructuredForDisplay(notes: string): { extra: string; structuredLines: string[] } | null {
+  const raw = String(notes || "");
+  const structured = parseStructuredFromNotes(raw);
+  if (!structured) return null;
+
+  const extra = String(removeStructuredBlock(raw) || "").trim();
+
+  // Group rows by exercise name (trimmed)
+  const rows = Array.isArray(structured.rows) ? structured.rows : [];
+  const groups = new Map<string, any[]>();
+  rows.forEach((r) => {
+    const name = String(r?.name || "").trim() || "Exercise";
+    if (!groups.has(name)) groups.set(name, []);
+    groups.get(name)!.push(r);
+  });
+
+  const lines: string[] = [];
+  for (const [name, rs] of groups.entries()) {
+    lines.push(name);
+    rs.forEach((r, i) => {
+      const reps = String(r?.reps ?? "").trim();
+      const weight = String(r?.weight ?? "").trim();
+      const completed = Boolean((r as any)?.completed);
+      const bits: string[] = [];
+      if (reps) bits.push(reps);
+      if (weight) bits.push(weight);
+      const core = bits.length ? bits.join(" x ") : "";
+      const status = completed ? "Done" : "Not Done";
+      // If we have both reps and weight, show "reps x weight", otherwise show what's available.
+      const body = core ? `${core} (${status})` : `(${status})`;
+      lines.push(`- Set ${i + 1}: ${body}`);
+    });
+    lines.push(""); // blank line between exercises
+  }
+
+  // trim trailing blank lines
+  while (lines.length && lines[lines.length - 1] === "") lines.pop();
+
+  return { extra, structuredLines: lines };
+}
+
 
 function timeAgoShort(iso: string | null | undefined) {
   if (!iso) return "";
@@ -1296,11 +1340,40 @@ export default function CommunityPage() {
                         </div>
                       )}
 
-                      {notes && (
-                        <div style={{ marginTop: kind && path ? 10 : 0, whiteSpace: "pre-wrap", opacity: 0.92, wordBreak: "break-word" }}>
-                          {notes}
-                        </div>
-                      )}
+                      {notes && (() => {
+                        const fmt = formatStructuredForDisplay(notes);
+                        if (!fmt) {
+                          return (
+                            <div style={{ marginTop: kind && path ? 10 : 0, whiteSpace: "pre-wrap", opacity: 0.92, wordBreak: "break-word" }}>
+                              {notes}
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <div style={{ marginTop: kind && path ? 10 : 0, display: "grid", gap: 10 }}>
+                            {fmt.extra ? (
+                              <div style={{ whiteSpace: "pre-wrap", opacity: 0.92, wordBreak: "break-word" }}>{fmt.extra}</div>
+                            ) : null}
+
+                            <div
+                              style={{
+                                border: "1px solid rgba(255,255,255,0.12)",
+                                borderRadius: 14,
+                                padding: 12,
+                                background: "rgba(0,0,0,0.18)",
+                              }}
+                            >
+                              <div style={{ fontWeight: 950, marginBottom: 8, opacity: 0.92, display: "flex", gap: 8, alignItems: "center" }}>
+                                <span aria-hidden="true">✎</span> Structured workout
+                              </div>
+                              <div style={{ whiteSpace: "pre-wrap", opacity: 0.92, wordBreak: "break-word", lineHeight: 1.5 }}>
+                                {fmt.structuredLines.join("\n")}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
                   );
                 })}

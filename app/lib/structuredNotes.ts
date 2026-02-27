@@ -3,8 +3,10 @@ export type StructuredExerciseRow = {
   sets?: string;
   reps?: string;
   weight?: string;
+  // Deprecated fields (kept for backward compatibility)
   time?: string;
   note?: string;
+  completed?: boolean;
 };
 
 export type StructuredWorkout = {
@@ -57,8 +59,9 @@ export function compileStructuredBlock(data: StructuredWorkout): string {
       weight: String(r?.weight ?? "").trim(),
       time: String(r?.time ?? "").trim(),
       note: String((r?.note ?? (r as any)?.notes) ?? "").trim(),
+      completed: Boolean((r as any)?.completed),
     }))
-    .filter((r) => r.name || r.sets || r.reps || r.weight || r.time || r.note);
+    .filter((r) => r.name || r.sets || r.reps || r.weight || r.time || r.note || r.completed);
 
   const payload: StructuredWorkout = {
     workoutName: cleanName,
@@ -176,6 +179,7 @@ export function parseStructuredFromNotes(notes: string): StructuredWorkout | nul
           weight: r?.weight != null ? String(r.weight) : undefined,
           time: r?.time != null ? String(r.time) : undefined,
           note: (r?.note ?? r?.notes) != null ? String(r?.note ?? r?.notes) : undefined,
+          completed: r?.completed != null ? Boolean(r.completed) : undefined,
         })),
       };
     }

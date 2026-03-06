@@ -331,6 +331,37 @@ export default function HomePage() {
         </div>
       </header>
 
+{!isSignedIn && (
+  <div style={{
+    margin: "10px 16px",
+    padding: "8px 12px",
+    borderRadius: 10,
+    fontSize: 13,
+    background: "rgba(255,255,255,0.06)",
+    border: "1px solid rgba(255,255,255,0.12)",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 8
+  }}>
+    <span style={{opacity:0.85}}>Not signed in.</span>
+    <button
+      style={{
+        fontSize:12,
+        padding:"4px 8px",
+        borderRadius:6,
+        border:"1px solid rgba(255,255,255,0.2)",
+        background:"rgba(255,255,255,0.08)",
+        cursor:"pointer"
+      }}
+      onClick={() => setShowSettings(true)}
+    >
+      Open Settings
+    </button>
+  </div>
+)}
+
+
       <div ref={calendarCaptureRef} style={{ position: "relative" }}>
         <WorkoutCalendar
           workouts={workouts}

@@ -1,76 +1,78 @@
 "use client";
-import { useEffect, useState } from "react";
+
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 
-function getFlowType() {
-  if (typeof window === "undefined") return "";
+function getResetContext() {
+  if (typeof window === "undefined") {
+    return {
+      isRecoveryLink: false,
+      isSignupLink: false,
+      hasAccessToken: false,
+    };
+  }
+
   const url = new URL(window.location.href);
-  const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-  return hash.get("type") || url.searchParams.get("type") || "";
+  const hash = url.hash || "";
+  const hashParams = new URLSearchParams(hash.startsWith("#") ? hash.slice(1) : hash);
+  const queryType = url.searchParams.get("type");
+  const hashType = hashParams.get("type");
+  const type = queryType || hashType || "";
+  const hasAccessToken = hash.includes("access_token=") || Boolean(hashParams.get("access_token"));
+
+  return {
+    isRecoveryLink: type === "recovery",
+    isSignupLink: type === "signup" || type === "magiclink",
+    hasAccessToken,
+  };
 }
 
 export default function ResetPasswordPage() {
   const [ready, setReady] = useState(false);
-  const [checking, setChecking] = useState(true);
   const [pw1, setPw1] = useState("");
   const [pw2, setPw2] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const [status, setStatus] = useState<"checking" | "ready" | "invalid">("checking");
+
+  const context = useMemo(() => getResetContext(), []);
 
   useEffect(() => {
     let alive = true;
-    const flowType = getFlowType();
 
-    async function init() {
-      try {
-        const url = new URL(window.location.href);
-        const code = url.searchParams.get("code");
+    if (context.isSignupLink && context.hasAccessToken) {
+      window.location.replace("/?confirmed=1");
+      return;
+    }
 
-        if (code) {
-          const { error } = await supabase.auth.exchangeCodeForSession(code);
-          if (error) throw error;
-        }
-
-        const { data } = await supabase.auth.getSession();
-        if (!alive) return;
-
-        const hasSession = Boolean(data.session?.user);
-
-        if (flowType && flowType !== "recovery") {
-          window.location.replace("/?auth=confirmed");
-          return;
-        }
-
-        setReady(hasSession && flowType === "recovery");
-        if (!hasSession && flowType === "recovery") {
-          setMsg("Open the password reset link from your email on this device.");
-        }
-      } catch (e: any) {
-        if (!alive) return;
-        setMsg(e?.message || "This reset link is invalid or has expired.");
-      } finally {
-        if (alive) setChecking(false);
-      }
+    if (!context.isRecoveryLink) {
+      setStatus("invalid");
+      setReady(false);
+      setMsg("This password reset link is invalid or has expired. Please request a new one.");
+      return;
     }
 
     const sub = supabase.auth.onAuthStateChange((event, session) => {
       if (!alive) return;
-      const currentFlowType = getFlowType();
-
-      if (event === "PASSWORD_RECOVERY") {
-        setReady(Boolean(session?.user));
-        setChecking(false);
-        setMsg("Set a new password to finish resetting your account.");
-        return;
-      }
-
-      if ((event === "SIGNED_IN" || event === "INITIAL_SESSION") && currentFlowType && currentFlowType !== "recovery") {
-        window.location.replace("/?auth=confirmed");
-        return;
+      if (event === "PASSWORD_RECOVERY" || session?.user) {
+        setReady(true);
+        setStatus("ready");
+        setMsg(null);
       }
     });
 
-    init();
+    supabase.auth.getSession().then(({ data }) => {
+      if (!alive) return;
+      if (data.session?.user) {
+        setReady(true);
+        setStatus("ready");
+        setMsg(null);
+      } else {
+        setReady(false);
+        setStatus("invalid");
+        setMsg("This password reset link is invalid or has expired. Please request a new one.");
+      }
+    });
 
     return () => {
       alive = false;
@@ -78,7 +80,7 @@ export default function ResetPasswordPage() {
         sub.data.subscription.unsubscribe();
       } catch {}
     };
-  }, []);
+  }, [context.hasAccessToken, context.isRecoveryLink, context.isSignupLink]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -98,10 +100,10 @@ export default function ResetPasswordPage() {
       const { error } = await supabase.auth.updateUser({ password: pw1 });
       if (error) throw error;
 
-      setMsg("Password updated. Redirecting to home…");
+      setMsg("Password updated. Redirecting to homepage…");
       window.setTimeout(() => {
-        window.location.href = "/?auth=password-updated";
-      }, 900);
+        window.location.href = "/?reset=success";
+      }, 700);
     } catch (e: any) {
       setMsg(e?.message || "Failed to update password.");
     } finally {
@@ -110,45 +112,48 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div style={{ padding: 16 }}>
-      <div style={{ maxWidth: 520, margin: "0 auto", display: "grid", gap: 12 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-          <h1 style={{ margin: 0, fontSize: 28 }}>Reset password</h1>
-          <button
-            type="button"
-            onClick={() => {
-              window.location.href = "/";
-            }}
-            style={{
-              padding: "10px 12px",
-              borderRadius: 12,
-              border: "1px solid rgba(255,255,255,0.12)",
-              background: "rgba(255,255,255,0.06)",
-              color: "var(--text)",
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
-          >
-            Back to home
-          </button>
-        </div>
+    <div style={{ padding: 16, minHeight: "100dvh" }}>
+      <div style={{ maxWidth: 520, margin: "0 auto", paddingTop: 24 }}>
+        <button
+          type="button"
+          onClick={() => {
+            window.location.href = "/";
+          }}
+          style={{
+            marginBottom: 16,
+            padding: "10px 14px",
+            borderRadius: 12,
+            border: "1px solid rgba(255,255,255,0.12)",
+            background: "rgba(255,255,255,0.04)",
+            color: "var(--text)",
+            fontWeight: 700,
+            cursor: "pointer",
+          }}
+        >
+          Back to homepage
+        </button>
 
-        {checking ? (
+        <h1 style={{ margin: "6px 0 10px" }}>Reset password</h1>
+
+        {status === "checking" && (
           <div style={{ opacity: 0.8 }}>Checking your reset link…</div>
-        ) : !ready ? (
-          <div style={{ display: "grid", gap: 10 }}>
-            <div style={{ opacity: 0.82 }}>
-              {msg || "Open the password reset link from your email on this device."}
-            </div>
+        )}
+
+        {status === "invalid" && (
+          <div style={{ opacity: 0.9, display: "grid", gap: 12 }}>
+            <div>{msg}</div>
+            <div style={{ opacity: 0.75 }}>Go back home and request a new reset email from Settings.</div>
           </div>
-        ) : (
+        )}
+
+        {status === "ready" && ready && (
           <form onSubmit={onSubmit} style={{ display: "grid", gap: 10 }}>
-            <div style={{ opacity: 0.82 }}>Set a new password to finish resetting your account.</div>
             <input
               type="password"
               value={pw1}
               onChange={(e) => setPw1(e.target.value)}
               placeholder="New password"
+              autoComplete="new-password"
               style={{
                 padding: "12px 14px",
                 borderRadius: 12,
@@ -162,6 +167,7 @@ export default function ResetPasswordPage() {
               value={pw2}
               onChange={(e) => setPw2(e.target.value)}
               placeholder="Confirm new password"
+              autoComplete="new-password"
               style={{
                 padding: "12px 14px",
                 borderRadius: 12,
@@ -180,7 +186,6 @@ export default function ResetPasswordPage() {
                 background: "var(--accent)",
                 color: "#111",
                 fontWeight: 900,
-                cursor: busy ? "progress" : "pointer",
               }}
             >
               {busy ? "Updating…" : "Update password"}

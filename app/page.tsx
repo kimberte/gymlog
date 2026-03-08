@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import WorkoutCalendar from "./components/WorkoutCalendar";
 import WorkoutEditor from "./components/WorkoutEditor";
 import SettingsModal from "./components/SettingsModal";
@@ -134,7 +133,6 @@ function PeopleIcon({ size = 20 }: { size?: number }) {
 }
 
 export default function HomePage() {
-  const searchParams = useSearchParams();
   const [workouts, setWorkouts] = useState<Record<string, any>>({});
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
@@ -154,6 +152,8 @@ export default function HomePage() {
   const backupBusyRef = useRef(false);
 
   const didLoadRef = useRef(false);
+
+  const handledAuthReturnRef = useRef(false);
 
   useEffect(() => {
     const loaded = loadWorkouts();
@@ -181,53 +181,34 @@ export default function HomePage() {
   }
 
   useEffect(() => {
+    if (handledAuthReturnRef.current) return;
+    handledAuthReturnRef.current = true;
+
     if (typeof window === "undefined") return;
 
-    let cancelled = false;
+    const url = new URL(window.location.href);
+    const hash = url.hash || "";
+    const hashParams = new URLSearchParams(hash.startsWith("#") ? hash.slice(1) : hash);
+    const queryType = url.searchParams.get("type");
+    const hashType = hashParams.get("type");
+    const type = queryType || hashType || "";
+    const hasAccessToken = hash.includes("access_token=") || Boolean(hashParams.get("access_token"));
+    const resetSuccess = url.searchParams.get("reset") === "success";
+    const confirmed = url.searchParams.get("confirmed") === "1";
 
-    async function handleAuthReturn() {
-      const url = new URL(window.location.href);
-      const code = url.searchParams.get("code");
-      const authNotice = url.searchParams.get("auth");
-      const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-      const hashType = hash.get("type");
-      const queryType = url.searchParams.get("type");
-      const flowType = hashType || queryType || "";
-
-      if (code) {
-        try {
-          const { error } = await supabase.auth.exchangeCodeForSession(code);
-          if (error) throw error;
-        } catch {
-          if (!cancelled && flowType !== "recovery") {
-            showToast("Could not finish email confirmation");
-          }
-        }
-      }
-
-      if (cancelled) return;
-
-      if (authNotice === "password-updated") {
-        showToast("Password updated. You are signed in.");
-      } else if (authNotice === "confirmed" || (code && flowType !== "recovery")) {
-        showToast("Account confirmed. You can now use Gym Log.");
-      }
-
-      if (code || authNotice || queryType) {
-        url.searchParams.delete("code");
-        url.searchParams.delete("auth");
-        url.searchParams.delete("type");
-        const cleaned = `${url.pathname}${url.searchParams.toString() ? `?${url.searchParams.toString()}` : ""}${url.hash}`;
-        window.history.replaceState({}, "", cleaned);
-      }
+    if (resetSuccess) {
+      showToast("Password updated successfully");
+      url.searchParams.delete("reset");
+      window.history.replaceState({}, "", `${url.pathname}${url.searchParams.toString() ? `?${url.searchParams.toString()}` : ""}`);
+      return;
     }
 
-    handleAuthReturn();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [searchParams]);
+    if (confirmed || hasAccessToken || type === "signup" || type === "magiclink") {
+      showToast("Account confirmed. Welcome!");
+      window.history.replaceState({}, "", "/");
+      return;
+    }
+  }, []);
 
   useEffect(() => {
     let unsub: { data?: { subscription?: { unsubscribe: () => void } } } | null = null;

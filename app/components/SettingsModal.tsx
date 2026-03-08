@@ -308,14 +308,13 @@ async function signUpPassword() {
 
   setAuthLoading(true);
   try {
-    const origin =
-      typeof window !== "undefined" ? window.location.origin : undefined;
+    const origin = typeof window !== "undefined" ? window.location.origin : undefined;
 
     const { data, error } = await supabase.auth.signUp({
       email: trimmed,
       password,
       options: {
-        emailRedirectTo: origin ? `${origin}/?auth=confirmed` : undefined,
+        emailRedirectTo: origin ? `${origin}/` : undefined,
       },
     });
 
@@ -330,7 +329,7 @@ async function signUpPassword() {
       user_id: data.user?.id || undefined,
     });
 
-    setAuthMessage("Check your email to confirm your account, then sign in.");
+    setAuthMessage("Check your email to confirm your account. After confirming, you'll return to the homepage signed in.");
     setPassword("");
     setAuthMode("signin");
   } catch {
@@ -402,9 +401,12 @@ async function updatePassword() {
       return;
     }
 
-    setAuthMessage("Password updated. You're signed in.");
+    setAuthMessage("Password updated. Redirecting home…");
     setNewPassword("");
     toast("Password updated");
+    window.setTimeout(() => {
+      if (typeof window !== "undefined") window.location.href = "/?reset=success";
+    }, 700);
   } catch {
     setAuthError("Could not update password.");
   } finally {

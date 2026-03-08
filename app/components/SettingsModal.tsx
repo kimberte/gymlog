@@ -308,9 +308,15 @@ async function signUpPassword() {
 
   setAuthLoading(true);
   try {
+    const origin =
+      typeof window !== "undefined" ? window.location.origin : undefined;
+
     const { data, error } = await supabase.auth.signUp({
       email: trimmed,
       password,
+      options: {
+        emailRedirectTo: origin ? `${origin}/?auth=confirmed` : undefined,
+      },
     });
 
     if (error) {
@@ -357,7 +363,7 @@ async function sendPasswordReset() {
       typeof window !== "undefined" ? window.location.origin : undefined;
 
     const { error } = await supabase.auth.resetPasswordForEmail(trimmed, {
-      redirectTo: origin ? `${origin}/` : undefined,
+      redirectTo: origin ? `${origin}/reset` : undefined,
     });
 
     if (error) {

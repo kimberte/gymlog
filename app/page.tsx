@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import WorkoutCalendar from "./components/WorkoutCalendar";
 import WorkoutEditor from "./components/WorkoutEditor";
 import SettingsModal from "./components/SettingsModal";
@@ -133,6 +134,7 @@ function PeopleIcon({ size = 20 }: { size?: number }) {
 }
 
 export default function HomePage() {
+  const searchParams = useSearchParams();
   const [workouts, setWorkouts] = useState<Record<string, any>>({});
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
@@ -177,6 +179,55 @@ export default function HomePage() {
     setToast(msg);
     window.setTimeout(() => setToast(null), 1400);
   }
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    let cancelled = false;
+
+    async function handleAuthReturn() {
+      const url = new URL(window.location.href);
+      const code = url.searchParams.get("code");
+      const authNotice = url.searchParams.get("auth");
+      const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+      const hashType = hash.get("type");
+      const queryType = url.searchParams.get("type");
+      const flowType = hashType || queryType || "";
+
+      if (code) {
+        try {
+          const { error } = await supabase.auth.exchangeCodeForSession(code);
+          if (error) throw error;
+        } catch {
+          if (!cancelled && flowType !== "recovery") {
+            showToast("Could not finish email confirmation");
+          }
+        }
+      }
+
+      if (cancelled) return;
+
+      if (authNotice === "password-updated") {
+        showToast("Password updated. You are signed in.");
+      } else if (authNotice === "confirmed" || (code && flowType !== "recovery")) {
+        showToast("Account confirmed. You can now use Gym Log.");
+      }
+
+      if (code || authNotice || queryType) {
+        url.searchParams.delete("code");
+        url.searchParams.delete("auth");
+        url.searchParams.delete("type");
+        const cleaned = `${url.pathname}${url.searchParams.toString() ? `?${url.searchParams.toString()}` : ""}${url.hash}`;
+        window.history.replaceState({}, "", cleaned);
+      }
+    }
+
+    handleAuthReturn();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [searchParams]);
 
   useEffect(() => {
     let unsub: { data?: { subscription?: { unsubscribe: () => void } } } | null = null;

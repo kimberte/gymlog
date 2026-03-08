@@ -2,8 +2,16 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 
+function getFlowType() {
+  if (typeof window === "undefined") return "";
+  const url = new URL(window.location.href);
+  const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  return hash.get("type") || url.searchParams.get("type") || "";
+}
+
 export default function ResetPasswordPage() {
   const [ready, setReady] = useState(false);
+  const [checking, setChecking] = useState(true);
   const [pw1, setPw1] = useState("");
   const [pw2, setPw2] = useState("");
   const [busy, setBusy] = useState(false);
@@ -11,17 +19,58 @@ export default function ResetPasswordPage() {
 
   useEffect(() => {
     let alive = true;
+    const flowType = getFlowType();
 
-    // Some flows fire PASSWORD_RECOVERY; others just create a session.
-    const sub = supabase.auth.onAuthStateChange((_event, session) => {
+    async function init() {
+      try {
+        const url = new URL(window.location.href);
+        const code = url.searchParams.get("code");
+
+        if (code) {
+          const { error } = await supabase.auth.exchangeCodeForSession(code);
+          if (error) throw error;
+        }
+
+        const { data } = await supabase.auth.getSession();
+        if (!alive) return;
+
+        const hasSession = Boolean(data.session?.user);
+
+        if (flowType && flowType !== "recovery") {
+          window.location.replace("/?auth=confirmed");
+          return;
+        }
+
+        setReady(hasSession && flowType === "recovery");
+        if (!hasSession && flowType === "recovery") {
+          setMsg("Open the password reset link from your email on this device.");
+        }
+      } catch (e: any) {
+        if (!alive) return;
+        setMsg(e?.message || "This reset link is invalid or has expired.");
+      } finally {
+        if (alive) setChecking(false);
+      }
+    }
+
+    const sub = supabase.auth.onAuthStateChange((event, session) => {
       if (!alive) return;
-      if (session?.user) setReady(true);
+      const currentFlowType = getFlowType();
+
+      if (event === "PASSWORD_RECOVERY") {
+        setReady(Boolean(session?.user));
+        setChecking(false);
+        setMsg("Set a new password to finish resetting your account.");
+        return;
+      }
+
+      if ((event === "SIGNED_IN" || event === "INITIAL_SESSION") && currentFlowType && currentFlowType !== "recovery") {
+        window.location.replace("/?auth=confirmed");
+        return;
+      }
     });
 
-    supabase.auth.getSession().then(({ data }) => {
-      if (!alive) return;
-      setReady(Boolean(data.session?.user));
-    });
+    init();
 
     return () => {
       alive = false;
@@ -49,9 +98,9 @@ export default function ResetPasswordPage() {
       const { error } = await supabase.auth.updateUser({ password: pw1 });
       if (error) throw error;
 
-      setMsg("Password updated. Redirecting…");
+      setMsg("Password updated. Redirecting to home…");
       window.setTimeout(() => {
-        window.location.href = "/";
+        window.location.href = "/?auth=password-updated";
       }, 900);
     } catch (e: any) {
       setMsg(e?.message || "Failed to update password.");
@@ -62,15 +111,39 @@ export default function ResetPasswordPage() {
 
   return (
     <div style={{ padding: 16 }}>
-      <div style={{ maxWidth: 520, margin: "0 auto" }}>
-        <h1 style={{ margin: "6px 0 10px" }}>Reset password</h1>
+      <div style={{ maxWidth: 520, margin: "0 auto", display: "grid", gap: 12 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+          <h1 style={{ margin: 0, fontSize: 28 }}>Reset password</h1>
+          <button
+            type="button"
+            onClick={() => {
+              window.location.href = "/";
+            }}
+            style={{
+              padding: "10px 12px",
+              borderRadius: 12,
+              border: "1px solid rgba(255,255,255,0.12)",
+              background: "rgba(255,255,255,0.06)",
+              color: "var(--text)",
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            Back to home
+          </button>
+        </div>
 
-        {!ready ? (
-          <div style={{ opacity: 0.8 }}>
-            Open the password reset link from your email on this device.
+        {checking ? (
+          <div style={{ opacity: 0.8 }}>Checking your reset link…</div>
+        ) : !ready ? (
+          <div style={{ display: "grid", gap: 10 }}>
+            <div style={{ opacity: 0.82 }}>
+              {msg || "Open the password reset link from your email on this device."}
+            </div>
           </div>
         ) : (
           <form onSubmit={onSubmit} style={{ display: "grid", gap: 10 }}>
+            <div style={{ opacity: 0.82 }}>Set a new password to finish resetting your account.</div>
             <input
               type="password"
               value={pw1}
@@ -107,6 +180,7 @@ export default function ResetPasswordPage() {
                 background: "var(--accent)",
                 color: "#111",
                 fontWeight: 900,
+                cursor: busy ? "progress" : "pointer",
               }}
             >
               {busy ? "Updating…" : "Update password"}

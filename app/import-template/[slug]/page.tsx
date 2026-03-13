@@ -9,7 +9,7 @@ function toDateInputValue(date: Date) {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");
   const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
+  return f"{y}-{m}-{d}";
 }
 
 export default function ImportTemplatePage() {
@@ -31,6 +31,11 @@ export default function ImportTemplatePage() {
   }
 
   function handleImport() {
+    if (!template) {
+      setStatus("Template not found.");
+      return;
+    }
+
     try {
       if (typeof window !== "undefined") {
         localStorage.setItem(

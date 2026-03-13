@@ -8,6 +8,7 @@ import { supabase } from "./lib/supabaseClient";
 import { upsertBackup } from "./lib/backup";
 import { shareNodeAsPng } from "./lib/shareImage";
 import { ensureTrialStarted, getProStatus, type ProStatus } from "./lib/entitlements";
+import { mergeSeoTemplateIntoWorkouts } from "./lib/seoWorkoutTemplates";
 
 type WeekStart = "sunday" | "monday";
 
@@ -52,6 +53,17 @@ function ListIcon({ size = 20 }: { size?: number }) {
       <circle cx="4.5" cy="7" r="1.2" fill="currentColor" />
       <circle cx="4.5" cy="12" r="1.2" fill="currentColor" />
       <circle cx="4.5" cy="17" r="1.2" fill="currentColor" />
+    </svg>
+  );
+}
+
+
+function ProgramsIcon({ size = 20 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect x="4" y="4" width="16" height="16" rx="3" stroke="currentColor" strokeWidth="2" />
+      <path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <circle cx="17" cy="16" r="1.2" fill="currentColor" />
     </svg>
   );
 }
@@ -156,12 +168,60 @@ export default function HomePage() {
   const handledAuthReturnRef = useRef(false);
 
   useEffect(() => {
-    const loaded = loadWorkouts();
-    setWorkouts(loaded);
+    let initialWorkouts = loadWorkouts();
 
     const ws = loadWeekStart();
     setWeekStart(ws);
 
+    if (typeof window !== "undefined") {
+      try {
+        const url = new URL(window.location.href);
+        const importedFlag = url.searchParams.get("imported") === "1";
+        const importSlug = String(url.searchParams.get("template") || "").trim();
+        const importStartDate = String(url.searchParams.get("start") || "").trim();
+        const pendingImportRaw = localStorage.getItem("gym-log-template-import-pending");
+
+        let pendingSlug = "";
+        let pendingStartDate = "";
+
+        if (pendingImportRaw) {
+          try {
+            const pending = JSON.parse(pendingImportRaw) as { slug?: string; startDate?: string };
+            pendingSlug = String(pending?.slug || "").trim();
+            pendingStartDate = String(pending?.startDate || "").trim();
+          } catch {}
+        }
+
+        const slug = importSlug || pendingSlug;
+        const startDate = importStartDate || pendingStartDate;
+
+        if (slug && startDate) {
+          const result = mergeSeoTemplateIntoWorkouts(initialWorkouts, slug, startDate);
+          initialWorkouts = result.next;
+          saveWorkouts(initialWorkouts);
+          try {
+            localStorage.setItem("gym-log-workouts", JSON.stringify(initialWorkouts));
+            localStorage.removeItem("gym-log-template-import-pending");
+          } catch {}
+          if (result.importedDates[0]) {
+            setSelectedDate(result.importedDates[0]);
+          }
+        }
+
+        if (importedFlag || (slug && startDate)) {
+          showToast("Template imported");
+        }
+
+        if (importedFlag || importSlug || importStartDate) {
+          url.searchParams.delete("imported");
+          url.searchParams.delete("template");
+          url.searchParams.delete("start");
+          window.history.replaceState({}, "", `${url.pathname}${url.searchParams.toString() ? `?${url.searchParams.toString()}` : ""}`);
+        }
+      } catch {}
+    }
+
+    setWorkouts(initialWorkouts);
     didLoadRef.current = true;
   }, []);
 
@@ -337,6 +397,19 @@ export default function HomePage() {
 
           <button className="icon-btn" title="Toggle view" aria-label="Toggle view" onClick={() => setStacked((s) => !s)}>
             {stacked ? <ListIcon /> : <CalendarIcon />}
+          </button>
+
+          <button
+            className="icon-btn nav-tooltip nav-programs-btn"
+            title="Programs"
+            aria-label="Open workout programs"
+            data-tooltip="Workout programs"
+            onClick={() => {
+              window.location.href = "/workouts";
+            }}
+          >
+            <ProgramsIcon />
+            <span className="nav-programs-label">Programs</span>
           </button>
 
           {/* ✅ Community icon stands out */}

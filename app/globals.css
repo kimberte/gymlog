@@ -1362,3 +1362,64 @@ button.secondary.danger {
 .exporting .stacked-scope-toggle {
   display: none !important;
 }
+
+
+.nav-tooltip {
+  position: relative;
+}
+
+.nav-tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%) translateY(4px);
+  background: rgba(20, 22, 28, 0.96);
+  color: var(--text);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 10px;
+  padding: 6px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.22);
+}
+
+.nav-tooltip:hover::after,
+.nav-tooltip:focus-visible::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.nav-programs-btn {
+  width: auto;
+  padding: 0 12px;
+  gap: 8px;
+  line-height: 1;
+}
+
+.nav-programs-label {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+@media (max-width: 820px) {
+  .nav-programs-btn {
+    width: 40px;
+    padding: 0;
+  }
+
+  .nav-programs-label {
+    display: none;
+  }
+
+  .nav-tooltip::after {
+    display: none;
+  }
+}

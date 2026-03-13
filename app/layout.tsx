@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     template: "%s | Gym Log",
   },
   description:
-    "A simple, fast workout calendar to log workouts, track progress, and back up your training. Optional Pro unlocks media, sharing, and more.",
+    "A simple, fast workout calendar to log workouts, import free workout templates, track progress, and back up your training.",
   applicationName: "Gym Log",
   keywords: [
     "workout log",
@@ -24,6 +24,10 @@ export const metadata: Metadata = {
     "strength training",
     "fitness journal",
     "PWA workout tracker",
+    "workout templates",
+    "push pull legs workout",
+    "5x5 workout",
+    "upper lower split",
   ],
   alternates: {
     canonical: "/",
@@ -34,13 +38,13 @@ export const metadata: Metadata = {
     siteName: "Gym Log",
     title: "Gym Log – Workout Calendar & Gym Tracker",
     description:
-      "Log workouts on a calendar, track progress, and back up your training. Optional Pro unlocks media, sharing, and more.",
+      "Log workouts on a calendar, import free workout templates, track progress, and back up your training.",
   },
   twitter: {
     card: "summary",
     title: "Gym Log – Workout Calendar & Gym Tracker",
     description:
-      "Log workouts on a calendar, track progress, and back up your training. Optional Pro unlocks media, sharing, and more.",
+      "Log workouts on a calendar, import free workout templates, track progress, and back up your training.",
   },
   robots: {
     index: true,

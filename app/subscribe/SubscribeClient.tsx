@@ -41,7 +41,7 @@ export default function SubscribeClient() {
 
   const monthlyBase =
     process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK_MONTHLY ||
-    "https://buy.stripe.com/5kQ28ta4o63oh0ka48b7y03";
+    "https://buy.stripe.com/fZu7sNb8s9fA6lG1xCb7y02";
   const yearlyBase =
     process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK_YEARLY ||
     "https://buy.stripe.com/5kQ28ta4o63oh0ka48b7y03";

@@ -41,10 +41,10 @@ export default function SubscribeClient() {
 
   const monthlyBase =
     process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK_MONTHLY ||
-    "https://buy.stripe.com/test_3cI00j8ggfLv9NvghtejK00";
+    "https://buy.stripe.com/5kQ28ta4o63oh0ka48b7y03";
   const yearlyBase =
     process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK_YEARLY ||
-    "https://buy.stripe.com/test_dRm9ATgMMeHr5xf0ivejK01";
+    "https://buy.stripe.com/5kQ28ta4o63oh0ka48b7y03";
 
   // Stripe Customer Portal login link (Dashboard → Customer portal → Login link)
   const portalLoginUrl =
@@ -292,7 +292,7 @@ export default function SubscribeClient() {
               className={`btn btnPrimary`}
               style={{ pointerEvents: monthlyUrl ? "auto" : "none", opacity: monthlyUrl ? 1 : 0.6 }}
             >
-              Subscribe Monthly $4.99 CAD
+              Subscribe Monthly $1.99 CAD
             </a>
 
             <a
@@ -301,7 +301,7 @@ export default function SubscribeClient() {
               className={`btn btnSoft`}
               style={{ pointerEvents: yearlyUrl ? "auto" : "none", opacity: yearlyUrl ? 1 : 0.6 }}
             >
-              Subscribe Yearly $49.99 CAD
+              Subscribe Yearly $9.99 CAD
             </a>
           </div>
 

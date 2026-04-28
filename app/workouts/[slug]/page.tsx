@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import WorkoutDownloadGate from "./WorkoutDownloadGate";
 import {
   SEO_WORKOUT_TEMPLATES,
   getRelatedTemplates,
@@ -76,6 +77,54 @@ export default async function WorkoutTemplatePage({ params }: { params: Promise<
   return (
     <main style={{ maxWidth: 1080, margin: "0 auto", padding: "28px 20px 60px" }}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+
+      <div
+        style={{
+          display: "flex",
+          gap: 12,
+          flexWrap: "wrap",
+          marginBottom: 18,
+          padding: "14px",
+          borderRadius: 18,
+          background: "rgba(255,255,255,0.05)",
+          border: "1px solid rgba(255,255,255,0.1)",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        <div style={{ minWidth: 240 }}>
+          <div style={{ fontWeight: 800 }}>Want the offline version?</div>
+          <div style={{ marginTop: 4, fontSize: 14, opacity: 0.82 }}>Download this workout as PDF or Excel, or import it into Gym Log to track your progress.</div>
+        </div>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <a
+            href="#download"
+            style={{
+              padding: "10px 14px",
+              borderRadius: 12,
+              background: "rgba(255,255,255,0.96)",
+              color: "#111827",
+              fontWeight: 800,
+              textDecoration: "none",
+            }}
+          >
+            Download PDF / Excel
+          </a>
+          <Link
+            href={`/import-template/${template.slug}`}
+            style={{
+              padding: "10px 14px",
+              borderRadius: 12,
+              background: "var(--accent)",
+              color: "#111827",
+              fontWeight: 800,
+              textDecoration: "none",
+            }}
+          >
+            Track this workout automatically
+          </Link>
+        </div>
+      </div>
 
       <div style={{ marginBottom: 18, display: "flex", gap: 14, flexWrap: "wrap" }}>
         <Link href="/workouts" style={{ color: "var(--accent)", textDecoration: "none", fontWeight: 700 }}>
@@ -214,17 +263,41 @@ export default async function WorkoutTemplatePage({ params }: { params: Promise<
           </section>
 
           <section style={{ marginTop: 30 }}>
-            <h2 style={{ margin: 0, fontSize: 28 }}>How to track this workout in Gym Log</h2>
+            <h2 style={{ margin: 0, fontSize: 28 }}>Track this workout properly</h2>
             <p style={{ lineHeight: 1.78, opacity: 0.92 }}>
-              After import, each session lands directly on your Gym Log calendar. You can then edit the workouts, add
-              notes, record your sets, or swap exercises based on your equipment and recovery.
+              You can follow this workout manually, but tracking your sets, reps, and progression is what actually drives results.
+              Gym Log automatically places each session on your calendar so you can focus on lifting instead of remembering what you did last time.
             </p>
             <ol style={{ margin: "12px 0 0", paddingLeft: 18, lineHeight: 1.85 }}>
-              <li>Open the import page.</li>
-              <li>Choose your start date.</li>
-              <li>Add the template to your Gym Log calendar.</li>
-              <li>Edit any workout day to personalize the routine.</li>
+              <li>Import the workout in one click.</li>
+              <li>Log your sets and reps as you train.</li>
+              <li>Track progression week over week.</li>
+              <li>Never lose your workout history again.</li>
             </ol>
+            <div style={{ marginTop: 16 }}>
+              <Link
+                href={`/import-template/${template.slug}`}
+                style={{
+                  display: "inline-block",
+                  padding: "12px 18px",
+                  borderRadius: 14,
+                  background: "var(--accent)",
+                  color: "#111827",
+                  fontWeight: 800,
+                  textDecoration: "none",
+                }}
+              >
+                Start tracking this workout →
+              </Link>
+            </div>
+          </section>
+
+          <section id="download" style={{ marginTop: 34 }}>
+            <h2 style={{ margin: 0, fontSize: 28 }}>Download this workout</h2>
+            <p style={{ margin: "10px 0 0", lineHeight: 1.72, opacity: 0.9 }}>
+              Prefer to use the plan offline? Enter your email to unlock a clean PDF and Excel version of this workout.
+            </p>
+            <WorkoutDownloadGate slug={template.slug} templateName={template.name} />
           </section>
 
           <section style={{ marginTop: 30 }}>

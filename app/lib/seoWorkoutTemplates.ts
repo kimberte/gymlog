@@ -3089,6 +3089,215 @@ export const SEO_WORKOUT_TEMPLATES: SeoWorkoutTemplate[] = [
     ],
   },
 
+  {
+    slug: "30-minute-workout-plan",
+    name: "30 Minute Workout Plan",
+    seoTitle: "30 Minute Workout Plan (Free 4 Day Gym Template)",
+    metaDescription:
+      "Free 30 minute workout plan with a fast 4-day split, efficient exercise selection, PDF/Excel downloads, and Gym Log import.",
+    shortDescription:
+      "A time-efficient 4-day gym plan for busy lifters who want productive sessions without long workouts.",
+    intro: [
+      "This 30 minute workout plan is built for people who want a real gym routine but do not have time for long sessions. Each workout focuses on the highest-value movements first, then uses short accessory blocks so you can train hard and still get out quickly.",
+      "The plan works especially well inside Gym Log because short workouts depend on consistency. Import it, place the sessions on your calendar, and track your weights so each 30 minute session has a clear purpose.",
+    ],
+    searchIntent: "30 minute workout plan",
+    level: "Beginner to Intermediate",
+    goal: "Build strength and muscle with efficient short gym sessions.",
+    equipment: "Commercial gym or home gym with dumbbells, bench, cables or machines, and basic lower-body equipment.",
+    frequency: "4 training days per week, about 30 minutes per session.",
+    benefits: [
+      "Fits busy schedules better than longer bodybuilding routines.",
+      "Uses simple compound lifts plus focused accessories.",
+      "Easy to repeat and track week after week.",
+      "Good bridge from casual workouts into structured training.",
+    ],
+    whoFor: [
+      "Busy lifters who can train often but not for long.",
+      "Parents, professionals, and students who need efficient workouts.",
+      "Users who want a clear plan instead of random quick workouts.",
+    ],
+    tips: [
+      "Keep rest periods controlled so the workout stays around 30 minutes.",
+      "Track your top set on each main lift and try to improve gradually.",
+      "Use supersets for accessories when the gym is not too crowded.",
+    ],
+    faqs: [
+      {
+        question: "Can a 30 minute workout build muscle?",
+        answer: "Yes. A 30 minute workout can build muscle when the plan uses effective exercises, enough weekly frequency, and consistent progression.",
+      },
+      {
+        question: "How many days per week should I run this plan?",
+        answer: "This version is built for four training days per week, but you can move sessions around your calendar if your week changes.",
+      },
+    ],
+    relatedSlugs: ["3-day-workout-split", "upper-lower-split", "workout-plan-for-busy-people"],
+    days: [
+      { name: "Upper Push", focus: "Chest, shoulders, and triceps in a short session", offsetDays: 0, exercises: ["Barbell or Dumbbell Bench Press — 3 x 6-10", "Incline Dumbbell Press — 3 x 8-10", "Seated Shoulder Press — 2 x 8-12", "Triceps Pressdown — 2 x 10-15"], notes: "Keep rest focused. Pair the shoulder press and triceps pressdown if time is tight." },
+      { name: "Lower Body", focus: "Quads, hamstrings, and calves", offsetDays: 1, exercises: ["Back Squat or Leg Press — 3 x 6-10", "Romanian Deadlift — 3 x 8-10", "Leg Curl — 2 x 10-15", "Standing Calf Raise — 2 x 12-20"] },
+      { name: "Upper Pull", focus: "Back, rear delts, and biceps", offsetDays: 3, exercises: ["Lat Pulldown or Pull-Up — 3 x 8-10", "Seated Cable Row — 3 x 8-12", "Face Pull — 2 x 12-15", "Dumbbell Curl — 2 x 10-12"] },
+      { name: "Full Body Finisher", focus: "Efficient full-body repeat", offsetDays: 5, exercises: ["Trap Bar Deadlift or Deadlift — 3 x 5", "Dumbbell Bench Press — 3 x 8-10", "Walking Lunge — 2 x 10 each leg", "Plank — 3 rounds"] },
+    ],
+  },
+  {
+    slug: "dumbbell-only-hypertrophy-program",
+    name: "Dumbbell Only Hypertrophy Program",
+    seoTitle: "Dumbbell Only Hypertrophy Program (Free 4 Day Plan)",
+    metaDescription:
+      "Free dumbbell only hypertrophy program with a 4-day split for muscle growth, home gyms, PDF/Excel downloads, and Gym Log import.",
+    shortDescription:
+      "A 4-day muscle-building program using only dumbbells, a bench, and consistent progression.",
+    intro: [
+      "This dumbbell only hypertrophy program is designed for lifters who want muscle-building structure without needing a full commercial gym. It uses dumbbell presses, rows, squats, hinges, raises, and curls to cover the major muscle groups across the week.",
+      "Because dumbbells can be progressed in smaller jumps and many people use them at home, tracking matters. Import the plan into Gym Log and record your reps so you know when it is time to move up in weight.",
+    ],
+    searchIntent: "dumbbell only hypertrophy program",
+    level: "Beginner to Intermediate",
+    goal: "Build muscle using dumbbells and repeatable weekly volume.",
+    equipment: "Dumbbells and an adjustable bench. A pull-up bar is optional but not required.",
+    frequency: "4 training days per week.",
+    benefits: ["Works for home gyms and small spaces.", "Avoids machines and barbells while still training the full body.", "Good for hypertrophy-focused tracking and rep progression.", "Easy to edit around the dumbbells you own."],
+    whoFor: ["Home gym users with dumbbells.", "Lifters who prefer joint-friendly dumbbell movements.", "People who want a muscle-building plan without machines."],
+    tips: ["Use slower eccentrics when your dumbbells are limited.", "Progress by adding reps before increasing weight.", "Keep most sets one or two reps short of failure."],
+    faqs: [
+      { question: "Can I build muscle with dumbbells only?", answer: "Yes. Dumbbells can build muscle when you train with enough effort, use enough weekly volume, and track progression over time." },
+      { question: "What if my dumbbells are too light?", answer: "Use slower reps, pauses, higher reps, and single-limb variations to make lighter dumbbells more challenging." },
+    ],
+    relatedSlugs: ["dumbbell-only-workout", "home-dumbbell-workout", "home-gym-workout"],
+    days: [
+      { name: "Chest and Triceps", focus: "Dumbbell pressing and triceps volume", offsetDays: 0, exercises: ["Dumbbell Bench Press — 4 x 8-12", "Incline Dumbbell Press — 3 x 8-12", "Dumbbell Fly — 3 x 10-15", "Overhead Dumbbell Triceps Extension — 3 x 10-15"] },
+      { name: "Back and Biceps", focus: "Rows, pullovers, and curls", offsetDays: 1, exercises: ["One-Arm Dumbbell Row — 4 x 8-12 each side", "Dumbbell Pullover — 3 x 10-12", "Rear Delt Raise — 3 x 12-15", "Dumbbell Curl — 3 x 10-12", "Hammer Curl — 2 x 10-12"] },
+      { name: "Legs", focus: "Dumbbell lower-body hypertrophy", offsetDays: 3, exercises: ["Goblet Squat — 4 x 10-15", "Dumbbell Romanian Deadlift — 4 x 8-12", "Dumbbell Walking Lunge — 3 x 10 each leg", "Single-Leg Calf Raise — 3 x 12-20"] },
+      { name: "Shoulders and Arms", focus: "Delts, biceps, and triceps", offsetDays: 5, exercises: ["Dumbbell Shoulder Press — 4 x 8-12", "Dumbbell Lateral Raise — 4 x 12-20", "Rear Delt Raise — 3 x 12-20", "Incline Dumbbell Curl — 3 x 10-12", "Dumbbell Skull Crusher — 3 x 10-12"] },
+    ],
+  },
+  {
+    slug: "8-week-muscle-building-program",
+    name: "8 Week Muscle Building Program",
+    seoTitle: "8 Week Muscle Building Program (Free 4 Day Template)",
+    metaDescription:
+      "Free 8 week muscle building program with a 4-day upper/lower split, progression notes, PDF/Excel downloads, and Gym Log import.",
+    shortDescription:
+      "An 8-week upper/lower plan built around progressive overload, repeatable volume, and clear weekly tracking.",
+    intro: [
+      "This 8 week muscle building program gives you a clear block of training instead of a random list of workouts. The first half builds consistency and volume, while the second half pushes progression by adding weight or reps to the main movements.",
+      "Run the same sessions for the full eight weeks and track each workout. That is the point of the program: you can see whether your presses, rows, squats, hinges, and accessories are actually moving forward.",
+    ],
+    searchIntent: "8 week muscle building program",
+    level: "Beginner to Intermediate",
+    goal: "Build muscle over an 8-week block with consistent upper/lower training.",
+    equipment: "Barbell, dumbbells, bench, cables or machines, and basic leg equipment.",
+    frequency: "4 training days per week for 8 weeks.",
+    benefits: ["Clear 8-week structure for users who want a defined plan.", "Upper/lower split balances volume and recovery.", "Progression is easy to track in Gym Log.", "Good for beginners moving into intermediate training."],
+    whoFor: ["Lifters who want a program with a clear start and finish.", "People focused on muscle gain and consistency.", "Users who like tracking progression across multiple weeks."],
+    tips: ["Weeks 1-4: work mostly in the 8-12 rep range and build clean volume.", "Weeks 5-8: increase load when you hit the top of the rep range.", "Do not change exercises too often during the block."],
+    faqs: [
+      { question: "Is 8 weeks enough to build muscle?", answer: "Eight weeks is enough to build visible momentum, improve lifts, and establish a repeatable muscle-building routine when training is consistent." },
+      { question: "Should I change exercises during the 8 weeks?", answer: "Keep the main exercises stable so you can track progression. Swap only if equipment, pain, or schedule requires it." },
+    ],
+    relatedSlugs: ["upper-lower-split", "4-day-hypertrophy-workout", "hypertrophy-training-program"],
+    days: [
+      { name: "Upper A", focus: "Horizontal push and pull", offsetDays: 0, exercises: ["Bench Press — 4 x 6-10", "Chest-Supported Row — 4 x 8-12", "Incline Dumbbell Press — 3 x 8-12", "Lat Pulldown — 3 x 10-12", "Lateral Raise — 3 x 12-20", "Triceps Pressdown — 2 x 10-15"] },
+      { name: "Lower A", focus: "Squat-focused lower body", offsetDays: 1, exercises: ["Back Squat — 4 x 6-10", "Romanian Deadlift — 3 x 8-12", "Leg Press — 3 x 10-15", "Leg Curl — 3 x 10-15", "Calf Raise — 3 x 12-20"] },
+      { name: "Upper B", focus: "Vertical push and pull", offsetDays: 3, exercises: ["Overhead Press — 4 x 6-10", "Pull-Up or Lat Pulldown — 4 x 8-12", "Dumbbell Bench Press — 3 x 8-12", "Seated Cable Row — 3 x 10-12", "Rear Delt Raise — 3 x 12-20", "Dumbbell Curl — 2 x 10-15"] },
+      { name: "Lower B", focus: "Hinge and glute-focused lower body", offsetDays: 5, exercises: ["Deadlift or Trap Bar Deadlift — 3 x 4-6", "Front Squat or Goblet Squat — 3 x 8-10", "Bulgarian Split Squat — 3 x 8-12 each leg", "Hip Thrust — 3 x 8-12", "Seated Calf Raise — 3 x 12-20"] },
+    ],
+  },
+  {
+    slug: "progressive-overload-workout-program",
+    name: "Progressive Overload Workout Program",
+    seoTitle: "Progressive Overload Workout Program (Free Tracking Template)",
+    metaDescription:
+      "Free progressive overload workout program with clear rep targets, weight progression rules, PDF/Excel downloads, and Gym Log import.",
+    shortDescription:
+      "A 4-day program built around tracking reps and weights so progress is planned instead of guessed.",
+    intro: [
+      "This progressive overload workout program is built for people who know they should be increasing weights or reps but want a simple system to follow. Each main lift uses a rep range. When you hit the top of the range with good form, increase the weight next time.",
+      "This is one of the best templates to use inside Gym Log because the whole point is tracking. The app makes it easier to see what you lifted last time, what rep target you are chasing, and when you should move up.",
+    ],
+    searchIntent: "progressive overload workout program",
+    level: "Beginner to Intermediate",
+    goal: "Build strength and muscle by gradually increasing reps, weight, or quality of work.",
+    equipment: "Barbell, dumbbells, bench, cables or machines, and basic leg equipment.",
+    frequency: "4 training days per week.",
+    benefits: ["Directly teaches users how to progress a workout plan.", "Pairs naturally with Gym Log tracking.", "Works for muscle gain and strength development.", "Clear rules reduce guessing from week to week."],
+    whoFor: ["Users who want to stop repeating the same weights forever.", "Beginner-to-intermediate lifters learning progression.", "Anyone who wants a plan that rewards consistent logging."],
+    tips: ["Use double progression: add reps first, then increase weight.", "Only increase load after hitting the top of the rep range on all work sets.", "Track every set so your next target is obvious."],
+    faqs: [
+      { question: "What is progressive overload?", answer: "Progressive overload means gradually making training harder over time by adding weight, reps, sets, range of motion, or better control." },
+      { question: "How do I know when to increase weight?", answer: "For this plan, increase weight when you can complete all sets at the top of the target rep range with clean form." },
+    ],
+    relatedSlugs: ["strength-training-workout-plan", "4-day-hypertrophy-split", "8-week-muscle-building-program"],
+    days: [
+      { name: "Upper Strength", focus: "Trackable upper-body progression", offsetDays: 0, exercises: ["Bench Press — 4 x 6-8", "Barbell or Cable Row — 4 x 8-10", "Overhead Press — 3 x 6-10", "Lat Pulldown — 3 x 8-12", "Triceps Pressdown — 2 x 10-15"], notes: "When every set reaches the top of the rep range, increase weight next session." },
+      { name: "Lower Strength", focus: "Squat and hinge progression", offsetDays: 1, exercises: ["Back Squat — 4 x 6-8", "Romanian Deadlift — 3 x 8-10", "Leg Press — 3 x 10-12", "Leg Curl — 3 x 10-15", "Calf Raise — 3 x 12-20"] },
+      { name: "Upper Volume", focus: "Higher-rep upper-body progression", offsetDays: 3, exercises: ["Incline Dumbbell Press — 3 x 8-12", "Chest-Supported Row — 3 x 8-12", "Dumbbell Shoulder Press — 3 x 8-12", "Lateral Raise — 3 x 12-20", "Dumbbell Curl — 3 x 10-15"] },
+      { name: "Lower Volume", focus: "Single-leg, glute, and accessory progression", offsetDays: 5, exercises: ["Deadlift or Trap Bar Deadlift — 3 x 4-6", "Bulgarian Split Squat — 3 x 8-12 each leg", "Hip Thrust — 3 x 8-12", "Leg Extension — 2 x 12-15", "Hanging Knee Raise — 3 x 10-15"] },
+    ],
+  },
+  {
+    slug: "arm-specialization-program",
+    name: "Arm Specialization Program",
+    seoTitle: "Arm Specialization Program (Free 4 Week Add-On)",
+    metaDescription:
+      "Free arm specialization program with biceps and triceps focused training, 4-week add-on structure, PDF/Excel downloads, and Gym Log import.",
+    shortDescription:
+      "A focused arm growth add-on that increases biceps and triceps volume without replacing your whole program.",
+    intro: [
+      "This arm specialization program is a 4-week add-on for lifters who want more focused biceps and triceps work without abandoning their main routine. It adds targeted arm volume, repeatable exercise selection, and clear progression targets.",
+      "Because arm training responds well to consistent volume and small improvements, logging helps. Track reps, pumps, and loads in Gym Log so you can see whether your curls, extensions, and close-grip pressing are improving over the block.",
+    ],
+    searchIntent: "arm specialization program",
+    level: "Beginner to Intermediate",
+    goal: "Add focused biceps and triceps volume for arm growth over 4 weeks.",
+    equipment: "Dumbbells, cable station or bands, bench, and optional EZ bar.",
+    frequency: "2 dedicated arm sessions per week, or added after upper-body days.",
+    benefits: ["Targets a popular search intent without requiring a full program reset.", "Easy to add to existing splits.", "Creates repeat visits for users running a 4-week block.", "Great for PDF/Excel downloads and app tracking."],
+    whoFor: ["Lifters who want bigger arms.", "Users already following a general strength or hypertrophy plan.", "People who want a short focused add-on program."],
+    tips: ["Do not turn every arm set into a sloppy max effort set.", "Use full range of motion and control the lowering phase.", "Add this after upper-body workouts or on separate short sessions."],
+    faqs: [
+      { question: "Can I add this arm program to another workout plan?", answer: "Yes. This is designed as an add-on. Start with two arm-focused sessions per week and reduce volume if elbows or recovery become an issue." },
+      { question: "How long should I run an arm specialization block?", answer: "Four weeks is a practical starting point. After that, return to normal volume or repeat if recovery is still good." },
+    ],
+    relatedSlugs: ["bro-split-workout", "5-day-bodybuilding-split", "hypertrophy-training-program"],
+    days: [
+      { name: "Arm Day A", focus: "Heavy curl and triceps extension emphasis", offsetDays: 0, exercises: ["EZ Bar Curl or Barbell Curl — 4 x 8-10", "Close-Grip Bench Press — 4 x 6-10", "Incline Dumbbell Curl — 3 x 10-12", "Cable Triceps Pressdown — 3 x 10-15", "Hammer Curl — 2 x 12-15"] },
+      { name: "Arm Day B", focus: "Higher-rep biceps and triceps volume", offsetDays: 3, exercises: ["Preacher Curl or Concentration Curl — 3 x 10-12", "Overhead Cable or Dumbbell Triceps Extension — 3 x 10-15", "Cable Curl — 3 x 12-15", "Skull Crusher — 3 x 8-12", "Reverse Curl — 2 x 12-15"] },
+    ],
+  },
+  {
+    slug: "workout-plan-for-busy-people",
+    name: "Workout Plan for Busy People",
+    seoTitle: "Workout Plan for Busy People (Free 3 Day Template)",
+    metaDescription:
+      "Free workout plan for busy people with 3 full-body sessions, efficient exercise selection, PDF/Excel downloads, and Gym Log import.",
+    shortDescription:
+      "A simple 3-day full-body plan for people who need consistency without spending all week in the gym.",
+    intro: [
+      "This workout plan for busy people is built around the reality that perfect schedules are rare. Instead of requiring five or six gym days, it gives you three full-body sessions that cover the major movement patterns and are easy to move around your week.",
+      "The plan is a strong fit for Gym Log because calendar flexibility matters. Import the workouts, place them where they fit, and keep your training history even when life gets messy.",
+    ],
+    searchIntent: "workout plan for busy people",
+    level: "Beginner to Intermediate",
+    goal: "Stay consistent with three efficient full-body workouts per week.",
+    equipment: "Commercial gym or home gym with basic barbell, dumbbell, bench, and cable or machine options.",
+    frequency: "3 training days per week.",
+    benefits: ["Lower schedule pressure than high-frequency plans.", "Full-body sessions make missed workouts less disruptive.", "Simple enough for beginners and useful for returning lifters.", "Easy to track and reschedule inside Gym Log."],
+    whoFor: ["Parents, professionals, students, and shift workers.", "People who fall off plans that require too many days.", "Users who want the minimum effective structure for consistency."],
+    tips: ["Schedule the three days first, then move them only when needed.", "Prioritize the first three exercises if time is short.", "Track workouts even when sessions are imperfect so the habit stays alive."],
+    faqs: [
+      { question: "Is three days per week enough to make progress?", answer: "Yes. Three well-structured full-body workouts per week can build strength, muscle, and consistency for many people." },
+      { question: "What should I do if I miss a day?", answer: "Move the missed workout to the next available day instead of skipping the plan entirely. The routine is designed to be flexible." },
+    ],
+    relatedSlugs: ["full-body-beginner-workout", "3-day-workout-split", "30-minute-workout-plan"],
+    days: [
+      { name: "Full Body A", focus: "Squat, press, and row", offsetDays: 0, exercises: ["Back Squat or Goblet Squat — 3 x 6-10", "Bench Press or Dumbbell Bench Press — 3 x 6-10", "Seated Row or Dumbbell Row — 3 x 8-12", "Romanian Deadlift — 2 x 8-10", "Plank — 3 rounds"] },
+      { name: "Full Body B", focus: "Hinge, overhead press, and pull", offsetDays: 2, exercises: ["Deadlift or Trap Bar Deadlift — 3 x 4-6", "Overhead Press — 3 x 6-10", "Lat Pulldown or Pull-Up — 3 x 8-12", "Walking Lunge — 2 x 10 each leg", "Dumbbell Curl — 2 x 10-12"] },
+      { name: "Full Body C", focus: "Legs, incline press, and back volume", offsetDays: 4, exercises: ["Leg Press — 3 x 10-12", "Incline Dumbbell Press — 3 x 8-12", "Chest-Supported Row — 3 x 8-12", "Leg Curl — 2 x 10-15", "Triceps Pressdown — 2 x 10-15"] },
+    ],
+  },
+
 ];
 
 export function getSeoTemplateBySlug(slug: string) {

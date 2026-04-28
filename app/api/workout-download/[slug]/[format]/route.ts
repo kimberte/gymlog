@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 import { getSeoTemplateBySlug } from "../../../../lib/seoWorkoutTemplates";
 
 export const dynamic = "force-dynamic";
@@ -6,6 +7,25 @@ export const dynamic = "force-dynamic";
 type RouteParams = {
   params: Promise<{ slug: string; format: string }>;
 };
+
+
+async function getUserFromRequest(request: Request) {
+  const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "").trim();
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+
+  if (!token || !url || !anon) return null;
+
+  const client = createClient(url, anon, {
+    global: {
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  });
+
+  const { data, error } = await client.auth.getUser(token);
+  if (error || !data.user) return null;
+  return data.user;
+}
 
 function cleanFilename(value: string) {
   return value
@@ -175,7 +195,13 @@ function createPdf(template: NonNullable<ReturnType<typeof getSeoTemplateBySlug>
   return pdf;
 }
 
-export async function GET(_request: Request, { params }: RouteParams) {
+export async function GET(request: Request, { params }: RouteParams) {
+  const user = await getUserFromRequest(request);
+
+  if (!user) {
+    return NextResponse.json({ error: "Sign in required to download workouts" }, { status: 401 });
+  }
+
   const { slug, format } = await params;
   const template = getSeoTemplateBySlug(slug);
 

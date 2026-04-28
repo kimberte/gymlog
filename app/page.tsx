@@ -176,6 +176,17 @@ export default function HomePage() {
     if (typeof window !== "undefined") {
       try {
         const url = new URL(window.location.href);
+        const authIntent = url.searchParams.get("auth");
+        const returnTo = url.searchParams.get("returnTo");
+
+        if (authIntent === "signup" || authIntent === "signin") {
+          setShowSettings(true);
+          try {
+            localStorage.setItem("gym-log-auth-intent", authIntent);
+            if (returnTo) localStorage.setItem("gym-log-auth-return-to", returnTo);
+          } catch {}
+        }
+
         const importedFlag = url.searchParams.get("imported") === "1";
         const importSlug = String(url.searchParams.get("template") || "").trim();
         const importStartDate = String(url.searchParams.get("start") || "").trim();
@@ -265,7 +276,18 @@ export default function HomePage() {
 
     if (confirmed || hasAccessToken || type === "signup" || type === "magiclink") {
       showToast("Account confirmed. Welcome!");
-      window.history.replaceState({}, "", "/");
+      let returnTo = url.searchParams.get("returnTo") || "";
+      try {
+        returnTo = returnTo || localStorage.getItem("gym-log-auth-return-to") || "";
+        localStorage.removeItem("gym-log-auth-return-to");
+        localStorage.removeItem("gym-log-auth-intent");
+      } catch {}
+
+      if (returnTo && returnTo.startsWith("/")) {
+        window.location.replace(returnTo);
+      } else {
+        window.history.replaceState({}, "", "/");
+      }
       return;
     }
   }, []);

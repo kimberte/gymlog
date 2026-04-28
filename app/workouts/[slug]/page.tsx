@@ -295,7 +295,7 @@ export default async function WorkoutTemplatePage({ params }: { params: Promise<
           <section id="download" style={{ marginTop: 34 }}>
             <h2 style={{ margin: 0, fontSize: 28 }}>Download this workout</h2>
             <p style={{ margin: "10px 0 0", lineHeight: 1.72, opacity: 0.9 }}>
-              Prefer to use the plan offline? Enter your email to unlock a clean PDF and Excel version of this workout.
+              Prefer to use the plan offline? Create a free Gym Log account or sign in to unlock instant PDF and Excel downloads.
             </p>
             <WorkoutDownloadGate slug={template.slug} templateName={template.name} />
           </section>

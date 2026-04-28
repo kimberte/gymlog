@@ -219,6 +219,24 @@ export default function SettingsModal({
     };
   }, [supabaseConfigured]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const url = new URL(window.location.href);
+      const intent = url.searchParams.get("auth") || localStorage.getItem("gym-log-auth-intent") || "";
+      const returnTo = url.searchParams.get("returnTo") || "";
+      if (returnTo) localStorage.setItem("gym-log-auth-return-to", returnTo);
+      if (intent === "signup" || intent === "signin") {
+        setAuthMode(intent);
+        setAuthMessage(
+          intent === "signup"
+            ? "Create a free account to unlock instant workout PDF and Excel downloads."
+            : "Sign in to unlock instant workout PDF and Excel downloads."
+        );
+      }
+    } catch {}
+  }, []);
+
   // ---- load latest backup timestamp from server (when signed in) ----
   useEffect(() => {
     async function loadBackup() {
@@ -278,6 +296,15 @@ async function signInPassword() {
     toast("Signed in");
     setPassword("");
     setAuthMode("signin");
+    try {
+      const returnTo = localStorage.getItem("gym-log-auth-return-to") || "";
+      localStorage.removeItem("gym-log-auth-return-to");
+      localStorage.removeItem("gym-log-auth-intent");
+      if (returnTo && returnTo.startsWith("/")) {
+        window.location.href = returnTo;
+        return;
+      }
+    } catch {}
   } catch {
     setAuthError("Could not sign in.");
   } finally {
@@ -314,7 +341,7 @@ async function signUpPassword() {
       email: trimmed,
       password,
       options: {
-        emailRedirectTo: origin ? `${origin}/` : undefined,
+        emailRedirectTo: origin ? `${origin}/?confirmed=1&returnTo=${encodeURIComponent((typeof window !== "undefined" ? localStorage.getItem("gym-log-auth-return-to") : "") || "/")}` : undefined,
       },
     });
 
@@ -329,7 +356,7 @@ async function signUpPassword() {
       user_id: data.user?.id || undefined,
     });
 
-    setAuthMessage("Check your email to confirm your account. After confirming, you'll return to the homepage signed in.");
+    setAuthMessage("Check your email to confirm your free account. After confirming, you’ll return to the workout page and downloads will unlock automatically.");
     setPassword("");
     setAuthMode("signin");
   } catch {
@@ -784,12 +811,12 @@ async function updatePassword() {
 <>
   <div style={{ marginTop: 8, fontSize: 13, opacity: 0.9 }}>
     {authMode === "signup"
-      ? "Create an account to unlock Pro features."
+      ? "Create a free account to unlock instant workout PDF and Excel downloads."
       : authMode === "reset"
       ? "Send yourself a password reset email."
       : authMode === "updatepw"
       ? "Set a new password to finish your reset."
-      : "Sign in to unlock CSV import/export (and auto-backup)."}
+      : "Sign in to unlock instant workout downloads, CSV import/export, and auto-backup."}
   </div>
 
   <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
@@ -830,7 +857,7 @@ async function updatePassword() {
       }}
       type="button"
     >
-      Create
+      Free sign up
     </button>
 
     <button
@@ -950,7 +977,7 @@ async function updatePassword() {
       }}
       type="button"
     >
-      {authLoading ? "Creating…" : "Create account"}
+      {authLoading ? "Creating…" : "Create free account"}
     </button>
   )}
 

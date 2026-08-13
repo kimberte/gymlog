@@ -116,6 +116,14 @@ export default function PrivacyPolicyPage() {
       </section>
 
       <section style={{ marginTop: 18 }}>
+        <h2 style={{ fontSize: 16, margin: "18px 0 8px" }}>Advertising</h2>
+        <p>
+          We may use Google AdSense and similar advertising services to display ads on the Service. These services may
+          use cookies, web beacons, or similar technologies to help deliver, measure, and personalize advertising based
+          on applicable settings and consent requirements. Third-party advertisers may collect information about your
+          visits to this and other websites in accordance with their own privacy policies.
+        </p>
+
         <h2 style={{ fontSize: 16, margin: "18px 0 8px" }}>Analytics</h2>
         <p style={{ margin: 0, opacity: 0.95 }}>
           We may use analytics tools (for example, Google Analytics) to understand how the Service is used and to improve

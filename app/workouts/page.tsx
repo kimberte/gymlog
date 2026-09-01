@@ -45,6 +45,11 @@ export default function WorkoutsIndexPage() {
           Browse simple, practical workout plans for strength, muscle building, and beginner training. Each template
           includes a weekly layout, exercise ideas, and a fast way to add it straight into your Gym Log calendar.
         </p>
+        <div style={{ marginTop: 18 }}>
+          <Link href="/workouts/new-plans" style={{ display: "inline-block", textDecoration: "none", padding: "12px 16px", borderRadius: 14, background: "var(--accent)", color: "#111827", fontWeight: 800 }}>
+            Explore 8 new workout plans →
+          </Link>
+        </div>
       </section>
 
       <section style={{ marginBottom: 28 }}>

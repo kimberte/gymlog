@@ -124,51 +124,86 @@ export default function ImportTemplatePage() {
 
   if (!days.length) {
     return (
-      <main style={{ maxWidth: 760, margin: "0 auto", padding: "28px 20px 56px" }}>
-        <Link href="/workout-programs" style={{ color: "var(--accent)", textDecoration: "none", fontWeight: 700 }}>← Back to program library</Link>
-        <h1>Program not found</h1>
+      <main className="program-import-page">
+        <nav className="programs-nav">
+          <Link href="/workout-programs" className="programs-brand">Gym Log</Link>
+          <Link href="/" className="programs-back">Open Workout Log</Link>
+        </nav>
+        <section className="program-import-shell program-import-empty">
+          <Link href="/workout-programs" className="program-breadcrumb">← Back to program library</Link>
+          <div className="program-detail-kicker">WORKOUT PROGRAM</div>
+          <h1>Program not found</h1>
+          <p>We couldn't find that workout program. Return to the library to choose another routine.</p>
+          <Link href="/workout-programs" className="program-import-primary">Browse workout programs</Link>
+        </section>
       </main>
     );
   }
 
   return (
-    <main style={{ maxWidth: 940, margin: "0 auto", padding: "28px 20px 56px" }}>
-      <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginBottom: 18 }}>
-        <Link href={`/workout-programs/${slug}`} style={{ color: "var(--accent)", textDecoration: "none", fontWeight: 700 }}>← Back to program</Link>
-        <Link href="/" style={{ textDecoration: "none", color: "inherit", opacity: 0.8 }}>Gym Log home</Link>
-      </div>
+    <main className="program-import-page">
+      <nav className="programs-nav">
+        <Link href="/workout-programs" className="programs-brand">Gym Log</Link>
+        <Link href="/" className="programs-back">Open Workout Log</Link>
+      </nav>
 
-      <div className="import-layout">
-        <section style={{ borderRadius: 24, padding: "26px 22px", border: "1px solid rgba(255,255,255,0.12)", background: "linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03))", minWidth: 0 }}>
-          <p style={{ margin: 0, color: "var(--accent)", fontWeight: 700 }}>Import program</p>
-          <h1 style={{ margin: "10px 0 0", fontSize: "clamp(2rem, 4vw, 2.8rem)", lineHeight: 1.08 }}>{name}</h1>
-          <p style={{ margin: "14px 0 0", opacity: 0.9, lineHeight: 1.72 }}>{description}</p>
+      <section className="program-import-shell">
+        <Link href={`/workout-programs/${slug}`} className="program-breadcrumb">← Back to {name}</Link>
 
-          <div style={{ marginTop: 24 }}>
-            <label htmlFor="startDate" style={{ display: "block", fontWeight: 700, marginBottom: 8 }}>Choose your start date</label>
-            <input id="startDate" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} style={{ width: "100%", maxWidth: 280, padding: "12px 14px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.06)", color: "inherit" }} />
-            <p style={{ margin: "12px 0 0", opacity: 0.8, lineHeight: 1.65 }}>Your existing workouts are preserved. New program days are added to open slots on the selected dates.</p>
-          </div>
+        <div className="program-import-hero">
+          <div className="program-detail-kicker">START YOUR PROGRAM</div>
+          <h1>Track <span>{name}</span> with Gym Log.</h1>
+          <p>{description}</p>
+        </div>
 
-          <button onClick={handleImport} style={{ marginTop: 22, padding: "12px 16px", borderRadius: 14, border: 0, background: "var(--accent)", color: "#111827", fontWeight: 800, cursor: "pointer" }}>Import into Gym Log</button>
-          {status ? <p style={{ margin: "14px 0 0", color: "var(--accent)", fontWeight: 600 }}>{status}</p> : null}
-        </section>
+        <div className="program-import-layout">
+          <section className="program-import-card program-import-main-card">
+            <div className="program-import-step">1</div>
+            <div>
+              <h2>Choose your start date</h2>
+              <p className="program-import-muted">We'll place the program into your Gym Log calendar starting on this date.</p>
+            </div>
 
-        <aside style={{ borderRadius: 24, padding: "22px 20px", border: "1px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.04)", minWidth: 0 }}>
-          <h2 style={{ margin: 0, fontSize: 24 }}>What gets imported</h2>
-          <div style={{ display: "grid", gap: 12, marginTop: 16 }}>
-            {days.map((day) => (
-              <div key={day.name + day.offsetDays} style={{ borderRadius: 16, padding: 14, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                <div style={{ fontWeight: 700 }}>{day.name}</div>
-                <div style={{ marginTop: 4, opacity: 0.78, fontSize: 14, lineHeight: 1.5 }}>{day.focus}</div>
-                <div style={{ marginTop: 8, fontSize: 14, opacity: 0.88 }}>{day.exercises.length} exercises • {day.offsetDays === 0 ? "Starts on your chosen date." : `Starts ${day.offsetDays} day${day.offsetDays > 1 ? "s" : ""} later.`}</div>
-              </div>
-            ))}
-          </div>
-        </aside>
-      </div>
+            <label htmlFor="startDate" className="program-import-label">Program start</label>
+            <input id="startDate" className="program-import-date" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
 
-      <style>{` .import-layout { display:grid; grid-template-columns:minmax(0,1.2fr) minmax(280px,.9fr); gap:22px; align-items:start; } @media(max-width:880px){.import-layout{grid-template-columns:1fr;}} `}</style>
+            <div className="program-import-callout">
+              <span className="program-import-check">✓</span>
+              <div><strong>Your existing workouts stay safe.</strong><span>New sessions are added only where there is an open slot.</span></div>
+            </div>
+
+            <button onClick={handleImport} className="program-import-primary">Import into Gym Log <span>→</span></button>
+            {status ? <p className="program-import-status">{status}</p> : null}
+          </section>
+
+          <aside className="program-import-card program-import-preview">
+            <div className="program-import-step">2</div>
+            <div>
+              <h2>Here's what you'll get</h2>
+              <p className="program-import-muted">{days.length} training day{days.length === 1 ? "" : "s"} ready to add to your calendar.</p>
+            </div>
+
+            <div className="program-import-days">
+              {days.map((day, index) => (
+                <div key={day.name + day.offsetDays} className="program-import-day">
+                  <div className="program-import-day-number">{index + 1}</div>
+                  <div className="program-import-day-copy">
+                    <strong>{day.name}</strong>
+                    <span>{day.focus}</span>
+                    <small>{day.exercises.length} exercises · {day.offsetDays === 0 ? "Starts on your chosen date" : `${day.offsetDays} day${day.offsetDays > 1 ? "s" : ""} later`}</small>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </aside>
+        </div>
+
+        <div className="program-import-footer">
+          <span>Gym Log workout library</span>
+          <span>•</span>
+          <span>Track it. Progress. Repeat.</span>
+        </div>
+      </section>
     </main>
   );
 }

@@ -58,8 +58,8 @@ export default async function ProgramPage({ params }: PageProps) {
           <p>Gym Log is a workout tracking tool, not a substitute for individualized medical or coaching advice. Choose loads and training frequency that are appropriate for you.</p>
         </section>
         <section className="program-cta">
-          <div><h2>Ready to track it?</h2><p>Open Gym Log and start recording your workouts.</p></div>
-          <Link href="/" className="program-cta-button">Start logging →</Link>
+          <div><h2>Ready to track it?</h2><p>Choose a start date and import this program directly into your Gym Log calendar.</p></div>
+          <Link href={`/import-template/${p.slug}`} className="program-cta-button">Import into Gym Log →</Link>
         </section>
       </article>
     </main>

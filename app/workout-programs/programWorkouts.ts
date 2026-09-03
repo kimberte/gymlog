@@ -1,7 +1,10 @@
 import type { Program } from "../lib/programs";
 import { SPECIFIC_PROGRAMS } from "./specificPrograms";
+import { SPECIFIC_PROGRAMS_2 } from "./specificPrograms2";
 
 export type ProgramWorkout = { day: string; focus: string; exercises: string[]; guidance: string };
+
+const ALL_SPECIFIC_PROGRAMS = { ...SPECIFIC_PROGRAMS, ...SPECIFIC_PROGRAMS_2 };
 
 const strength = [
   ["Squat", "Bench Press", "Barbell Row", "Romanian Deadlift", "Plank"],
@@ -51,7 +54,7 @@ function focusFor(program: Program, index: number) {
   const name = program.name.toLowerCase();
   if (name.includes("bench")) return ["Bench strength", "Upper-body volume", "Bench accessories"][index % 3];
   if (name.includes("squat")) return ["Squat strength", "Lower-body volume", "Squat accessories"][index % 3];
-  if (name.includes("deadlift") || name.includes("coan")) return ["Deadlift strength", "Posterior chain", "Deadlift accessories"][index % 3];
+  if (name.includes("deadlift") || name.includes("coan") || name.includes("mag/ort")) return ["Deadlift strength", "Posterior chain", "Deadlift accessories"][index % 3];
   if (name.includes("ppl") || name.includes("push pull legs")) return ["Push", "Pull", "Legs", "Upper", "Lower", "Arms"][index % 6];
   if (name.includes("upper") || name.includes("lower")) return index % 2 === 0 ? "Upper body" : "Lower body";
   if (name.includes("bro split") || name.includes("bodybuilding") || name.includes("golden six")) return ["Chest & triceps", "Back & biceps", "Legs", "Shoulders", "Arms"][index % 5];
@@ -60,7 +63,7 @@ function focusFor(program: Program, index: number) {
 }
 
 export function getProgramWorkouts(program: Program): ProgramWorkout[] {
-  const specific = SPECIFIC_PROGRAMS[program.slug];
+  const specific = ALL_SPECIFIC_PROGRAMS[program.slug];
   if (specific) return specific.workouts;
   const pool = poolFor(program);
   return Array.from({ length: program.days }, (_, i) => ({
@@ -72,13 +75,13 @@ export function getProgramWorkouts(program: Program): ProgramWorkout[] {
 }
 
 export function getProgramProgression(program: Program) {
-  return SPECIFIC_PROGRAMS[program.slug]?.progression ?? "Use the original program source for exact progression rules. Gym Log provides a practical starter structure for tracking the program.";
+  return ALL_SPECIFIC_PROGRAMS[program.slug]?.progression ?? "Use the original program source for exact progression rules. Gym Log provides a practical starter structure for tracking the program.";
 }
 
 export function isSpecificProgram(program: Program) {
-  return Boolean(SPECIFIC_PROGRAMS[program.slug]);
+  return Boolean(ALL_SPECIFIC_PROGRAMS[program.slug]);
 }
 
 export function getProgramAccuracyNote(program: Program) {
-  return SPECIFIC_PROGRAMS[program.slug]?.accuracyNote ?? "This is a Gym Log starter template rather than an official program prescription.";
+  return ALL_SPECIFIC_PROGRAMS[program.slug]?.accuracyNote ?? "This is a Gym Log starter template rather than an official program prescription.";
 }

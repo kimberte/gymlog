@@ -1,4 +1,5 @@
 import type { Program } from "../lib/programs";
+import { SPECIFIC_PROGRAMS } from "./specificPrograms";
 
 export type ProgramWorkout = { day: string; focus: string; exercises: string[]; guidance: string };
 
@@ -59,11 +60,25 @@ function focusFor(program: Program, index: number) {
 }
 
 export function getProgramWorkouts(program: Program): ProgramWorkout[] {
+  const specific = SPECIFIC_PROGRAMS[program.slug];
+  if (specific) return specific.workouts;
   const pool = poolFor(program);
   return Array.from({ length: program.days }, (_, i) => ({
     day: `Day ${i + 1}`,
     focus: focusFor(program, i),
     exercises: pool[i % pool.length],
-    guidance: "Start with a manageable load, keep 1–3 reps in reserve on most working sets, and add reps or weight gradually when technique stays solid.",
+    guidance: "This is a Gym Log starter template, not an official prescription. Use the original program source for exact sets, reps and progression rules.",
   }));
+}
+
+export function getProgramProgression(program: Program) {
+  return SPECIFIC_PROGRAMS[program.slug]?.progression ?? "Use the original program source for exact progression rules. Gym Log provides a practical starter structure for tracking the program.";
+}
+
+export function isSpecificProgram(program: Program) {
+  return Boolean(SPECIFIC_PROGRAMS[program.slug]);
+}
+
+export function getProgramAccuracyNote(program: Program) {
+  return SPECIFIC_PROGRAMS[program.slug]?.accuracyNote ?? "This is a Gym Log starter template rather than an official program prescription.";
 }

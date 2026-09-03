@@ -5,10 +5,11 @@ import { SPECIFIC_PROGRAMS_3 } from "./specificPrograms3";
 import { SPECIFIC_PROGRAMS_4 } from "./specificPrograms4";
 import { SPECIFIC_PROGRAMS_5 } from "./specificPrograms5";
 import { SPECIFIC_PROGRAMS_6 } from "./specificPrograms6";
+import { SPECIFIC_PROGRAMS_7 } from "./specificPrograms7";
 
 export type ProgramWorkout = { day: string; focus: string; exercises: string[]; guidance: string };
 
-const ALL_SPECIFIC_PROGRAMS = { ...SPECIFIC_PROGRAMS, ...SPECIFIC_PROGRAMS_2, ...SPECIFIC_PROGRAMS_3, ...SPECIFIC_PROGRAMS_4, ...SPECIFIC_PROGRAMS_5, ...SPECIFIC_PROGRAMS_6 };
+const ALL_SPECIFIC_PROGRAMS = { ...SPECIFIC_PROGRAMS, ...SPECIFIC_PROGRAMS_2, ...SPECIFIC_PROGRAMS_3, ...SPECIFIC_PROGRAMS_4, ...SPECIFIC_PROGRAMS_5, ...SPECIFIC_PROGRAMS_6, ...SPECIFIC_PROGRAMS_7 };
 
 const strength = [["Squat", "Bench Press", "Barbell Row", "Romanian Deadlift", "Plank"],["Deadlift", "Overhead Press", "Pull-Up or Lat Pulldown", "Bulgarian Split Squat", "Curl"],["Front Squat", "Incline Bench Press", "Seated Cable Row", "Leg Curl", "Triceps Pressdown"],["Squat", "Bench Press", "Barbell Row", "Hip Thrust", "Lateral Raise"],["Deadlift", "Overhead Press", "Chin-Up", "Leg Press", "Calf Raise"],["Bench Press", "Squat", "Chest-Supported Row", "Leg Curl", "Ab Wheel"]];
 const hypertrophy = [["Bench Press", "Incline Dumbbell Press", "Cable Fly", "Lateral Raise", "Triceps Pressdown"],["Lat Pulldown", "Chest-Supported Row", "Seated Cable Row", "Dumbbell Curl", "Hammer Curl"],["Back Squat", "Romanian Deadlift", "Leg Press", "Leg Curl", "Calf Raise"],["Overhead Press", "Machine Chest Press", "Cable Lateral Raise", "Rear Delt Fly", "Overhead Triceps Extension"],["Pull-Up", "One-Arm Dumbbell Row", "Lat Pulldown", "Preacher Curl", "Face Pull"],["Hack Squat", "Hip Thrust", "Leg Extension", "Seated Leg Curl", "Calf Raise"]];

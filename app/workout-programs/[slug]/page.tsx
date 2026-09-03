@@ -2,66 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getProgram, PROGRAMS } from "../../lib/programs";
+import { getProgramWorkouts } from "../programWorkouts";
+import "../programs.css";
 
 type PageProps = { params: Promise<{ slug: string }> };
-
-export function generateStaticParams() {
-  return PROGRAMS.map((program) => ({ slug: program.slug }));
-}
-
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { slug } = await params;
-  const p = getProgram(slug);
-  return p
-    ? {
-        title: `${p.name} Workout Program | Gym Log`,
-        description: `${p.name}: overview, training structure, goals, experience level and how to track the program with Gym Log.`,
-      }
-    : { title: "Workout Program | Gym Log" };
-}
-
-export default async function ProgramPage({ params }: PageProps) {
-  const { slug } = await params;
-  const p = getProgram(slug);
-  if (!p) notFound();
-
-  return (
-    <main className="program-detail-page">
-      <nav className="programs-nav">
-        <Link href="/workout-programs" className="programs-brand">Gym Log</Link>
-        <Link href="/" className="programs-back">Open Workout Log</Link>
-      </nav>
-      <article className="program-detail">
-        <Link href="/workout-programs" className="program-breadcrumb">← Back to program library</Link>
-        <div className="program-detail-kicker">{p.category}</div>
-        <h1>{p.name}</h1>
-        <p className="program-lede">{p.description}</p>
-        <div className="program-facts">
-          <div><strong>{p.days}</strong><span>days / week</span></div>
-          <div><strong>{p.level}</strong><span>experience</span></div>
-          <div><strong>{p.goal}</strong><span>primary goal</span></div>
-          <div><strong>{p.equipment}</strong><span>equipment</span></div>
-        </div>
-        <div className="program-detail-grid">
-          <section className="program-content-card">
-            <h2>How it is structured</h2>
-            <ul>{p.structure.map((item) => <li key={item}>{item}</li>)}</ul>
-          </section>
-          <section className="program-content-card">
-            <h2>Who it is best for</h2>
-            <p>{p.bestFor}</p>
-          </section>
-        </div>
-        <section className="program-content-card program-note">
-          <h2>Before you start</h2>
-          <p>{p.notes}</p>
-          <p>Gym Log is a workout tracking tool, not a substitute for individualized medical or coaching advice. Choose loads and training frequency that are appropriate for you.</p>
-        </section>
-        <section className="program-cta">
-          <div><h2>Ready to track it?</h2><p>Choose a start date and import this program directly into your Gym Log calendar.</p></div>
-          <Link href={`/import-template/${p.slug}`} className="program-cta-button">Import into Gym Log →</Link>
-        </section>
-      </article>
-    </main>
-  );
+export function generateStaticParams(){return PROGRAMS.map(p=>({slug:p.slug}));}
+export async function generateMetadata({params}:PageProps):Promise<Metadata>{const {slug}=await params;const p=getProgram(slug);return p?{title:`${p.name} Workout Program | Gym Log`,description:`${p.name}: workout schedule, exercises, goals and tracking guide.`,alternates:{canonical:`/workout-programs/${p.slug}`}}:{title:"Workout Program | Gym Log"};}
+export default async function ProgramPage({params}:PageProps){const {slug}=await params;const p=getProgram(slug);if(!p)notFound();const workouts=getProgramWorkouts(p);return <main className="program-detail-page"><nav className="programs-nav"><Link href="/" className="programs-brand">Gym Log</Link><Link href="/" className="programs-back">Open Workout Log</Link></nav><article className="program-detail"><Link href="/workout-programs" className="program-breadcrumb">← All programs</Link><div className="program-detail-kicker">{p.category} · {p.days} DAYS / WEEK</div><h1>{p.name}</h1><p className="program-lede">{p.description}</p><div className="program-facts"><div><strong>{p.days}</strong><span>days / week</span></div><div><strong>{p.level}</strong><span>experience</span></div><div><strong>{p.goal}</strong><span>goal</span></div><div><strong>{p.equipment}</strong><span>equipment</span></div></div><section><div className="section-heading"><div><div className="program-detail-kicker">WEEKLY PLAN</div><h2>Sample training schedule</h2></div><span>Gym Log starter template</span></div><div className="workout-grid">{workouts.map(w=><section className="workout-day" key={w.day}><div className="workout-day-head"><small>{w.day}</small><strong>{w.focus}</strong></div><ol>{w.exercises.map(e=><li key={e}>{e}</li>)}</ol><p>{w.guidance}</p></section>)}</div></section><div className="program-detail-grid"><section className="program-content-card"><h2>How to use it</h2><ul>{p.structure.map(x=><li key={x}>{x}</li>)}</ul></section><section className="program-content-card"><h2>Who it is for</h2><p>{p.bestFor}</p><h3>Goal</h3><p>{p.goal}</p></section></div><section className="program-content-card program-note"><h2>Progression & recovery</h2><p>Log every working set. When reps and technique are solid, increase the load gradually. Keep most work controlled and leave roughly 1–3 reps in reserve rather than forcing failure on every set.</p><p>{p.notes}</p></section><section className="program-cta"><div><h2>Ready to track it?</h2><p>Choose a start date and import this plan into your Gym Log calendar.</p></div><Link href={`/import-template/${p.slug}`} className="program-cta-button">Import into Gym Log →</Link></section></article></main>;
 }

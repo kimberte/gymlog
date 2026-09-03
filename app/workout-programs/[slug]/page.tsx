@@ -3,7 +3,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getProgram, PROGRAMS } from "../../lib/programs";
 import { getProgramWorkouts } from "../programWorkouts";
-import "../programs.css";
 
 type PageProps = { params: Promise<{ slug: string }> };
 export function generateStaticParams(){return PROGRAMS.map(p=>({slug:p.slug}));}

@@ -1,10 +1,11 @@
 import type { Program } from "../lib/programs";
 import { SPECIFIC_PROGRAMS } from "./specificPrograms";
 import { SPECIFIC_PROGRAMS_2 } from "./specificPrograms2";
+import { SPECIFIC_PROGRAMS_3 } from "./specificPrograms3";
 
 export type ProgramWorkout = { day: string; focus: string; exercises: string[]; guidance: string };
 
-const ALL_SPECIFIC_PROGRAMS = { ...SPECIFIC_PROGRAMS, ...SPECIFIC_PROGRAMS_2 };
+const ALL_SPECIFIC_PROGRAMS = { ...SPECIFIC_PROGRAMS, ...SPECIFIC_PROGRAMS_2, ...SPECIFIC_PROGRAMS_3 };
 
 const strength = [
   ["Squat", "Bench Press", "Barbell Row", "Romanian Deadlift", "Plank"],

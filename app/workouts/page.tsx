@@ -20,7 +20,10 @@ export default function WorkoutsIndexPage() {
     <main className="programs-page">
       <nav className="programs-nav">
         <Link href="/" className="programs-brand">Gym Log</Link>
-        <Link href="/" className="programs-back">Open Workout Log</Link>
+        <div style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap",justifyContent:"flex-end"}}>
+          <Link href="/workout-programs/find" className="programs-back">Find My Program →</Link>
+          <Link href="/" className="programs-back">Open Workout Log</Link>
+        </div>
       </nav>
       <section className="programs-hero">
         <div className="programs-kicker">THE GYM LOG PROGRAM LIBRARY</div>
@@ -28,6 +31,9 @@ export default function WorkoutsIndexPage() {
         <p>
           Browse strength, hypertrophy, powerlifting, bodybuilding, beginner, home, dumbbell, kettlebell and conditioning programs. Search by goal, experience level, equipment or days per week, then open any program and import it into Gym Log.
         </p>
+        <div style={{display:"flex",gap:10,flexWrap:"wrap",marginTop:20}}>
+          <Link href="/workout-programs/find" className="programs-back">Not sure what to choose? Find my program →</Link>
+        </div>
       </section>
       <ProgramLibrary programs={PROGRAMS} />
     </main>

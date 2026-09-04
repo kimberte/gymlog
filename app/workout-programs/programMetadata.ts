@@ -1,4 +1,4 @@
-import type { Program } from "../lib/programs";
+import { PROGRAMS, type Program } from "../lib/programs";
 
 export type ProgramMetadata = Program & {
   goalTags: string[];
@@ -19,12 +19,13 @@ const levelMap: Record<Program["level"], ProgramMetadata["levelTag"]> = {
 
 function equipmentTags(equipment: string) {
   const value = equipment.toLowerCase();
-  const tags = ["gym"];
+  const tags: string[] = [];
+  if (value.includes("full gym") || value.includes("barbell gym")) tags.push("gym");
   if (value.includes("barbell")) tags.push("barbell");
   if (value.includes("dumbbell")) tags.push("dumbbells");
   if (value.includes("machine")) tags.push("machines");
   if (value.includes("home")) tags.push("home");
-  if (value.includes("bodyweight") || value.includes("bodyweight /")) tags.push("bodyweight");
+  if (value.includes("bodyweight")) tags.push("bodyweight");
   if (value.includes("kettlebell")) tags.push("kettlebell");
   if (value.includes("minimal")) tags.push("minimal-equipment");
   return Array.from(new Set(tags));
@@ -35,7 +36,7 @@ function goalTags(program: Program) {
   const tags: string[] = [];
   if (/muscle|hypertrophy|bodybuilding|size/.test(text)) tags.push("muscle");
   if (/strength|powerlifting|powerbuilding|squat|bench|deadlift/.test(text)) tags.push("strength");
-  if (/fat loss|fitness|conditioning|endurance|athletic|recomposition/.test(text)) tags.push("fitness");
+  if (/fitness|conditioning|endurance|athletic|recomposition/.test(text)) tags.push("fitness");
   if (/fat loss|recomposition/.test(text)) tags.push("fat-loss");
   if (/powerlifting|competition/.test(text)) tags.push("powerlifting");
   if (/conditioning|hybrid|athletic|kettlebell|crossfit/.test(text)) tags.push("conditioning");
@@ -84,4 +85,4 @@ export function getProgramMetadata(program: Program): ProgramMetadata {
   };
 }
 
-export const PROGRAM_METADATA: ProgramMetadata[] = [];
+export const PROGRAM_METADATA: ProgramMetadata[] = PROGRAMS.map(getProgramMetadata);

@@ -1,0 +1,22 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { PROGRAM_METADATA } from "../../programMetadata";
+
+const LANDINGS: Record<string,{title:string;description:string;intro:string;tag:string}> = {
+  muscle: { title: "Best Workout Programs for Building Muscle", description: "Compare workout programs for muscle growth, hypertrophy and bodybuilding across different experience levels and training schedules.", intro: "Find structured programs designed around building muscle, then compare the weekly schedule, experience level and equipment before choosing one.", tag: "muscle" },
+  strength: { title: "Best Strength Workout Programs", description: "Explore proven strength workout programs for beginners, intermediate lifters and advanced athletes.", intro: "Compare strength-focused routines by training frequency, experience level, equipment and style.", tag: "strength" },
+  beginners: { title: "Best Beginner Workout Programs", description: "Find beginner-friendly workout programs for building strength, muscle and fitness with a manageable weekly schedule.", intro: "Starting out? These programs prioritize simple structures, repeatable training and progression you can stick with.", tag: "beginner" },
+  powerlifting: { title: "Best Powerlifting Programs", description: "Compare powerlifting workout programs for squat, bench press and deadlift strength, from structured cycles to competition preparation.", intro: "Explore powerlifting-focused routines and compare frequency, experience level and training emphasis.", tag: "powerlifting" },
+  home: { title: "Best Home Workout Programs", description: "Find workout programs built for home gyms, dumbbells, bodyweight and minimal equipment.", intro: "You don't need a commercial gym to follow a structured plan. Compare home-friendly programs by goal and training frequency.", tag: "home-friendly" },
+  '3-day': { title: "Best 3-Day Workout Programs", description: "Explore effective 3-day workout programs for strength, muscle building and general fitness.", intro: "Three training days can be enough to make excellent progress. Compare full-body, strength and muscle-building routines.", tag: "3-day" },
+  '4-day': { title: "Best 4-Day Workout Programs", description: "Compare 4-day workout programs for strength, hypertrophy, powerbuilding and general fitness.", intro: "Four days gives you room for more weekly volume while keeping a manageable schedule. Find a plan that fits your goals.", tag: "4-day" },
+};
+
+export function generateStaticParams(){return Object.keys(LANDINGS).map(slug=>({slug}));}
+export async function generateMetadata({params}:{params:Promise<{slug:string}>}):Promise<Metadata>{const {slug}=await params;const page=LANDINGS[slug];return page?{title:`${page.title} | Gym Log`,description:page.description,alternates:{canonical:`/workout-programs/goal/${slug}`}}:{title:"Workout Programs | Gym Log"};}
+
+export default async function GoalLanding({params}:{params:Promise<{slug:string}>}){
+  const {slug}=await params; const page=LANDINGS[slug]; if(!page) return null;
+  const matches=PROGRAM_METADATA.filter(p=>page.tag==='beginner'?p.levelTag==='beginner'||p.levelTag==='all-levels':page.tag==='3-day'?p.days===3:page.tag==='4-day'?p.days===4:p.goalTags.includes(page.tag)||p.styleTags.includes(page.tag)).slice(0,12);
+  return <main className="program-detail-page"><nav className="programs-nav"><Link href="/" className="programs-brand">Gym Log</Link><Link href="/workout-programs/find" className="programs-back">Find my workout</Link></nav><article className="program-detail"><Link href="/workout-programs" className="program-breadcrumb">← All programs</Link><div className="program-detail-kicker">WORKOUT PROGRAM GUIDE</div><h1>{page.title}</h1><p className="program-lede">{page.intro}</p><section className="program-content-card"><h2>Compare programs</h2><div className="program-related-grid">{matches.map(p=><Link className="program-related-card" href={`/workout-programs/${p.slug}`} key={p.slug}><strong>{p.name}</strong><span>{p.category} · {p.days} days · {p.level}</span></Link>)}</div></section><section className="program-content-card"><h2>Not sure which one?</h2><p>Use the Gym Log Workout Finder to answer a few questions and get personalized recommendations based on your goals, experience, schedule and equipment.</p><Link href="/workout-programs/find" className="program-cta-button">Find my workout →</Link></section></article></main>;
+}

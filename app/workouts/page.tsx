@@ -3,14 +3,17 @@ import Link from "next/link";
 import ProgramLibrary from "../workout-programs/ProgramLibrary";
 import { PROGRAMS } from "../lib/programs";
 
+const programCount = PROGRAMS.length;
+const programCountLabel = `${programCount}+`;
+
 export const metadata: Metadata = {
-  title: "100 Workout Programs & Training Routines | Gym Log",
+  title: `${programCountLabel} Workout Programs & Training Routines | Gym Log`,
   description:
-    "Explore 100 workout programs for strength, hypertrophy, powerlifting, bodybuilding, home training, conditioning and more. Find a routine and track it with Gym Log.",
+    `Explore ${programCountLabel} workout programs for strength, hypertrophy, powerlifting, bodybuilding, home training, conditioning and more. Find a routine and track it with Gym Log.`,
   alternates: { canonical: "/workouts" },
   openGraph: {
-    title: "100 Workout Programs | Gym Log",
-    description: "Browse 100 structured workout programs and import a routine into Gym Log.",
+    title: `${programCountLabel} Workout Programs | Gym Log`,
+    description: `Browse ${programCountLabel} workout programs and import a routine into Gym Log.`,
     url: "/workouts",
   },
 };
@@ -27,7 +30,7 @@ export default function WorkoutsIndexPage() {
       </nav>
       <section className="programs-hero">
         <div className="programs-kicker">THE GYM LOG PROGRAM LIBRARY</div>
-        <h1>100 workout programs. One place to find your next routine.</h1>
+        <h1>{programCountLabel} workout programs. One place to find your next routine.</h1>
         <p>
           Browse strength, hypertrophy, powerlifting, bodybuilding, beginner, home, dumbbell, kettlebell and conditioning programs. Search by goal, experience level, equipment or days per week, then open any program and import it into Gym Log.
         </p>

@@ -1,0 +1,92 @@
+import type { ProgramWorkout } from "./programWorkouts";
+
+type SpecificProgram = { workouts: ProgramWorkout[]; progression: string; accuracyNote: string };
+const w=(day:string,focus:string,exercises:string[],guidance:string):ProgramWorkout=>({day,focus,exercises,guidance});
+
+export const SPECIFIC_PROGRAMS_9:Record<string,SpecificProgram>={
+  "531-fsl":{workouts:[
+    w("Day 1","Squat + supplemental squat",["Squat — 5/3/1 wave","Squat — First Set Last supplemental work","Single-Leg Work — 3–5 sets","Abs — 3–5 sets"],"First Set Last keeps supplemental work tied to the day's main lift; use the selected 5/3/1 template for exact percentages."),
+    w("Day 2","Bench + supplemental bench",["Bench Press — 5/3/1 wave","Bench Press — First Set Last supplemental work","Row — 3–5 sets","Triceps — 3–5 sets"],"Keep supplemental volume submaximal enough to recover for the next press exposure."),
+    w("Day 3","Deadlift + supplemental deadlift",["Deadlift — 5/3/1 wave","Deadlift — First Set Last supplemental work","Lat Pulldown — 3–5 sets","Core — 3–5 sets"],"Manage posterior-chain fatigue; FSL volume should support rather than replace the main progression."),
+    w("Day 4","Overhead press + supplemental press",["Overhead Press — 5/3/1 wave","Overhead Press — First Set Last supplemental work","Pull-Up or Row — 3–5 sets","Arms — 3–5 sets"],"Use the current 5/3/1 template for the exact supplemental set count and training max."),
+  ],progression:"5/3/1 FSL pairs the main 5/3/1 work with additional sets using the first work-set percentage. The exact FSL volume varies by template.",accuracyNote:"High-level representation of the 5/3/1 First Set Last method; 5/3/1 has multiple official templates and FSL set counts vary."},
+  "531-building-the-monolith":{workouts:[
+    w("Day 1","Press + high-volume assistance",["Overhead Press — main work","Deadlift — supplemental work","Chin-Ups — high-volume work","Dips or Push-Ups — high-volume work","Abs"],"Building the Monolith is a high-volume 5/3/1 template; use the published program for exact set targets and loading."),
+    w("Day 2","Squat + upper volume",["Squat — main work","Bench Press — supplemental work","Chin-Ups — high-volume work","Dips or Push-Ups — high-volume work","Abs"],"Recovery and food intake are major considerations because the template is intentionally demanding."),
+    w("Day 3","Deadlift + press volume",["Deadlift — main work","Overhead Press — supplemental work","Chin-Ups — high-volume work","Dips or Push-Ups — high-volume work","Abs"],"Do not add large amounts of extra work to an already high-volume template."),
+  ],progression:"Building the Monolith uses 5/3/1-style main work plus substantial supplemental and bodyweight volume. Follow the original template for its exact progression and volume targets.",accuracyNote:"High-level summary of Jim Wendler's Building the Monolith concept; exact programming is intentionally not reproduced line-for-line."},
+  "gzcl-uhf":{workouts:[
+    w("Day 1","Squat T1 + upper volume",["Squat — T1 strength work","Bench Press — T2/T3 volume","Row — T2/T3 volume","Leg Curl — T3","Lateral Raise — T3"],"GZCL UHF uses tiered work with frequent exposure to the main lifts; use the selected UHF template for exact loading."),
+    w("Day 2","Bench T1 + lower volume",["Bench Press — T1 strength work","Squat — T2 volume","Pulldown — T2/T3","Split Squat — T3","Triceps — T3"],"Keep high-frequency pressing recoverable."),
+    w("Day 3","Deadlift T1 + upper volume",["Deadlift — T1 strength work","Overhead Press — T2/T3","Row — T2/T3","Leg Curl — T3","Core — T3"],"The tier system distributes heavy, moderate and high-rep work."),
+    w("Day 4","Press T1 + lower volume",["Overhead Press — T1 strength work","Deadlift or variation — T2 work","Pull-Up or Pulldown — T2/T3","Leg Extension — T3","Curl — T3"],"Use the exact UHF spreadsheet for week-to-week loading and exercise order."),
+    w("Day 5","Volume / supplemental",["Bench or Squat Variation — T2 work","Row — T2 work","Leg Work — T3","Delts — T3","Arms — T3"],"The fifth session adds volume and should be adjusted if recovery falls."),
+  ],progression:"GZCL UHF combines T1 strength work with T2 supplemental and T3 high-rep work across a high-frequency week. Exact percentages and set counts are template-specific.",accuracyNote:"High-level GZCL UHF structure; the original spreadsheet should be used for exact week-by-week prescriptions."},
+  "greg-nuckols-3x-week":{workouts:[
+    w("Day 1","Squat + bench",["Squat — strength work","Bench Press — strength work","Row — 3–5 sets","Hamstring Work — 3–4 sets"],"Greg Nuckols has published multiple strength templates; use the exact 3x-week version selected for loading."),
+    w("Day 2","Bench + deadlift",["Bench Press — strength work","Deadlift — strength work","Pull-Up or Pulldown — 3–5 sets","Single-Leg Work — 3 sets"],"Keep fatigue manageable between the main lifts."),
+    w("Day 3","Squat + bench",["Squat — strength/volume work","Bench Press — strength/volume work","Row — 3–5 sets","Core — 3–4 sets"],"Use the current program's progression rather than treating this summary as a complete spreadsheet."),
+  ],progression:"Greg Nuckols has several 3-day strength programs and variants. The shared approach is planned volume/intensity with gradual progression and fatigue management.",accuracyNote:"This page summarizes the 3x-week strength format without claiming to reproduce a specific spreadsheet version."},
+  "greg-nuckols-28-bench":{workouts:[
+    w("Day 1","Bench volume",["Bench Press — prescribed volume work","Row — 3–5 sets","Triceps — 3–4 sets","Rear Delts — 3 sets"],"The 28 Programs are a collection of bench, squat and deadlift templates; select the exact version before following loading."),
+    w("Day 2","Bench intensity",["Bench Press — prescribed intensity work","Overhead Press — 3 sets","Pulldown — 3–5 sets","Triceps — 3 sets"],"Use the original 28 Programs spreadsheet for exact percentages and weekly progression."),
+    w("Day 3","Bench volume / variation",["Bench Variation — prescribed work","Chest-Supported Row — 3–5 sets","Lateral Raise — 3 sets","Arms — 3 sets"],"The exercise and frequency selection varies among the 28 templates."),
+  ],progression:"The 28 Programs collection provides multiple frequency and specialization options. Progression is template-specific and generally manipulates volume and intensity across a block.",accuracyNote:"High-level representation of the Greg Nuckols 28 Programs bench specialization collection; not one universal prescription."},
+  "greg-nuckols-28-squat":{workouts:[
+    w("Day 1","Squat volume",["Back Squat — prescribed volume work","Romanian Deadlift — 3 sets","Leg Curl — 3 sets","Abs — 3 sets"],"Choose the exact 28 Programs squat template before following percentages."),
+    w("Day 2","Squat intensity",["Back Squat — prescribed intensity work","Bench Press — 3–4 sets","Row — 3–5 sets","Single-Leg Work — 3 sets"],"Use the original spreadsheet for exact loading."),
+    w("Day 3","Squat variation",["Squat Variation — prescribed work","Front Squat or Leg Press — 3 sets","Hamstring Work — 3 sets","Core — 3 sets"],"Specialization templates vary in frequency and exercise selection."),
+  ],progression:"The 28 Programs collection contains multiple squat specialization options; progression is defined by the selected template's volume and intensity schedule.",accuracyNote:"High-level summary rather than a reproduction of one of the 28 squat spreadsheets."},
+  "greg-nuckols-28-deadlift":{workouts:[
+    w("Day 1","Deadlift volume",["Deadlift — prescribed volume work","Romanian Deadlift — 3 sets","Row — 3–5 sets","Core — 3 sets"],"Use the exact 28 Programs deadlift template for percentages and set targets."),
+    w("Day 2","Deadlift intensity",["Deadlift — prescribed intensity work","Squat — 3–4 sets","Pulldown — 3–5 sets","Hamstring Work — 3 sets"],"Keep assistance recoverable around the deadlift."),
+    w("Day 3","Deadlift variation",["Deadlift Variation — prescribed work","Hip Hinge Accessory — 3 sets","Chest-Supported Row — 3–5 sets","Abs — 3 sets"],"Different 28 Programs versions use different frequency and variation choices."),
+  ],progression:"Deadlift specialization templates vary across the 28 Programs collection; the chosen spreadsheet determines the exact volume and intensity progression.",accuracyNote:"High-level representation of the collection rather than a single canonical deadlift program."},
+  "sbs-novice-strength":{workouts:[
+    w("Day 1","Full body strength",["Squat — primary work","Bench Press — primary work","Lat Pulldown or Row — 3–4 sets","Romanian Deadlift — 2–3 sets"],"Stronger By Science has published multiple versions; use the current novice template for exact loading."),
+    w("Day 2","Full body strength",["Deadlift — primary work","Overhead Press — primary work","Row — 3–4 sets","Split Squat — 2–3 sets"],"Keep the main lifts submaximal enough to progress consistently."),
+    w("Day 3","Full body strength",["Squat — primary work","Bench Press — primary work","Pulldown — 3–4 sets","Leg Curl — 2–3 sets"],"Use the current SBS progression and reset rules rather than inventing a fixed percentage scheme."),
+  ],progression:"The SBS novice approach emphasizes repeatable practice, planned progression and fatigue management. Exact set/rep prescriptions vary by published version.",accuracyNote:"High-level summary of Stronger By Science novice programming; use the current official template for exact prescriptions."},
+  "bill-starr-5x5":{workouts:[
+    w("Monday","Heavy",["Squat — ramp to 5-rep top set","Bench Press — ramp to 5-rep top set","Barbell Row — ramp to 5-rep top set"],"Classic Bill Starr 5×5 uses ramped sets, with the heaviest set as the target rather than five identical loads."),
+    w("Wednesday","Light / recovery",["Squat — lighter 5×5 work","Overhead Press — 5×5 ramp","Deadlift — lighter work"],"The middle day reduces lower-body stress while maintaining practice."),
+    w("Friday","Medium + top set",["Squat — ramped work + top set","Bench Press — ramped work + top set","Barbell Row — ramped work + top set"],"Increase the target top sets gradually across weeks while keeping the ramp sets proportional."),
+  ],progression:"The classic Bill Starr 5×5 model uses heavy, light and medium days with ramped sets and weekly increases in the target top sets.",accuracyNote:"High-level representation of the classic Bill Starr 5×5 concept; versions differ in exercise selection and assistance."},
+  "reg-park-5x5":{workouts:[
+    w("Workout A","Full body 5×5",["Back Squat — 5×5","Bench Press — 5×5","Barbell Row — 5×5","Overhead Press — supplemental work","Barbell Curl — supplemental work"],"Reg Park's 5×5 routines have multiple versions and phases; the exact exercise list depends on the edition."),
+    w("Workout B","Full body 5×5",["Back Squat — 5×5","Deadlift — 5×5 or prescribed work","Bench Press — 5×5","Barbell Row — 5×5","Calf / Core Work"],"Use the original phase-specific routine for exact loading and exercise order."),
+    w("Workout A","Repeat",["Back Squat — 5×5","Bench Press — 5×5","Barbell Row — 5×5","Overhead Press — supplemental work","Curl — supplemental work"],"Progress the main lifts gradually while maintaining technique."),
+  ],progression:"Reg Park published several 5×5 routines with phased progression. This page captures the full-body 5×5 emphasis without treating every historical version as identical.",accuracyNote:"Historical program with multiple versions; exact prescription should be tied to the chosen Reg Park routine/phase."},
+  "strong-curves":{workouts:[
+    w("Day 1","Lower + glutes",["Squat or Goblet Squat — primary work","Hip Thrust — primary work","Romanian Deadlift — 3 sets","Split Squat — 3 sets","Core"],"Strong Curves has multiple phases and workout options; use the selected phase for exact programming."),
+    w("Day 2","Upper + full body",["Bench or Push-Up — primary work","Row — 3–4 sets","Overhead Press — 3 sets","Lat Pulldown — 3 sets","Glute Accessory — 2–3 sets"],"Progress gradually and keep the selected phase consistent."),
+    w("Day 3","Lower + glutes",["Deadlift or Hip Hinge — primary work","Hip Thrust — primary work","Lunge — 3 sets","Leg Curl — 3 sets","Core"],"The program emphasizes glute and lower-body development alongside full-body strength."),
+  ],progression:"Strong Curves uses phased strength and hypertrophy work with progressive loading and substantial lower-body/glute emphasis. Exact routines vary by phase.",accuracyNote:"High-level summary of the Strong Curves training system; it does not reproduce the complete book/program."},
+  "hatch-squat":{workouts:[
+    w("Day 1","Squat + Olympic lifts",["Back Squat — prescribed percentage work","Power Clean — technical work","Front Squat — prescribed work","Accessory posterior chain"],"The Hatch Squat cycle is a squat-focused Olympic-lifting-oriented program; use the original schedule for exact percentages."),
+    w("Day 2","Squat + pulls",["Back Squat — prescribed percentage work","Clean Pull — prescribed work","Front Squat — prescribed work","Upper-back accessory"],"Keep the squat work at the planned intensity rather than adding extra max attempts."),
+    w("Day 3","Squat + power",["Back Squat — prescribed percentage work","Power Clean or Clean — technical work","Front Squat — prescribed work","Core"],"The defining feature is frequent squat exposure alongside Olympic-lift movements."),
+  ],progression:"The Hatch Squat cycle uses frequent squat training with planned percentage changes and Olympic-lifting movements. Follow the original cycle for exact week-by-week loading.",accuracyNote:"High-level representation of the Hatch Squat program; exact percentages and exercise order are intentionally not reproduced."},
+  "kettlebell-rite-of-passage":{workouts:[
+    w("Day 1","Clean + press",["One-Arm Clean and Press — ladders","Pull-Up — ladders or volume","Goblet Squat — moderate work"],"The Rite of Passage is centered on the clean and press and pull-up, with progression built through ladders."),
+    w("Day 2","Swing + press",["One-Arm Swing — prescribed volume","Clean and Press — ladder work","Pull-Up — prescribed volume"],"Use the original Rite of Passage progression for exact ladder structure and loading."),
+    w("Day 3","Clean + press",["Clean and Press — ladder progression","Pull-Up — ladder progression","Goblet Squat or mobility"],"Keep repetitions crisp and do not turn every ladder into a maximal effort."),
+    w("Day 4","Swing + pull",["Two-Hand or One-Arm Swing — prescribed volume","Pull-Up — volume","Turkish Get-Up — light practice"],"Frequency and progression are part of the program; recovery should guide optional work."),
+  ],progression:"Rite of Passage uses ladder-based clean-and-press and pull-up progression with swing work on alternate sessions. The exact ladder and bell progression come from the original program.",accuracyNote:"High-level StrongFirst-style summary; exact proprietary/program-specific session prescriptions should be taken from the source text."},
+  "enter-the-kettlebell":{workouts:[
+    w("Session A","Fundamentals",["Turkish Get-Up — practice","Two-Hand Swing — practice","Goblet Squat — optional"],"Enter the Kettlebell emphasizes technique and foundational kettlebell movements before more demanding programming."),
+    w("Session B","Swing + get-up",["Two-Hand Swing — prescribed practice","Turkish Get-Up — prescribed practice","Clean — technique practice"],"Keep technique consistent and use appropriate progression before increasing volume."),
+    w("Session A","Repeat fundamentals",["Turkish Get-Up — practice","Two-Hand Swing — practice","Goblet Squat — optional"],"Build skill and work capacity progressively."),
+  ],progression:"Enter the Kettlebell teaches foundational swing and Turkish get-up practice before progressing toward structured kettlebell work. Exact progression depends on the selected level.",accuracyNote:"High-level summary of Pavel Tsatsouline's Enter the Kettlebell framework rather than a reproduction of the book's complete program."},
+  "recommended-routine":{workouts:[
+    w("Day 1","Full body",["Squat or Squat Progression","Push-Up or Dip Progression","Pull-Up or Row Progression","Leg Curl / Nordic Progression","Hanging Leg Raise"],"The Recommended Routine is a bodyweight progression system; select variations appropriate to current ability."),
+    w("Day 2","Full body",["Squat Progression","Push-Up / Dip Progression","Pull-Up / Row Progression","Hip Hinge / Nordic Progression","Core Progression"],"Progress through harder variations and added repetitions rather than chasing maximal fatigue."),
+    w("Day 3","Full body",["Single-Leg Squat Progression","Vertical Push Progression","Vertical Pull Progression","Hamstring Progression","Core"],"Use rest days between sessions and keep skill work technically clean."),
+  ],progression:"The bodyweight Recommended Routine progresses exercises through increasingly difficult variations, volume and control. Exact progression is skill-dependent.",accuracyNote:"High-level summary of the commonly referenced bodyweight Recommended Routine; exercise substitutions and progressions vary by ability."},
+  "murph-prep":{workouts:[
+    w("Day 1","Strength + calisthenics",["Back Squat — moderate strength work","Pull-Up — submaximal sets","Push-Up — submaximal sets","Run — easy/moderate"],"Build volume gradually and avoid frequent all-out Murph simulations."),
+    w("Day 2","Running + bodyweight",["Run — intervals or tempo","Pull-Up — volume","Push-Up — volume","Air Squat — volume"],"Break large rep targets into sustainable sets."),
+    w("Day 3","Strength maintenance",["Deadlift — moderate work","Overhead Press — moderate work","Pull-Up — controlled volume","Core"],"Strength work supports the goal but should not undermine running and calisthenics recovery."),
+    w("Day 4","Long conditioning",["Run — longer easy effort","Pull-Up — partitioned volume","Push-Up — partitioned volume","Air Squat — partitioned volume"],"Progress total workload gradually and use an appropriate scaled version when necessary."),
+  ],progression:"Murph preparation combines running with high-repetition pull-ups, push-ups and squats. Increase total volume gradually and practice sustainable partitioning before testing the full workout.",accuracyNote:"Gym Log original Murph-prep template; it is not an official CrossFit training plan or coaching prescription."}
+};

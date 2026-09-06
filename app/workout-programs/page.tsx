@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import ProgramLibrary from "./ProgramLibrary";
+import ProgramFeaturedStyles from "./ProgramFeaturedStyles";
 import { PROGRAMS } from "../lib/programs";
 
 export const metadata: Metadata = {
@@ -39,6 +40,7 @@ export default function WorkoutProgramsPage() {
 
   return (
     <main className="programs-page">
+      <ProgramFeaturedStyles />
       <nav className="programs-nav"><Link href="/" className="programs-brand">Gym Log</Link><Link href="/" className="programs-back">Open Workout Log</Link></nav>
       <section className="programs-hero">
         <div className="programs-kicker">THE GYM LOG PROGRAM LIBRARY</div>
@@ -65,20 +67,6 @@ export default function WorkoutProgramsPage() {
 
       <section className="program-browse-links" aria-labelledby="browse-heading"><div className="program-detail-kicker">BROWSE BY GOAL & TRAINING STYLE</div><h2 id="browse-heading">Workout program guides</h2><p>Jump directly to programs for a specific goal, schedule or equipment setup.</p><div className="program-browse-grid">{browseLinks.map(([href,label]) => <Link href={href} key={href}>{label}<span>→</span></Link>)}</div></section>
       <ProgramLibrary programs={PROGRAMS} />
-      <style jsx global>{`
-        .program-featured{max-width:1100px;margin:0 auto;padding:24px 20px 12px}
-        .program-featured h2{font-size:28px;margin:7px 0}
-        .program-featured>p{max-width:700px;line-height:1.6;opacity:.68;margin:0}
-        .program-featured-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:18px}
-        .program-featured-card{display:flex;flex-direction:column;gap:8px;min-height:142px;padding:16px;border:1px solid rgba(255,255,255,.1);border-radius:15px;background:rgba(255,255,255,.04);color:inherit;text-decoration:none;transition:transform .15s ease,border-color .15s ease,background .15s ease}
-        .program-featured-card:hover{transform:translateY(-2px);border-color:var(--accent,#ff5722);background:rgba(255,255,255,.07)}
-        .program-featured-card:focus-visible{outline:2px solid var(--accent,#ff5722);outline-offset:3px}
-        .program-featured-card>span,.program-featured-card>small{font-size:11px;opacity:.58}
-        .program-featured-card>strong{font-size:16px;line-height:1.25;flex:1}
-        .program-featured-card>b{font-size:12px;color:var(--accent,#ff5722)}
-        @media(max-width:800px){.program-featured-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-        @media(max-width:520px){.program-featured{padding-top:20px}.program-featured h2{font-size:24px}.program-featured-grid{grid-template-columns:1fr}.program-featured-card{min-height:0}}
-      `}</style>
     </main>
   );
 }

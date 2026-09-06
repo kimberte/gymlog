@@ -23,7 +23,20 @@ const browseLinks = [
   ["/workout-programs/goal/hypertrophy", "Hypertrophy programs"],
 ];
 
+const featuredSlugs = [
+  "starting-strength",
+  "stronglifts-5x5",
+  "531",
+  "push-pull-legs",
+  "upper-lower-split",
+  "full-body-3-day",
+  "jeff-nippard-ppl",
+  "beginner-full-body-3",
+];
+
 export default function WorkoutProgramsPage() {
+  const featured = featuredSlugs.map(slug => PROGRAMS.find(p => p.slug === slug)).filter(Boolean);
+
   return (
     <main className="programs-page">
       <nav className="programs-nav"><Link href="/" className="programs-brand">Gym Log</Link><Link href="/" className="programs-back">Open Workout Log</Link></nav>
@@ -33,6 +46,23 @@ export default function WorkoutProgramsPage() {
         <p>Explore {PROGRAMS.length} workout programs and practical Gym Log templates. Pick a routine, learn how it works, then track your training.</p>
         <div style={{display:"flex",gap:10,flexWrap:"wrap",marginTop:22}}><Link href="/workout-programs/find" className="programs-back">Find my workout →</Link><Link href="/workout-programs/goal/muscle" className="programs-back" style={{background:"rgba(255,255,255,.08)",color:"inherit"}}>Browse muscle-building programs</Link></div>
       </section>
+
+      <section className="program-featured" aria-labelledby="featured-heading">
+        <div className="program-detail-kicker">GOOD PLACES TO START</div>
+        <h2 id="featured-heading">Popular workout program starting points</h2>
+        <p>Not sure where to begin? These recognizable routines cover strength, muscle building and beginner-friendly training schedules.</p>
+        <div className="program-featured-grid">
+          {featured.map(program => program ? (
+            <Link href={`/workout-programs/${program.slug}`} className="program-featured-card" key={program.slug}>
+              <span>{program.category} · {program.days} days</span>
+              <strong>{program.name}</strong>
+              <small>{program.goal}</small>
+              <b>View program →</b>
+            </Link>
+          ) : null)}
+        </div>
+      </section>
+
       <section className="program-browse-links" aria-labelledby="browse-heading"><div className="program-detail-kicker">BROWSE BY GOAL & TRAINING STYLE</div><h2 id="browse-heading">Workout program guides</h2><p>Jump directly to programs for a specific goal, schedule or equipment setup.</p><div className="program-browse-grid">{browseLinks.map(([href,label]) => <Link href={href} key={href}>{label}<span>→</span></Link>)}</div></section>
       <ProgramLibrary programs={PROGRAMS} />
     </main>

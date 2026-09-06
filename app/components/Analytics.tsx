@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { event, pageview } from "../lib/gtag";
+import { incrementProgramStat } from "../lib/programStats";
 
 export default function Analytics() {
   const pathname = usePathname();
@@ -23,7 +24,11 @@ export default function Analytics() {
         return;
       }
       if (button?.matches(".program-download-button")) {
-        event("program_download_click", { program_slug: pathname.split("/").filter(Boolean).pop() || "unknown" });
+        const slug = pathname.split("/").filter(Boolean).pop() || "unknown";
+        event("program_download_click", { program_slug: slug });
+        if (pathname.startsWith("/workout-programs/") && pathname.split("/").filter(Boolean).length === 2) {
+          void incrementProgramStat(slug, "downloads");
+        }
         return;
       }
       if (button?.matches(".finder-submit")) {
@@ -47,7 +52,9 @@ export default function Analytics() {
     if (!pathname.startsWith("/workout-programs/")) return;
     const parts = pathname.split("/").filter(Boolean);
     if (parts.length !== 2 || parts[0] !== "workout-programs") return;
-    event("program_view", { program_slug: parts[1] });
+    const slug = parts[1];
+    event("program_view", { program_slug: slug });
+    void incrementProgramStat(slug, "views");
   }, [pathname]);
 
   return null;

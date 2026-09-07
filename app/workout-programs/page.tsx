@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import ProgramLibrary from "./ProgramLibrary";
+import ProgramLibraryV2 from "./ProgramLibraryV2";
 import ProgramFeaturedStyles from "./ProgramFeaturedStyles";
 import ProgramLibraryStats from "./ProgramLibraryStats";
 import { PROGRAMS } from "../lib/programs";
@@ -42,10 +42,10 @@ export default function WorkoutProgramsPage() {
       </section>
       <section className="program-featured" aria-labelledby="featured-heading">
         <div className="program-detail-kicker">GOOD PLACES TO START</div><h2 id="featured-heading">Popular workout program starting points</h2><p>Not sure where to begin? These recognizable routines cover strength, muscle building and beginner-friendly training schedules.</p>
-        <div className="program-featured-grid">{featured.map(program => program ? <Link href={`/workout-programs/${program.slug}`} className="program-featured-card" key={program.slug}><span>{program.category} · {program.days} days</span><strong>{program.name}</strong><small>{program.goal}</small><b>View program →</b></Link> : null)}</div>
+        <div className="program-featured-grid">{featured.map(program => program ? <Link href={`/workout-programs/${program.slug}`} className="program-featured-card" key={program.slug}><span>{program.category} · {program.days} days</span><strong>{program.name}</strong><small>{program.goal}</small><b>View &amp; track →</b></Link> : null)}</div>
       </section>
       <section className="program-browse-links" aria-labelledby="browse-heading"><div className="program-detail-kicker">BROWSE BY GOAL & TRAINING STYLE</div><h2 id="browse-heading">Workout program guides</h2><p>Jump directly to programs for a specific goal, schedule or equipment setup.</p><div className="program-browse-grid">{browseLinks.map(([href,label]) => <Link href={href} key={href}>{label}<span>→</span></Link>)}</div></section>
-      <ProgramLibrary programs={PROGRAMS} />
+      <ProgramLibraryV2 programs={PROGRAMS} />
     </main>
   );
 }

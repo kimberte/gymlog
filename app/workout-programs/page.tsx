@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import ProgramLibraryV2 from "./ProgramLibraryV2";
 import ProgramFeaturedStyles from "./ProgramFeaturedStyles";
-import ProgramLibraryStats from "./ProgramLibraryStats";
 import { PROGRAMS } from "../lib/programs";
 
 export const metadata: Metadata = {
@@ -37,7 +36,6 @@ export default function WorkoutProgramsPage() {
         <div className="programs-kicker">THE GYM LOG PROGRAM LIBRARY</div>
         <h1>Find a workout program that fits you.</h1>
         <p>Explore {PROGRAMS.length} workout programs and practical Gym Log templates. Pick a routine, learn how it works, then track your training.</p>
-        <ProgramLibraryStats />
         <div style={{display:"flex",gap:10,flexWrap:"wrap",marginTop:22}}><Link href="/workout-programs/find" className="programs-back">Find my workout →</Link><Link href="/workout-programs/goal/muscle" className="programs-back" style={{background:"rgba(255,255,255,.08)",color:"inherit"}}>Browse muscle-building programs</Link></div>
       </section>
       <section className="program-featured" aria-labelledby="featured-heading">

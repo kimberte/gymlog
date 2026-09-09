@@ -1,0 +1,34 @@
+"use client";
+
+import Link from "next/link";
+import { useMemo, useState } from "react";
+import { EXERCISE_CATEGORIES, EXERCISE_DATABASE } from "../lib/exerciseDatabase";
+
+export default function ExercisesPage() {
+  const [query, setQuery] = useState("");
+  const [category, setCategory] = useState("All");
+  const [equipment, setEquipment] = useState("All");
+
+  const equipmentOptions = useMemo(() => ["All", ...Array.from(new Set(EXERCISE_DATABASE.flatMap(x => x.equipment))).sort()], []);
+  const results = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return EXERCISE_DATABASE.filter(x => {
+      const searchable = [x.name, x.category, x.movementPattern, ...x.primaryMuscles, ...x.secondaryMuscles, ...x.equipment].join(" ").toLowerCase();
+      return (!q || searchable.includes(q)) && (category === "All" || x.category === category) && (equipment === "All" || x.equipment.includes(equipment));
+    });
+  }, [query, category, equipment]);
+
+  return <main className="exercise-page">
+    <style>{`
+      .exercise-page{min-height:100vh;background:var(--background,#0b0f14);color:var(--foreground,#f5f7fa);padding-bottom:70px}.exercise-nav,.exercise-hero,.exercise-library{max-width:1100px;margin:auto}.exercise-nav{padding:18px 20px;display:flex;justify-content:space-between;align-items:center}.exercise-brand{font-size:20px;font-weight:900;color:inherit;text-decoration:none}.exercise-nav-link{padding:10px 15px;border-radius:12px;background:var(--accent,#ff5722);color:#111827;text-decoration:none;font-size:13px;font-weight:800}.exercise-hero{padding:46px 20px 25px}.exercise-kicker{font-size:12px;letter-spacing:.12em;font-weight:900;color:var(--accent,#ff5722)}.exercise-hero h1{font-size:clamp(38px,6vw,64px);line-height:1.02;letter-spacing:-.04em;margin:10px 0 15px}.exercise-hero p{max-width:760px;font-size:18px;line-height:1.6;opacity:.7}.exercise-hero-links{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}.exercise-hero-links a{padding:12px 15px;border-radius:12px;text-decoration:none;font-size:13px;font-weight:850;background:var(--accent,#ff5722);color:#111827}.exercise-hero-links a.secondary{background:rgba(255,255,255,.08);color:inherit;border:1px solid rgba(255,255,255,.1)}.exercise-library{padding:18px 20px}.exercise-filters{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px}.exercise-filters input,.exercise-filters select{width:100%;box-sizing:border-box;padding:13px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:inherit;font:inherit}.exercise-results{font-size:13px;opacity:.58;margin:15px 0}.exercise-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.exercise-card{display:flex;flex-direction:column;min-height:235px;padding:19px;border:1px solid rgba(255,255,255,.1);border-radius:17px;background:rgba(255,255,255,.045);color:inherit;text-decoration:none;transition:transform .15s ease,border-color .15s ease,background .15s ease}.exercise-card:hover{transform:translateY(-3px);border-color:var(--accent,#ff5722);background:rgba(255,255,255,.07)}.exercise-card:focus-visible{outline:2px solid var(--accent,#ff5722);outline-offset:3px}.exercise-card-top{display:flex;justify-content:space-between;gap:8px;font-size:11px;opacity:.58}.exercise-card h2{font-size:20px;line-height:1.2;margin:15px 0 9px}.exercise-card p{font-size:13px;line-height:1.55;opacity:.68;flex:1}.exercise-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}.exercise-tag{font-size:11px;padding:5px 7px;border-radius:8px;background:rgba(255,255,255,.06);opacity:.75}.exercise-card-action{margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.08);color:var(--accent,#ff5722);font-size:12px;font-weight:850}.exercise-empty{text-align:center;padding:60px 20px;opacity:.65}.exercise-note{max-width:1100px;margin:35px auto 0;padding:0 20px}.exercise-note-box{padding:20px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);line-height:1.6;font-size:13px;opacity:.75}@media(max-width:800px){.exercise-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.exercise-filters{grid-template-columns:1fr 1fr}.exercise-filters input{grid-column:1/-1}}@media(max-width:520px){.exercise-hero{padding-top:30px}.exercise-grid{grid-template-columns:1fr}.exercise-filters{grid-template-columns:1fr}.exercise-filters input{grid-column:auto}}
+    `}</style>
+    <nav className="exercise-nav"><Link href="/" className="exercise-brand">Gym Log</Link><Link href="/workout-programs" className="exercise-nav-link">Workout Programs</Link></nav>
+    <section className="exercise-hero"><div className="exercise-kicker">THE GYM LOG EXERCISE DATABASE</div><h1>Learn an exercise. Then track it.</h1><p>Explore the Gym Log exercise database with practical instructions, muscles worked, equipment, movement patterns, common mistakes and useful alternatives. The library is being built from original Gym Log content.</p><div className="exercise-hero-links"><Link href="/">Open Workout Log →</Link><Link href="/workout-programs" className="secondary">Browse Programs →</Link></div></section>
+    <section className="exercise-library" aria-label="Exercise database">
+      <div className="exercise-filters"><input aria-label="Search exercises" placeholder="Search exercises, muscles, equipment..." value={query} onChange={e => setQuery(e.target.value)} /><select aria-label="Filter by category" value={category} onChange={e => setCategory(e.target.value)}>{EXERCISE_CATEGORIES.map(x => <option key={x}>{x}</option>)}</select><select aria-label="Filter by equipment" value={equipment} onChange={e => setEquipment(e.target.value)}>{equipmentOptions.map(x => <option key={x}>{x}</option>)}</select></div>
+      <div className="exercise-results">Showing {results.length} of {EXERCISE_DATABASE.length} core exercises</div>
+      {results.length ? <div className="exercise-grid">{results.map(x => <Link href={`/exercises/${x.slug}`} className="exercise-card" key={x.slug}><div className="exercise-card-top"><span>{x.category}</span><span>{x.difficulty}</span></div><h2>{x.name}</h2><p>{x.description}</p><div className="exercise-tags"><span className="exercise-tag">{x.movementPattern}</span>{x.primaryMuscles.slice(0,2).map(m => <span className="exercise-tag" key={m}>{m}</span>)}</div><div className="exercise-card-action">View exercise →</div></Link>)}</div> : <div className="exercise-empty">No exercises match those filters. Try a broader search.</div>}
+    </section>
+    <section className="exercise-note"><div className="exercise-note-box"><strong>Building this library:</strong> Gym Log will add more variations, machines, mobility work, conditioning movements and original illustrations in later phases. Exercise pages are educational resources, not medical advice; use appropriate loads and seek qualified coaching when you need individualized instruction.</div></section>
+  </main>;
+}

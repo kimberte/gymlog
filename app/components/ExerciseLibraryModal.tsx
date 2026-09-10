@@ -21,11 +21,39 @@ export default function ExerciseLibraryModal() {
 
   useEffect(() => {
     if (!open) return;
+
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") setOpen(false);
     };
+
+    const onMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+      const data = event.data;
+      if (!data || data.type !== "gym-log-exercise-selected") return;
+
+      const name = String(data.name ?? "").trim();
+      if (!name) return;
+
+      const textarea = document.querySelector<HTMLTextAreaElement>("textarea.editor-notes");
+      if (!textarea) return;
+
+      const current = textarea.value.trimEnd();
+      const next = current ? `${current}\n\n${name}\n` : `${name}\n`;
+      const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")?.set;
+      if (setter) setter.call(textarea, next);
+      else textarea.value = next;
+      textarea.dispatchEvent(new Event("input", { bubbles: true }));
+      textarea.focus();
+      textarea.setSelectionRange(next.length, next.length);
+      setOpen(false);
+    };
+
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    window.addEventListener("message", onMessage);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("message", onMessage);
+    };
   }, [open]);
 
   if (!editorOpen) return null;
@@ -35,7 +63,7 @@ export default function ExerciseLibraryModal() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        aria-label="Open exercise library"
+        aria-label="Add an exercise from the exercise database"
         style={{
           position: "fixed",
           right: 16,
@@ -52,7 +80,7 @@ export default function ExerciseLibraryModal() {
           boxShadow: "0 8px 28px rgba(0,0,0,0.32)",
         }}
       >
-        Exercise Library
+        + Exercise
       </button>
     );
   }
@@ -61,7 +89,7 @@ export default function ExerciseLibraryModal() {
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Exercise Library"
+      aria-label="Add Exercise"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) setOpen(false);
       }}
@@ -102,8 +130,8 @@ export default function ExerciseLibraryModal() {
           }}
         >
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 15, fontWeight: 700 }}>Exercise Library</div>
-            <div style={{ fontSize: 12, opacity: 0.65 }}>Look up an exercise without leaving your workout.</div>
+            <div style={{ fontSize: 15, fontWeight: 700 }}>Add Exercise</div>
+            <div style={{ fontSize: 12, opacity: 0.65 }}>Choose from the Gym Log exercise database and add the exact exercise name to your notebook.</div>
           </div>
           <button
             type="button"
@@ -126,8 +154,8 @@ export default function ExerciseLibraryModal() {
         </div>
 
         <iframe
-          title="Gym Log Exercise Library"
-          src="/exercises"
+          title="Gym Log Exercise Database"
+          src="/exercises?picker=1"
           style={{
             width: "100%",
             flex: "1 1 auto",

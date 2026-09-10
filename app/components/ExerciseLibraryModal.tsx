@@ -21,22 +21,17 @@ export default function ExerciseLibraryModal() {
 
   useEffect(() => {
     if (!open) return;
-
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") setOpen(false);
     };
-
     const onMessage = (event: MessageEvent) => {
       if (event.origin !== window.location.origin) return;
       const data = event.data;
       if (!data || data.type !== "gym-log-exercise-selected") return;
-
       const name = String(data.name ?? "").trim();
       if (!name) return;
-
       const textarea = document.querySelector<HTMLTextAreaElement>("textarea.editor-notes");
       if (!textarea) return;
-
       const current = textarea.value.trimEnd();
       const next = current ? `${current}\n\n${name}\n` : `${name}\n`;
       const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")?.set;
@@ -47,7 +42,6 @@ export default function ExerciseLibraryModal() {
       textarea.setSelectionRange(next.length, next.length);
       setOpen(false);
     };
-
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("message", onMessage);
     return () => {
@@ -63,24 +57,28 @@ export default function ExerciseLibraryModal() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        aria-label="Add an exercise from the exercise database"
+        aria-label="Open exercise library"
         style={{
           position: "fixed",
-          right: 16,
-          bottom: "calc(18px + env(safe-area-inset-bottom))",
+          right: 0,
+          top: "50%",
+          transform: "translateY(-50%)",
           zIndex: 10050,
-          padding: "11px 14px",
-          borderRadius: 999,
+          padding: "12px 9px",
+          borderRadius: "12px 0 0 12px",
           border: "1px solid rgba(255,255,255,0.18)",
+          borderRight: 0,
           background: "var(--accent)",
-          color: "#fff",
-          fontSize: 13,
-          fontWeight: 700,
+          color: "#111827",
+          fontSize: 12,
+          fontWeight: 900,
           cursor: "pointer",
-          boxShadow: "0 8px 28px rgba(0,0,0,0.32)",
+          boxShadow: "0 8px 28px rgba(0,0,0,0.3)",
+          writingMode: "vertical-rl",
+          textOrientation: "mixed",
         }}
       >
-        + Exercise
+        Exercises
       </button>
     );
   }
@@ -89,7 +87,7 @@ export default function ExerciseLibraryModal() {
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Add Exercise"
+      aria-label="Exercise Library"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) setOpen(false);
       }}
@@ -104,66 +102,15 @@ export default function ExerciseLibraryModal() {
         justifyContent: "center",
       }}
     >
-      <div
-        style={{
-          width: "min(1100px, 100%)",
-          height: "min(88vh, 900px)",
-          background: "var(--background, #101010)",
-          border: "1px solid rgba(255,255,255,0.14)",
-          borderRadius: 18,
-          overflow: "hidden",
-          boxShadow: "0 24px 80px rgba(0,0,0,0.5)",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        <div
-          style={{
-            minHeight: 54,
-            padding: "10px 12px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 12,
-            borderBottom: "1px solid rgba(255,255,255,0.12)",
-            background: "rgba(0,0,0,0.2)",
-          }}
-        >
+      <div style={{ width: "min(1100px, 100%)", height: "min(88vh, 900px)", background: "var(--background, #101010)", border: "1px solid rgba(255,255,255,0.14)", borderRadius: 18, overflow: "hidden", boxShadow: "0 24px 80px rgba(0,0,0,0.5)", display: "flex", flexDirection: "column" }}>
+        <div style={{ minHeight: 54, padding: "10px 12px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, borderBottom: "1px solid rgba(255,255,255,0.12)", background: "rgba(0,0,0,0.2)" }}>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 15, fontWeight: 700 }}>Add Exercise</div>
-            <div style={{ fontSize: 12, opacity: 0.65 }}>Choose from the Gym Log exercise database and add the exact exercise name to your notebook.</div>
+            <div style={{ fontSize: 15, fontWeight: 700 }}>Exercise Library</div>
+            <div style={{ fontSize: 12, opacity: 0.65 }}>Learn how to perform an exercise first. Add it to your notebook only when you want to.</div>
           </div>
-          <button
-            type="button"
-            onClick={() => setOpen(false)}
-            aria-label="Close exercise library"
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 10,
-              border: "1px solid rgba(255,255,255,0.14)",
-              background: "rgba(255,255,255,0.06)",
-              color: "inherit",
-              cursor: "pointer",
-              fontSize: 18,
-              flex: "0 0 auto",
-            }}
-          >
-            ✕
-          </button>
+          <button type="button" onClick={() => setOpen(false)} aria-label="Close exercise library" style={{ width: 36, height: 36, borderRadius: 10, border: "1px solid rgba(255,255,255,0.14)", background: "rgba(255,255,255,0.06)", color: "inherit", cursor: "pointer", fontSize: 18, flex: "0 0 auto" }}>✕</button>
         </div>
-
-        <iframe
-          title="Gym Log Exercise Database"
-          src="/exercises?picker=1"
-          style={{
-            width: "100%",
-            flex: "1 1 auto",
-            minHeight: 0,
-            border: 0,
-            background: "var(--background, #101010)",
-          }}
-        />
+        <iframe title="Gym Log Exercise Library" src="/exercises?picker=1" style={{ width: "100%", flex: "1 1 auto", minHeight: 0, border: 0, background: "var(--background, #101010)" }} />
       </div>
     </div>
   );

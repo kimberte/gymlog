@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import Script from "next/script";
 import type { Metadata, Viewport } from "next";
 import Analytics from "./components/Analytics";
+import ExerciseLibraryModal from "./components/ExerciseLibraryModal";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://gymlogapp.com";
 
@@ -98,6 +99,7 @@ export default function RootLayout({
       </head>
       <body className={poppins.className}>
         {children}
+        <ExerciseLibraryModal />
         {/* Track client-side route changes */}
         <Suspense fallback={null}>
           <Analytics />

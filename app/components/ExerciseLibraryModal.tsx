@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function ExerciseLibraryModal() {
   const [editorOpen, setEditorOpen] = useState(false);
   const [open, setOpen] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
     const sync = () => {
@@ -47,6 +48,46 @@ export default function ExerciseLibraryModal() {
     return () => {
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("message", onMessage);
+    };
+  }, [open]);
+
+  function handleIframeLoad() {
+    const doc = iframeRef.current?.contentDocument;
+    if (!doc) return;
+
+    const onClick = (event: MouseEvent) => {
+      const target = event.target as Element | null;
+      const link = target?.closest("a");
+      if (!link) return;
+
+      const href = link.getAttribute("href");
+      if (!href) return;
+
+      try {
+        const url = new URL(href, window.location.origin);
+        // Any link back to the main workout/calendar should close the modal
+        // instead of loading the calendar inside the exercise-library iframe.
+        if (url.origin === window.location.origin && url.pathname === "/") {
+          event.preventDefault();
+          event.stopPropagation();
+          setOpen(false);
+        }
+      } catch {
+        // Ignore malformed/non-navigation hrefs.
+      }
+    };
+
+    doc.addEventListener("click", onClick);
+    iframeRef.current.dataset.bound = "true";
+    (iframeRef.current as HTMLIFrameElement & { __gymLogCleanup?: () => void }).__gymLogCleanup = () => {
+      doc.removeEventListener("click", onClick);
+    };
+  }
+
+  useEffect(() => {
+    return () => {
+      const iframe = iframeRef.current as (HTMLIFrameElement & { __gymLogCleanup?: () => void }) | null;
+      iframe?.__gymLogCleanup?.();
     };
   }, [open]);
 
@@ -110,7 +151,7 @@ export default function ExerciseLibraryModal() {
           </div>
           <button type="button" onClick={() => setOpen(false)} aria-label="Close exercise library" style={{ width: 36, height: 36, borderRadius: 10, border: "1px solid rgba(255,255,255,0.14)", background: "rgba(255,255,255,0.06)", color: "inherit", cursor: "pointer", fontSize: 18, flex: "0 0 auto" }}>✕</button>
         </div>
-        <iframe title="Gym Log Exercise Library" src="/exercises?picker=1" style={{ width: "100%", flex: "1 1 auto", minHeight: 0, border: 0, background: "var(--background, #101010)" }} />
+        <iframe ref={iframeRef} onLoad={handleIframeLoad} title="Gym Log Exercise Library" src="/exercises?picker=1" style={{ width: "100%", flex: "1 1 auto", minHeight: 0, border: 0, background: "var(--background, #101010)" }} />
       </div>
     </div>
   );

@@ -3,7 +3,21 @@
 import { useEffect, useState } from "react";
 
 export default function ExerciseLibraryModal() {
+  const [editorOpen, setEditorOpen] = useState(false);
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const sync = () => {
+      const visible = Boolean(document.querySelector(".editor-full"));
+      setEditorOpen(visible);
+      if (!visible) setOpen(false);
+    };
+
+    sync();
+    const observer = new MutationObserver(sync);
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -13,6 +27,8 @@ export default function ExerciseLibraryModal() {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [open]);
+
+  if (!editorOpen) return null;
 
   if (!open) {
     return (

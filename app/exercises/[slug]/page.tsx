@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { EXERCISE_CATALOG, getCatalogExercise } from "../../lib/exerciseCatalog";
+import ExercisePickerActions from "../../components/ExercisePickerActions";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -43,7 +44,8 @@ export default async function ExerciseDetailPage({ params }: Props) {
         <section className="exercise-card-section"><h2>Tips</h2><ul>{exercise.tips.map(x => <li key={x}>{x}</li>)}</ul></section>
       </div>
       <section className="exercise-card-section"><h2>Common mistakes</h2><ul>{exercise.commonMistakes.map(x => <li key={x}>{x}</li>)}</ul></section>
-      <section className="exercise-cta"><div><h2>Ready to track it?</h2><p>Add this movement to your Gym Log workout and start building your exercise history.</p></div><Link href="/">Open Workout Log →</Link></section>
+      <ExercisePickerActions name={exercise.name} slug={exercise.slug} />
+      <section className="exercise-cta"><div><h2>Want to log it manually?</h2><p>Gym Log is a notebook first. You can simply open your workout and type the exercise, sets, reps, weight and notes yourself.</p></div><Link href="/">Open Workout Log →</Link></section>
       {related.length ? <section className="exercise-related"><h2>Related exercises</h2><div className="exercise-related-grid">{related.map(x => x ? <Link href={`/exercises/${x.slug}`} key={x.slug}><strong>{x.name}</strong><span>{x.category} · {x.movementPattern}</span></Link> : null)}</div></section> : null}
     </article>
   </main>;

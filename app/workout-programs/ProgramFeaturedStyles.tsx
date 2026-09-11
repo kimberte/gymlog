@@ -4,9 +4,9 @@ export default function ProgramFeaturedStyles() {
   return (
     <style jsx global>{`
       .programs-page{overflow-x:hidden}
-      .programs-hero-visual{position:relative;overflow:hidden;min-height:380px;display:flex;align-items:stretch;isolation:isolate}
-      .programs-hero-image{position:absolute;inset:0;background-image:linear-gradient(90deg,rgba(8,11,16,.96) 0%,rgba(8,11,16,.82) 42%,rgba(8,11,16,.18) 100%),url('/empty-gym.png');background-size:cover;background-position:center 55%;z-index:-1}
-      .programs-hero-content{max-width:680px;padding:68px 34px 60px}
+      .programs-hero-visual{position:relative;overflow:hidden;min-height:380px;display:flex;align-items:stretch;isolation:isolate;background:#111820}
+      .programs-hero-image{position:absolute;inset:0;background-image:linear-gradient(90deg,rgba(8,11,16,.9) 0%,rgba(8,11,16,.55) 38%,rgba(8,11,16,.08) 72%,rgba(8,11,16,.02) 100%),linear-gradient(0deg,rgba(8,11,16,.28),transparent 45%),url('/empty-gym.png');background-size:cover;background-position:center 52%;z-index:0}
+      .programs-hero-content{position:relative;z-index:1;max-width:680px;padding:68px 34px 60px}
       .programs-hero-content h1{max-width:620px}
       .programs-hero-content p{max-width:620px}
       .programs-hero-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}

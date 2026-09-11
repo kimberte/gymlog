@@ -67,16 +67,12 @@ export default function ExerciseLibraryModal() {
 
       try {
         const url = new URL(href, window.location.origin);
-        // Any link back to the main workout/calendar should close the modal
-        // instead of loading the calendar inside the exercise-library iframe.
         if (url.origin === window.location.origin && url.pathname === "/") {
           event.preventDefault();
           event.stopPropagation();
           setOpen(false);
         }
-      } catch {
-        // Ignore malformed/non-navigation hrefs.
-      }
+      } catch {}
     };
 
     doc.addEventListener("click", onClick);
@@ -145,13 +141,13 @@ export default function ExerciseLibraryModal() {
         justifyContent: "center",
       }}
     >
-      <div style={{ width: "min(1100px, 100%)", height: "min(88vh, 900px)", background: "var(--background, #101010)", border: "1px solid rgba(255,255,255,0.14)", borderRadius: 18, overflow: "hidden", boxShadow: "0 24px 80px rgba(0,0,0,0.5)", display: "flex", flexDirection: "column" }}>
-        <div style={{ minHeight: 54, padding: "10px 12px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, borderBottom: "1px solid rgba(255,255,255,0.12)", background: "rgba(0,0,0,0.2)" }}>
+      <div className="exercise-library-modal" style={{ width: "min(1100px, 100%)", height: "min(88vh, 900px)", background: "var(--background, #101010)", border: "1px solid rgba(255,255,255,0.14)", borderRadius: 18, overflow: "hidden", boxShadow: "0 24px 80px rgba(0,0,0,0.5)", display: "flex", flexDirection: "column" }}>
+        <div className="exercise-library-modal-header" style={{ minHeight: 54, padding: "10px 12px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, borderBottom: "1px solid rgba(255,255,255,0.12)", background: "rgba(0,0,0,0.2)" }}>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 15, fontWeight: 700 }}>Exercise Library</div>
-            <div style={{ fontSize: 12, opacity: 0.65 }}>Learn how to perform an exercise first. Add it to your notebook only when you want to.</div>
+            <div className="exercise-library-modal-title" style={{ fontSize: 15, fontWeight: 700 }}>Exercise Library</div>
+            <div className="exercise-library-modal-subtitle" style={{ fontSize: 12, opacity: 0.65 }}>Learn how to perform an exercise first. Add it to your notebook only when you want to.</div>
           </div>
-          <button type="button" onClick={() => setOpen(false)} aria-label="Close exercise library" style={{ width: 36, height: 36, borderRadius: 10, border: "1px solid rgba(255,255,255,0.14)", background: "rgba(255,255,255,0.06)", color: "inherit", cursor: "pointer", fontSize: 18, flex: "0 0 auto" }}>✕</button>
+          <button type="button" onClick={() => setOpen(false)} aria-label="Close exercise library" className="exercise-library-modal-close" style={{ width: 36, height: 36, borderRadius: 10, border: "1px solid rgba(255,255,255,0.14)", background: "rgba(255,255,255,0.06)", color: "inherit", cursor: "pointer", fontSize: 18, flex: "0 0 auto" }}>✕</button>
         </div>
         <iframe ref={iframeRef} onLoad={handleIframeLoad} title="Gym Log Exercise Library" src="/exercises?picker=1" style={{ width: "100%", flex: "1 1 auto", minHeight: 0, border: 0, background: "var(--background, #101010)" }} />
       </div>

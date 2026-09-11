@@ -103,6 +103,41 @@ html[data-theme="light"] .stacked-date,
 html[data-theme="light"] .stacked-title-main { color: #18202b; }
 html[data-theme="light"] .stacked-title-sub { color: #667085; }
 
+/* Notebook title: keep the empty field visibly anchored in light mode. */
+html[data-theme="light"] .editor-title {
+  color: #18202b !important;
+  background: #f8fafc !important;
+  border: 1px solid #d0d5dd !important;
+  border-radius: 12px !important;
+  padding: 10px 12px !important;
+  box-shadow: inset 0 1px 2px rgba(16,24,40,.04);
+}
+html[data-theme="light"] .editor-title::placeholder {
+  color: #667085 !important;
+  opacity: 1 !important;
+}
+
+/* Exercise picker modal chrome follows the shared app theme. */
+html[data-theme="light"] .exercise-library-modal {
+  background: #ffffff !important;
+  border-color: #dfe4ea !important;
+}
+html[data-theme="light"] .exercise-library-modal-header {
+  background: #f2f4f7 !important;
+  border-bottom-color: #d0d5dd !important;
+  color: #18202b !important;
+}
+html[data-theme="light"] .exercise-library-modal-title { color: #18202b !important; }
+html[data-theme="light"] .exercise-library-modal-subtitle { color: #475467 !important; opacity: 1 !important; }
+html[data-theme="light"] .exercise-library-modal-close {
+  background: #ffffff !important;
+  border-color: #d0d5dd !important;
+  color: #18202b !important;
+}
+
+/* Appearance control is intentionally positioned immediately above Terms/Privacy. */
+.settings-appearance-slot { width: 100%; }
+
 .theme-setting-row { display:flex; align-items:center; justify-content:space-between; gap:16px; margin:0 0 16px; padding:14px; border:1px solid rgba(255,255,255,.1); border-radius:14px; background:rgba(255,255,255,.035); }
 .theme-setting-row > div:first-child { display:flex; flex-direction:column; gap:3px; min-width:0; }
 .theme-setting-row strong { font-size:13px; }

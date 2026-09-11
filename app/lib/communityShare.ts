@@ -4,12 +4,15 @@ import { uploadWorkoutMedia } from "./workoutMedia";
 
 const COMMUNITY_SHARE_KEY = "gym-log-community-share-enabled";
 
+// Community sharing is now opt-out. The database default is also true so
+// signed-up users participate unless they explicitly turn sharing off.
 export function isCommunityShareEnabled(): boolean {
-  if (typeof window === "undefined") return false;
+  if (typeof window === "undefined") return true;
   try {
-    return localStorage.getItem(COMMUNITY_SHARE_KEY) === "1";
+    const stored = localStorage.getItem(COMMUNITY_SHARE_KEY);
+    return stored === null ? true : stored === "1";
   } catch {
-    return false;
+    return true;
   }
 }
 
@@ -19,6 +22,22 @@ export function setCommunityShareEnabled(enabled: boolean) {
     localStorage.setItem(COMMUNITY_SHARE_KEY, enabled ? "1" : "0");
   } catch {
     // ignore
+  }
+}
+
+export async function syncCommunitySharePreference(enabled: boolean) {
+  setCommunityShareEnabled(enabled);
+  const { data } = await supabase.auth.getSession();
+  const user = data.session?.user;
+  if (!user) return;
+
+  try {
+    await supabase
+      .from("profiles")
+      .update({ community_share_enabled: enabled })
+      .eq("id", user.id);
+  } catch {
+    // best-effort; local state still controls publishing immediately
   }
 }
 
@@ -72,7 +91,6 @@ export async function publishWorkoutDay(args: { dateKey: string; workouts: Recor
 
   const rawEntries: any[] = Array.isArray(day?.entries) ? day.entries : [];
 
-  // Upload any blob/data media to Storage and replace paths with Storage paths
   const entries = await Promise.all(
     rawEntries.map(async (e: any, idx: number) => {
       const entryId = String(e?.id || `w${idx + 1}`);
@@ -80,7 +98,7 @@ export async function publishWorkoutDay(args: { dateKey: string; workouts: Recor
       if (!media?.path || !media?.kind) return e;
 
       const path = String(media.path);
-      if (!isBlobLike(path)) return e; // already a storage path or external URL
+      if (!isBlobLike(path)) return e;
 
       try {
         const res = await fetch(path);
@@ -98,7 +116,6 @@ export async function publishWorkoutDay(args: { dateKey: string; workouts: Recor
           return { ...e, media: { ...media, path: storagePath } };
         }
 
-        // video
         const ext = pickVideoExtFromType(blob.type);
         const storagePath = await uploadWorkoutMedia({
           userId: user.id,
@@ -110,7 +127,6 @@ export async function publishWorkoutDay(args: { dateKey: string; workouts: Recor
         });
         return { ...e, media: { ...media, path: storagePath } };
       } catch {
-        // If upload fails, keep original path (may not render for friends, but don't break save)
         return e;
       }
     })

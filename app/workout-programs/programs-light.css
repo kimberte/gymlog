@@ -1,0 +1,72 @@
+html[data-gymlog-theme="light"] .program-detail-page,
+html[data-gymlog-theme="light"] .programs-page {
+  --background: #f6f7f9;
+  --foreground: #111827;
+  --muted: #4b5563;
+}
+
+html[data-gymlog-theme="light"] .program-detail-page {
+  background: #f6f7f9;
+  color: #111827;
+}
+
+html[data-gymlog-theme="light"] .program-detail-page .programs-nav,
+html[data-gymlog-theme="light"] .program-detail-page .program-detail,
+html[data-gymlog-theme="light"] .program-detail-page .program-related {
+  color: #111827;
+}
+
+html[data-gymlog-theme="light"] .program-detail-page .programs-brand,
+html[data-gymlog-theme="light"] .program-detail-page .programs-back,
+html[data-gymlog-theme="light"] .program-detail-page .program-content-card,
+html[data-gymlog-theme="light"] .program-detail-page .program-related-card,
+html[data-gymlog-theme="light"] .program-detail-page .program-facts>div,
+html[data-gymlog-theme="light"] .program-detail-page .workout-day {
+  color: #111827;
+}
+
+html[data-gymlog-theme="light"] .program-detail-page .program-content-card,
+html[data-gymlog-theme="light"] .program-detail-page .program-related-card,
+html[data-gymlog-theme="light"] .program-detail-page .program-facts>div,
+html[data-gymlog-theme="light"] .program-detail-page .workout-day,
+html[data-gymlog-theme="light"] .program-detail-page .program-downloads,
+html[data-gymlog-theme="light"] .program-detail-page .program-cta {
+  background: #ffffff;
+  border-color: rgba(15,23,42,.12);
+  box-shadow: 0 8px 28px rgba(15,23,42,.06);
+}
+
+html[data-gymlog-theme="light"] .program-detail-page .program-lede,
+html[data-gymlog-theme="light"] .program-detail-page .program-content-card p,
+html[data-gymlog-theme="light"] .program-detail-page .program-related-card span,
+html[data-gymlog-theme="light"] .program-detail-page .program-facts span,
+html[data-gymlog-theme="light"] .program-detail-page .program-downloads p,
+html[data-gymlog-theme="light"] .program-detail-page .program-cta p {
+  color: #4b5563;
+  opacity: 1;
+}
+
+html[data-gymlog-theme="light"] .program-detail-page .program-download-secondary {
+  background: #eef1f4;
+  border-color: rgba(15,23,42,.12);
+  color: #111827;
+}
+
+html[data-gymlog-theme="light"] .program-detail-page .program-related,
+html[data-gymlog-theme="light"] .program-detail-page .workout-day-head {
+  border-color: rgba(15,23,42,.12);
+}
+
+html[data-gymlog-theme="light"] .program-detail-page .program-faq {
+  color: #111827;
+}
+
+html[data-gymlog-theme="light"] .program-detail-page .program-faq p {
+  color: #4b5563;
+  opacity: 1;
+}
+
+html[data-gymlog-theme="light"] .program-detail-page .programs-back {
+  background: #ff5722;
+  color: #111827;
+}

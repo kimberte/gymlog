@@ -3,59 +3,56 @@
 import { useEffect, useState } from "react";
 
 const STORAGE_KEY = "gymlog-program-library-theme";
-
 type Theme = "light" | "dark";
 
 export default function ProgramThemeShell({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>("light");
 
   useEffect(() => {
-    try {
-      const saved = window.localStorage.getItem(STORAGE_KEY);
-      if (saved === "dark" || saved === "light") setTheme(saved);
-    } catch {}
-  }, []);
+    const readTheme = () => {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        const next: Theme = saved === "dark" ? "dark" : "light";
+        setTheme(next);
+        document.documentElement.dataset.gymlogTheme = next;
+      } catch {
+        setTheme("light");
+        document.documentElement.dataset.gymlogTheme = "light";
+      }
+    };
 
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(STORAGE_KEY, theme);
-    } catch {}
-  }, [theme]);
+    readTheme();
+    const onThemeChange = (event: Event) => {
+      const next = (event as CustomEvent<Theme>).detail;
+      if (next === "dark" || next === "light") {
+        setTheme(next);
+        document.documentElement.dataset.gymlogTheme = next;
+      } else {
+        readTheme();
+      }
+    };
+
+    window.addEventListener("gymlog-theme-change", onThemeChange);
+    window.addEventListener("storage", readTheme);
+    return () => {
+      window.removeEventListener("gymlog-theme-change", onThemeChange);
+      window.removeEventListener("storage", readTheme);
+    };
+  }, []);
 
   return (
     <main className={`programs-page programs-page-${theme}`}>
-      <div className="program-theme-toggle-wrap">
-        <div className="program-theme-toggle" role="group" aria-label="Workout program appearance">
-          <span className="program-theme-label">Appearance</span>
-          <button
-            type="button"
-            className={theme === "light" ? "active" : ""}
-            onClick={() => setTheme("light")}
-            aria-pressed={theme === "light"}
-          >
-            <span aria-hidden="true">☀</span> Light
-          </button>
-          <button
-            type="button"
-            className={theme === "dark" ? "active" : ""}
-            onClick={() => setTheme("dark")}
-            aria-pressed={theme === "dark"}
-          >
-            <span aria-hidden="true">☾</span> Dark
-          </button>
-        </div>
-      </div>
       {children}
       <style jsx global>{`
         .programs-page {
           --program-bg: #f6f7f9;
           --program-surface: #ffffff;
-          --program-surface-soft: #f0f2f5;
-          --program-border: rgba(15,23,42,.11);
-          --program-border-strong: rgba(15,23,42,.17);
+          --program-surface-soft: #eef1f4;
+          --program-border: rgba(15,23,42,.12);
+          --program-border-strong: rgba(15,23,42,.20);
           --program-text: #111827;
-          --program-muted: #5f6878;
-          --program-subtle: #7b8493;
+          --program-muted: #4b5563;
+          --program-subtle: #667085;
           --program-accent: #ff5722;
           min-height: 100vh;
           background: var(--program-bg);
@@ -100,14 +97,12 @@ export default function ProgramThemeShell({ children }: { children: React.ReactN
         .programs-page.programs-page-dark .program-search-panel,
         .programs-page.programs-page-dark .program-filter-grid,
         .programs-page.programs-page-dark .program-card-v2,
-        .programs-page.programs-page-dark .program-empty-v2 {
-          box-shadow: 0 8px 28px rgba(0,0,0,.14);
-        }
+        .programs-page.programs-page-dark .program-empty-v2 { box-shadow: 0 8px 28px rgba(0,0,0,.14); }
         .programs-page .program-featured-card>strong,
         .programs-page .program-featured-card>span,
         .programs-page .program-featured-card>small { color: var(--program-text) !important; }
         .programs-page .program-featured-card>span,
-        .programs-page .program-featured-card>small { opacity: .62; }
+        .programs-page .program-featured-card>small { opacity: .72; }
         .programs-page .program-featured-card>b,
         .programs-page .program-card-track strong { color: var(--program-accent) !important; }
         .programs-page .program-search-box,
@@ -132,46 +127,6 @@ export default function ProgramThemeShell({ children }: { children: React.ReactN
         .programs-page .program-card-v2:hover,
         .programs-page .program-featured-card:hover { border-color: rgba(255,87,34,.55) !important; }
         .programs-page .programs-back[style] { background: var(--program-surface-soft) !important; }
-        .programs-page .program-theme-toggle-wrap {
-          position: absolute;
-          top: 14px;
-          right: 20px;
-          z-index: 20;
-        }
-        .programs-page .program-theme-toggle {
-          display: flex;
-          align-items: center;
-          gap: 3px;
-          padding: 4px;
-          border: 1px solid var(--program-border);
-          border-radius: 999px;
-          background: var(--program-surface);
-          box-shadow: 0 5px 18px rgba(15,23,42,.08);
-          font-size: 11px;
-        }
-        .programs-page.programs-page-dark .program-theme-toggle { box-shadow: 0 5px 18px rgba(0,0,0,.18); }
-        .programs-page .program-theme-label { padding: 0 6px 0 8px; color: var(--program-muted); font-weight: 700; }
-        .programs-page .program-theme-toggle button {
-          border: 0;
-          border-radius: 999px;
-          padding: 7px 10px;
-          background: transparent;
-          color: var(--program-muted);
-          font: inherit;
-          font-weight: 800;
-          cursor: pointer;
-          transition: background .15s ease, color .15s ease;
-        }
-        .programs-page .program-theme-toggle button.active {
-          background: var(--program-text);
-          color: var(--program-bg);
-        }
-        .programs-page .program-theme-toggle button:hover { color: var(--program-text); }
-        @media(max-width:650px) {
-          .programs-page .program-theme-toggle-wrap { top: 10px; right: 12px; }
-          .programs-page .program-theme-label { display: none; }
-          .programs-page .program-theme-toggle button { padding: 7px 9px; }
-        }
       `}</style>
     </main>
   );

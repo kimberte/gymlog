@@ -52,7 +52,9 @@ export default function ExerciseLibraryModal() {
   }, [open]);
 
   function handleIframeLoad() {
-    const doc = iframeRef.current?.contentDocument;
+    const iframe = iframeRef.current;
+    if (!iframe) return;
+    const doc = iframe.contentDocument;
     if (!doc) return;
 
     const onClick = (event: MouseEvent) => {
@@ -78,8 +80,8 @@ export default function ExerciseLibraryModal() {
     };
 
     doc.addEventListener("click", onClick);
-    iframeRef.current.dataset.bound = "true";
-    (iframeRef.current as HTMLIFrameElement & { __gymLogCleanup?: () => void }).__gymLogCleanup = () => {
+    iframe.dataset.bound = "true";
+    (iframe as HTMLIFrameElement & { __gymLogCleanup?: () => void }).__gymLogCleanup = () => {
       doc.removeEventListener("click", onClick);
     };
   }

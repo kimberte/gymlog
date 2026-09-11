@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-const STORAGE_KEY = "gymlog-program-library-theme";
+const STORAGE_KEY = "gym-log-theme";
 type Theme = "light" | "dark";
 
 export default function ProgramThemeShell({ children }: { children: React.ReactNode }) {
@@ -14,9 +14,11 @@ export default function ProgramThemeShell({ children }: { children: React.ReactN
         const saved = localStorage.getItem(STORAGE_KEY);
         const next: Theme = saved === "dark" ? "dark" : "light";
         setTheme(next);
+        document.documentElement.dataset.theme = next;
         document.documentElement.dataset.gymlogTheme = next;
       } catch {
         setTheme("light");
+        document.documentElement.dataset.theme = "light";
         document.documentElement.dataset.gymlogTheme = "light";
       }
     };
@@ -26,6 +28,7 @@ export default function ProgramThemeShell({ children }: { children: React.ReactN
       const next = (event as CustomEvent<Theme>).detail;
       if (next === "dark" || next === "light") {
         setTheme(next);
+        document.documentElement.dataset.theme = next;
         document.documentElement.dataset.gymlogTheme = next;
       } else {
         readTheme();

@@ -14,7 +14,7 @@ function applyTheme(theme: Theme) {
 
 export default function ThemeControl() {
   const [theme, setTheme] = useState<Theme>("light");
-  const [settingsEl, setSettingsEl] = useState<HTMLElement | null>(null);
+  const [settingsSlot, setSettingsSlot] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
     let saved: Theme = "light";
@@ -24,11 +24,40 @@ export default function ThemeControl() {
     setTheme(saved);
     applyTheme(saved);
 
-    const findSettings = () => setSettingsEl(document.querySelector<HTMLElement>(".settings"));
-    findSettings();
-    const observer = new MutationObserver(findSettings);
+    const ensureSettingsSlot = () => {
+      const settings = document.querySelector<HTMLElement>(".settings");
+      if (!settings) {
+        setSettingsSlot(null);
+        return;
+      }
+
+      let slot = settings.querySelector<HTMLElement>(".settings-appearance-slot");
+      if (!slot) {
+        const links = Array.from(settings.querySelectorAll<HTMLAnchorElement>("a"));
+        const legalLink = links.find((link) => /terms|privacy/i.test(link.textContent || ""));
+
+        slot = document.createElement("div");
+        slot.className = "settings-appearance-slot";
+
+        if (legalLink?.parentElement) {
+          legalLink.parentElement.insertBefore(slot, legalLink);
+        } else {
+          settings.appendChild(slot);
+        }
+      }
+
+      setSettingsSlot(slot);
+    };
+
+    ensureSettingsSlot();
+    const observer = new MutationObserver(ensureSettingsSlot);
     observer.observe(document.body, { childList: true, subtree: true });
-    return () => observer.disconnect();
+
+    return () => {
+      observer.disconnect();
+      setSettingsSlot(null);
+      document.querySelector(".settings-appearance-slot")?.remove();
+    };
   }, []);
 
   function changeTheme(next: Theme) {
@@ -38,7 +67,7 @@ export default function ThemeControl() {
     window.dispatchEvent(new CustomEvent("gymlog-theme-change", { detail: next }));
   }
 
-  if (!settingsEl) return null;
+  if (!settingsSlot) return null;
 
   return createPortal(
     <div className="theme-setting-row">
@@ -51,6 +80,6 @@ export default function ThemeControl() {
         <button type="button" className={theme === "dark" ? "active" : ""} onClick={() => changeTheme("dark")} aria-pressed={theme === "dark"}>☾ Dark</button>
       </div>
     </div>,
-    settingsEl
+    settingsSlot
   );
 }

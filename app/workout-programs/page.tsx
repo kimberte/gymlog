@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import ProgramLibraryV2 from "./ProgramLibraryV2";
 import ProgramFeaturedStyles from "./ProgramFeaturedStyles";
+import ProgramThemeShell from "./ProgramThemeShell";
 import { PROGRAMS } from "../lib/programs";
 
 export const metadata: Metadata = {
@@ -29,7 +30,7 @@ const featuredSlugs = ["starting-strength","stronglifts-5x5","531","push-pull-le
 export default function WorkoutProgramsPage() {
   const featured = featuredSlugs.map(slug => PROGRAMS.find(p => p.slug === slug)).filter(Boolean);
   return (
-    <main className="programs-page">
+    <ProgramThemeShell>
       <ProgramFeaturedStyles />
       <nav className="programs-nav"><Link href="/" className="programs-brand">Gym Log</Link><Link href="/" className="programs-back">Open Workout Log</Link></nav>
       <section className="programs-hero">
@@ -44,6 +45,6 @@ export default function WorkoutProgramsPage() {
       </section>
       <section className="program-browse-links" aria-labelledby="browse-heading"><div className="program-detail-kicker">BROWSE BY GOAL & TRAINING STYLE</div><h2 id="browse-heading">Workout program guides</h2><p>Jump directly to programs for a specific goal, schedule or equipment setup.</p><div className="program-browse-grid">{browseLinks.map(([href,label]) => <Link href={href} key={href}>{label}<span>→</span></Link>)}</div></section>
       <ProgramLibraryV2 programs={PROGRAMS} />
-    </main>
+    </ProgramThemeShell>
   );
 }

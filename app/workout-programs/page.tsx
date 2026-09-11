@@ -10,21 +10,6 @@ export const metadata: Metadata = {
   description: `Explore ${PROGRAMS.length}+ workout programs for strength, muscle building, hypertrophy, powerlifting, bodybuilding, home training and conditioning. Find a routine and track it with Gym Log.`,
 };
 
-const browseLinks = [
-  ["/workout-programs/goal/muscle", "Muscle building"],
-  ["/workout-programs/goal/strength", "Strength"],
-  ["/workout-programs/goal/beginners", "Beginner programs"],
-  ["/workout-programs/goal/powerlifting", "Powerlifting"],
-  ["/workout-programs/goal/home", "Home workouts"],
-  ["/workout-programs/goal/3-day", "3-day programs"],
-  ["/workout-programs/goal/4-day", "4-day programs"],
-  ["/workout-programs/goal/5-day", "5-day programs"],
-  ["/workout-programs/goal/6-day", "6-day programs"],
-  ["/workout-programs/goal/dumbbells", "Dumbbell programs"],
-  ["/workout-programs/goal/full-body", "Full-body programs"],
-  ["/workout-programs/goal/hypertrophy", "Hypertrophy programs"],
-];
-
 const featuredSlugs = ["starting-strength","stronglifts-5x5","531","push-pull-legs","upper-lower-split","full-body-3-day","jeff-nippard-ppl","beginner-full-body-3"];
 
 export default function WorkoutProgramsPage() {
@@ -33,17 +18,19 @@ export default function WorkoutProgramsPage() {
     <ProgramThemeShell>
       <ProgramFeaturedStyles />
       <nav className="programs-nav"><Link href="/" className="programs-brand">Gym Log</Link><Link href="/" className="programs-back">Open Workout Log</Link></nav>
-      <section className="programs-hero">
-        <div className="programs-kicker">THE GYM LOG PROGRAM LIBRARY</div>
-        <h1>Find a workout program that fits you.</h1>
-        <p>Explore {PROGRAMS.length} workout programs and practical Gym Log templates. Pick a routine, learn how it works, then track your training.</p>
-        <div style={{display:"flex",gap:10,flexWrap:"wrap",marginTop:22}}><Link href="/workout-programs/find" className="programs-back">Find my workout →</Link><Link href="/workout-programs/goal/muscle" className="programs-back" style={{background:"rgba(255,255,255,.08)",color:"inherit"}}>Browse muscle-building programs</Link></div>
+      <section className="programs-hero programs-hero-visual">
+        <div className="programs-hero-image" aria-hidden="true" />
+        <div className="programs-hero-content">
+          <div className="programs-kicker">THE GYM LOG PROGRAM LIBRARY</div>
+          <h1>Find a workout program that fits you.</h1>
+          <p>Explore {PROGRAMS.length} workout programs and practical Gym Log templates. Pick a routine, learn how it works, then track your training.</p>
+          <div className="programs-hero-actions"><Link href="/workout-programs/find" className="programs-back">Find my workout →</Link><a href="#program-library-results" className="programs-back programs-browse-cta">Browse Programs</a></div>
+        </div>
       </section>
       <section className="program-featured" aria-labelledby="featured-heading">
-        <div className="program-detail-kicker">GOOD PLACES TO START</div><h2 id="featured-heading">Popular workout program starting points</h2><p>Not sure where to begin? These recognizable routines cover strength, muscle building and beginner-friendly training schedules.</p>
-        <div className="program-featured-grid">{featured.map(program => program ? <Link href={`/workout-programs/${program.slug}`} className="program-featured-card" key={program.slug}><span>{program.category} · {program.days} days</span><strong>{program.name}</strong><small>{program.goal}</small><b>View &amp; track →</b></Link> : null)}</div>
+        <div className="program-section-heading"><div><div className="program-detail-kicker">GOOD PLACES TO START</div><h2 id="featured-heading">Popular workout program starting points</h2><p>Recognizable routines for strength, muscle building and beginner-friendly training. Swipe through and pick one to explore.</p></div><a href="#program-library-results" className="program-section-link">Browse Programs →</a></div>
+        <div className="program-featured-row">{featured.map(program => program ? <Link href={`/workout-programs/${program.slug}`} className="program-featured-card" key={program.slug}><span className="program-featured-image" aria-hidden="true" /><div className="program-featured-card-body"><span>{program.category} · {program.days} days</span><strong>{program.name}</strong><small>{program.goal}</small><b>View &amp; track →</b></div></Link> : null)}</div>
       </section>
-      <section className="program-browse-links" aria-labelledby="browse-heading"><div className="program-detail-kicker">BROWSE BY GOAL & TRAINING STYLE</div><h2 id="browse-heading">Workout program guides</h2><p>Jump directly to programs for a specific goal, schedule or equipment setup.</p><div className="program-browse-grid">{browseLinks.map(([href,label]) => <Link href={href} key={href}>{label}<span>→</span></Link>)}</div></section>
       <ProgramLibraryV2 programs={PROGRAMS} />
     </ProgramThemeShell>
   );

@@ -5,12 +5,12 @@ export default function ProgramFeaturedStyles() {
     <style jsx global>{`
       .programs-page{overflow-x:hidden}
       .programs-hero-visual{position:relative;overflow:hidden;min-height:380px;display:flex;align-items:stretch;isolation:isolate;background:#111820}
-      .programs-hero-image{position:absolute;inset:0;background-image:linear-gradient(90deg,rgba(8,11,16,.9) 0%,rgba(8,11,16,.55) 38%,rgba(8,11,16,.08) 72%,rgba(8,11,16,.02) 100%),linear-gradient(0deg,rgba(8,11,16,.28),transparent 45%),url('/empty-gym.png');background-size:cover;background-position:center 52%;z-index:0}
-      .programs-hero-content{position:relative;z-index:1;max-width:680px;padding:68px 34px 60px}
-      .programs-hero-content h1{max-width:620px}
-      .programs-hero-content p{max-width:620px}
+      .programs-hero-image{position:absolute;inset:0;background-image:linear-gradient(90deg,rgba(8,11,16,.82) 0%,rgba(8,11,16,.4) 38%,rgba(8,11,16,.06) 72%,rgba(8,11,16,.02) 100%),linear-gradient(0deg,rgba(8,11,16,.2),transparent 45%),url('/empty-gym.png');background-size:cover;background-position:center 52%;z-index:0}
+      .programs-hero-content{position:relative;z-index:1;max-width:680px;padding:68px 34px 60px;color:#fff}
+      .programs-hero-content h1{max-width:620px;color:#fff!important}
+      .programs-hero-content p{max-width:620px;color:rgba(255,255,255,.9)!important}
       .programs-hero-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
-      .programs-browse-cta{background:rgba(255,255,255,.1)!important;color:inherit!important;border:1px solid rgba(255,255,255,.14)}
+      .programs-browse-cta{background:rgba(255,255,255,.12)!important;color:#fff!important;border:1px solid rgba(255,255,255,.25)}
       .program-featured{max-width:1100px;margin:0 auto;padding:34px 20px 8px;min-width:0}
       .program-section-heading{display:flex;align-items:end;justify-content:space-between;gap:20px;margin-bottom:17px}
       .program-featured h2{font-size:clamp(26px,4vw,34px);line-height:1.1;margin:8px 0 9px;letter-spacing:-.03em}

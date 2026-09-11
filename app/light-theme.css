@@ -26,11 +26,14 @@ html[data-theme="light"] .calendar header button { color: var(--text); }
 html[data-theme="light"] .calendar header button:hover,
 html[data-theme="light"] .icon-btn:hover { background: #f2f4f7; }
 html[data-theme="light"] .month-subtitle,
-html[data-theme="light"] .dow-cell { color: #667085; }
+html[data-theme="light"] .dow-cell { color: #667085; opacity: 1; }
 html[data-theme="light"] .cell { background: #fff; border-color: #e2e6eb; box-shadow: 0 2px 8px rgba(16,24,40,.035); }
 html[data-theme="light"] .cell.selected { box-shadow: inset 0 0 0 2px rgba(24,32,43,.12); }
 html[data-theme="light"] .cell.blank { background: transparent; border-color: transparent; box-shadow: none; }
 html[data-theme="light"] .cell.today { background: rgba(255,87,33,.08); }
+html[data-theme="light"] .cell-date { color: #18202b; opacity: 1; }
+html[data-theme="light"] .cell-title { color: #18202b; opacity: 1; }
+html[data-theme="light"] .cell-notes-preview { color: #667085; }
 html[data-theme="light"] .workout-dot,
 html[data-theme="light"] .workout-half-dot { box-shadow: 0 0 0 2px rgba(255,255,255,.9); }
 html[data-theme="light"] .programs-page,
@@ -68,6 +71,37 @@ html[data-theme="light"] .exercise-note-box { background: #fff; border-color: #d
 html[data-theme="light"] .exercise-view-button { background: #f2f4f7; border-color: #dfe4ea; color: #18202b; }
 html[data-theme="light"] .theme-setting-row { background: #f8fafc; border-color: #e1e5ea; }
 html[data-theme="light"] .theme-setting-options { background: #eef1f5; }
+
+/* Higher-contrast light-mode text for the calendar, editor and settings. */
+html[data-theme="light"] .settings,
+html[data-theme="light"] .editor { color: #18202b; }
+html[data-theme="light"] .settings button,
+html[data-theme="light"] .editor button { color: #18202b; }
+html[data-theme="light"] .settings .close,
+html[data-theme="light"] .editor .close { color: #344054 !important; }
+html[data-theme="light"] .settings input,
+html[data-theme="light"] .settings textarea,
+html[data-theme="light"] .settings select,
+html[data-theme="light"] .editor input,
+html[data-theme="light"] .editor textarea,
+html[data-theme="light"] .editor select { background: #f8fafc !important; border-color: #d0d5dd !important; color: #18202b !important; }
+html[data-theme="light"] .settings input::placeholder,
+html[data-theme="light"] .settings textarea::placeholder,
+html[data-theme="light"] .editor input::placeholder,
+html[data-theme="light"] .editor textarea::placeholder { color: #667085 !important; opacity: 1 !important; }
+html[data-theme="light"] .settings a,
+html[data-theme="light"] .editor a { color: #d83d12; }
+html[data-theme="light"] .settings [style*="color: white"],
+html[data-theme="light"] .editor [style*="color: white"] { color: #18202b !important; }
+html[data-theme="light"] .settings [style*="rgba(255,255,255"],
+html[data-theme="light"] .editor [style*="rgba(255,255,255"] { color: #344054 !important; }
+html[data-theme="light"] .settings [style*="background: rgba(0,0,0"],
+html[data-theme="light"] .editor [style*="background: rgba(0,0,0"] { background: #f2f4f7 !important; }
+html[data-theme="light"] .calendar { color: #18202b; }
+html[data-theme="light"] .stacked-row { background: #fff; border-color: #e2e6eb; color: #18202b; }
+html[data-theme="light"] .stacked-date,
+html[data-theme="light"] .stacked-title-main { color: #18202b; }
+html[data-theme="light"] .stacked-title-sub { color: #667085; }
 
 .theme-setting-row { display:flex; align-items:center; justify-content:space-between; gap:16px; margin:0 0 16px; padding:14px; border:1px solid rgba(255,255,255,.1); border-radius:14px; background:rgba(255,255,255,.035); }
 .theme-setting-row > div:first-child { display:flex; flex-direction:column; gap:3px; min-width:0; }

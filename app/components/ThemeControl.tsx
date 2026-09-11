@@ -8,6 +8,7 @@ type Theme = "light" | "dark";
 
 function applyTheme(theme: Theme) {
   document.documentElement.dataset.theme = theme;
+  document.documentElement.dataset.gymlogTheme = theme;
   document.documentElement.style.colorScheme = theme;
 }
 
@@ -34,6 +35,7 @@ export default function ThemeControl() {
     setTheme(next);
     applyTheme(next);
     try { localStorage.setItem(STORAGE_KEY, next); } catch {}
+    window.dispatchEvent(new CustomEvent("gymlog-theme-change", { detail: next }));
   }
 
   if (!settingsEl) return null;

@@ -1,2 +1,11 @@
 import "./programs.css";
-export default function WorkoutProgramsLayout({ children }: { children: React.ReactNode }) { return children; }
+import ProgramThemeSync from "./ProgramThemeSync";
+
+export default function WorkoutProgramsLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <>
+      <ProgramThemeSync />
+      {children}
+    </>
+  );
+}

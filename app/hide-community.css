@@ -1,4 +1,7 @@
 /* Community is temporarily hidden while the feature is being rebuilt. */
-button[title="Community"] {
+button[title="Community"],
+button[aria-label="Open community"],
+a[href="/community"],
+a[href="/community/"] {
   display: none !important;
 }

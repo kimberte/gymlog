@@ -127,7 +127,7 @@ export default function HomePage() {
 
       if (!localStorage.getItem(HOMEPAGE_INTRO_SEEN_KEY) && !hasSpecialFlow) {
         localStorage.setItem(HOMEPAGE_INTRO_SEEN_KEY, "1");
-        window.location.replace("/testhomepage");
+        window.location.replace("/launcher");
       }
     } catch {}
   }, []);
@@ -323,7 +323,7 @@ export default function HomePage() {
           className="brand"
           title="Open Gym Log home"
           aria-label="Open Gym Log home"
-          onClick={() => { window.location.href = "/testhomepage"; }}
+          onClick={() => { window.location.href = "/launcher"; }}
           style={{ cursor: "pointer" }}
         >
           <img src="/icons/gym-app-logo-color-40x40.png" alt="Gym Log" className="brand-logo" width={28} height={28} />

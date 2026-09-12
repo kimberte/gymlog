@@ -1,5 +1,6 @@
 import "./globals.css";
 import "./light-theme.css";
+import "./hide-community.css";
 import { Poppins } from "next/font/google";
 import { Suspense } from "react";
 import Script from "next/script";

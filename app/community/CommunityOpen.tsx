@@ -1,2 +1,5 @@
 "use client";
-// GitHub write test
+
+export default function CommunityOpen() {
+  return null;
+}

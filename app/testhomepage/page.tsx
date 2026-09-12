@@ -1,9 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import SettingsModal from "../components/SettingsModal";
-import { loadWorkouts } from "../lib/storage";
+import { getDayEntries, loadWorkouts } from "../lib/storage";
 import { PROGRAMS } from "../lib/programs";
 import "./test-homepage.css";
 
@@ -13,7 +14,7 @@ function CalendarIcon({ size = 28 }: { size?: number }) { return <svg width={siz
 function ProgramsIcon({ size = 28 }: { size?: number }) { return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3" stroke="currentColor" strokeWidth="1.8"/><path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/><circle cx="17" cy="16" r="1.1" fill="currentColor"/></svg>; }
 function FinderIcon({ size = 28 }: { size?: number }) { return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.3" stroke="currentColor" strokeWidth="1.8"/><path d="m15.5 15.5 5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/><path d="M8.5 10.8h4.6M10.8 8.5v4.6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>; }
 function ExerciseIcon({ size = 28 }: { size?: number }) { return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9v6M3.8 10.2v3.6M18 9v6M20.2 10.2v3.6M6 12h12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>; }
-function SettingsIcon({ size = 28 }: { size?: number }) { return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m12 2.8 1.4 1.7 2.2-.3.9 2.1 2 .9-.3 2.2 1.7 1.4-1.7 1.4.3 2.2-2 .9-.9 2.1-2.2-.3-1.4 1.7-1.4-1.7-2.2.3-.9-2.1-2-.9.3-2.2-1.7-1.4 1.7-1.4-.3-2.2 2-.9.9-2.1 2.2.3L12 2.8Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/><circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.8"/></svg>; }
+function SettingsIcon({ size = 28 }: { size?: number }) { return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16M4 17h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/><circle cx="9" cy="7" r="2" fill="var(--surface,#fff)" stroke="currentColor" strokeWidth="1.8"/><circle cx="15" cy="17" r="2" fill="var(--surface,#fff)" stroke="currentColor" strokeWidth="1.8"/></svg>; }
 function BlogIcon({ size = 28 }: { size?: number }) { return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 4.5h14v15H5z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/><path d="M8.5 8h7M8.5 12h7M8.5 16h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>; }
 
 const actions = [
@@ -42,7 +43,7 @@ export default function TestHomepage() {
   }, []);
 
   const today = useMemo(() => dateKey(), []);
-  const todayWorkouts = Array.isArray(workouts[today]) ? workouts[today] : [];
+  const todayWorkouts = getDayEntries(workouts as any, today);
   const workoutNames = todayWorkouts.map((w: any) => String(w?.title || "").trim()).filter(Boolean);
   const primaryWorkout = workoutNames[0] || "No workout logged yet";
   const workoutCount = todayWorkouts.length;
@@ -54,7 +55,7 @@ export default function TestHomepage() {
   return <main className="test-homepage">
     <div className="test-home-shell">
       <header className="test-home-header">
-        <div className="test-home-brand"><div className="test-home-logo">G</div><div><strong>Gym Log</strong><span>Your training, organized.</span></div></div>
+        <div className="test-home-brand"><Image className="test-home-logo" src="/icon-192.png" alt="Gym Log" width={42} height={42} priority /><div><strong>Gym Log</strong><span>Your training, organized.</span></div></div>
       </header>
 
       <section className="test-home-actions" aria-label="Gym Log navigation">
@@ -75,8 +76,8 @@ export default function TestHomepage() {
       </Link>
 
       {featured && <Link href={`/workout-programs/${featured.slug}`} className="test-featured-card">
-        <div className="test-featured-visual"><span>PROGRAM<br/>OF THE DAY</span><div className="test-featured-mark">GYM<br/>LOG</div></div>
-        <div className="test-featured-content"><span className="test-section-kicker">FEATURED FOR YOU</span><h2>{featured.name}</h2><p>{featured.description}</p><div className="test-featured-meta"><span>{featured.goal}</span><span>{featured.days} days/week</span><span>{featured.level}</span></div><strong>View program →</strong></div>
+        <div className="test-featured-visual"><span>TRY<br/>SOMETHING NEW</span><div className="test-featured-mark">GYM<br/>LOG</div></div>
+        <div className="test-featured-content"><span className="test-section-kicker">TRY SOMETHING NEW</span><h2>{featured.name}</h2><p>{featured.description}</p><div className="test-featured-meta"><span>{featured.goal}</span><span>{featured.days} days/week</span><span>{featured.level}</span></div><strong>View program →</strong></div>
       </Link>}
 
       <p className="test-home-footer">Gym Log · Train consistently. Track everything.</p>

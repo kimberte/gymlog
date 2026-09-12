@@ -12,7 +12,8 @@ import { mergeSeoTemplateIntoWorkouts } from "./lib/seoWorkoutTemplates";
 
 type WeekStart = "sunday" | "monday";
 
-const WEEKSTART_KEY = "gym-log-week-start"; // ✅ separate + safe
+const WEEKSTART_KEY = "gym-log-week-start";
+const HOMEPAGE_INTRO_SEEN_KEY = "gym-log-homepage-intro-seen";
 
 function loadWeekStart(): WeekStart {
   if (typeof window === "undefined") return "sunday";
@@ -35,12 +36,7 @@ function CalendarIcon({ size = 20 }: { size?: number }) {
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       <path d="M7 2v3M17 2v3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
       <path d="M4.5 9h15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <path
-        d="M6.5 5h11A2.5 2.5 0 0 1 20 7.5v12A2.5 2.5 0 0 1 17.5 22h-11A2.5 2.5 0 0 1 4 19.5v-12A2.5 2.5 0 0 1 6.5 5Z"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinejoin="round"
-      />
+      <path d="M6.5 5h11A2.5 2.5 0 0 1 20 7.5v12A2.5 2.5 0 0 1 17.5 22h-11A2.5 2.5 0 0 1 4 19.5v-12A2.5 2.5 0 0 1 6.5 5Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
       <path d="M7.5 12h3M13.5 12h3M7.5 16h3M13.5 16h3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </svg>
   );
@@ -57,7 +53,6 @@ function ListIcon({ size = 20 }: { size?: number }) {
   );
 }
 
-
 function ProgramsIcon({ size = 20 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -71,40 +66,7 @@ function ProgramsIcon({ size = 20 }: { size?: number }) {
 function SettingsIcon({ size = 20 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <path
-        d="M12 2.75
-           13.6 4.35
-           15.85 3.95
-           17.15 5.9
-           19.1 6.2
-           19.4 8.45
-           21 10.05
-           20.1 12
-           21 13.95
-           19.4 15.55
-           19.1 17.8
-           17.15 18.1
-           15.85 20.05
-           13.6 19.65
-           12 21.25
-           10.4 19.65
-           8.15 20.05
-           6.85 18.1
-           4.9 17.8
-           4.6 15.55
-           3 13.95
-           3.9 12
-           3 10.05
-           4.6 8.45
-           4.9 6.2
-           6.85 5.9
-           8.15 3.95
-           10.4 4.35
-           12 2.75Z"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinejoin="round"
-      />
+      <path d="M12 2.75 13.6 4.35 15.85 3.95 17.15 5.9 19.1 6.2 19.4 8.45 21 10.05 20.1 12 21 13.95 19.4 15.55 19.1 17.8 17.15 18.1 15.85 20.05 13.6 19.65 12 21.25 10.4 19.65 8.15 20.05 6.85 18.1 4.9 17.8 4.6 15.55 3 13.95 3.9 12 3 10.05 4.6 8.45 4.9 6.2 6.85 5.9 8.15 3.95 10.4 4.35 12 2.75Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
       <path d="M12 15.4a3.4 3.4 0 1 0 0-6.8 3.4 3.4 0 0 0 0 6.8Z" stroke="currentColor" strokeWidth="2" />
     </svg>
   );
@@ -123,23 +85,10 @@ function ShareIcon({ size = 20 }: { size?: number }) {
 function PeopleIcon({ size = 20 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      {/* Two overlapping users (community) */}
       <path d="M9 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z" stroke="currentColor" strokeWidth="2" />
       <path d="M17 12a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5Z" stroke="currentColor" strokeWidth="2" />
-      <path
-        d="M2.5 20c0-3.2 3.1-5.8 7-5.8 2.3 0 4.4.9 5.7 2.3"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M12.8 16.1c1.1-1.2 2.6-1.9 4.4-1.9 3.0 0 5.3 2.4 5.3 5.8"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+      <path d="M2.5 20c0-3.2 3.1-5.8 7-5.8 2.3 0 4.4.9 5.7 2.3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M12.8 16.1c1.1-1.2 2.6-1.9 4.4-1.9 3 0 5.3 2.4 5.3 5.8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -150,26 +99,41 @@ export default function HomePage() {
   const [showSettings, setShowSettings] = useState(false);
   const [stacked, setStacked] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
-
   const calendarCaptureRef = useRef<HTMLDivElement | null>(null);
-
   const [weekStart, setWeekStart] = useState<WeekStart>("sunday");
-
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [sessionUserId, setSessionUserId] = useState<string | null>(null);
   const [proStatus, setProStatus] = useState<ProStatus>({ isPro: false, reason: "signed_out" });
   const [lastBackupAt, setLastBackupAt] = useState<string | null>(null);
-
   const lastBackupHashRef = useRef<string>("");
   const backupBusyRef = useRef(false);
-
   const didLoadRef = useRef(false);
-
   const handledAuthReturnRef = useRef(false);
 
   useEffect(() => {
-    let initialWorkouts = loadWorkouts();
+    if (typeof window === "undefined") return;
 
+    try {
+      const url = new URL(window.location.href);
+      const hasSpecialFlow = Boolean(
+        url.searchParams.get("auth") ||
+        url.searchParams.get("confirmed") ||
+        url.searchParams.get("imported") ||
+        url.searchParams.get("template") ||
+        url.searchParams.get("start") ||
+        url.searchParams.get("reset") ||
+        url.hash.includes("access_token=")
+      );
+
+      if (!localStorage.getItem(HOMEPAGE_INTRO_SEEN_KEY) && !hasSpecialFlow) {
+        localStorage.setItem(HOMEPAGE_INTRO_SEEN_KEY, "1");
+        window.location.replace("/testhomepage");
+      }
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    let initialWorkouts = loadWorkouts();
     const ws = loadWeekStart();
     setWeekStart(ws);
 
@@ -194,7 +158,6 @@ export default function HomePage() {
 
         let pendingSlug = "";
         let pendingStartDate = "";
-
         if (pendingImportRaw) {
           try {
             const pending = JSON.parse(pendingImportRaw) as { slug?: string; startDate?: string };
@@ -214,14 +177,10 @@ export default function HomePage() {
             localStorage.setItem("gym-log-workouts", JSON.stringify(initialWorkouts));
             localStorage.removeItem("gym-log-template-import-pending");
           } catch {}
-          if (result.importedDates[0]) {
-            setSelectedDate(result.importedDates[0]);
-          }
+          if (result.importedDates[0]) setSelectedDate(result.importedDates[0]);
         }
 
-        if (importedFlag || (slug && startDate)) {
-          showToast("Template imported");
-        }
+        if (importedFlag || (slug && startDate)) showToast("Template imported");
 
         if (importedFlag || importSlug || importStartDate) {
           url.searchParams.delete("imported");
@@ -254,7 +213,6 @@ export default function HomePage() {
   useEffect(() => {
     if (handledAuthReturnRef.current) return;
     handledAuthReturnRef.current = true;
-
     if (typeof window === "undefined") return;
 
     const url = new URL(window.location.href);
@@ -283,11 +241,8 @@ export default function HomePage() {
         localStorage.removeItem("gym-log-auth-intent");
       } catch {}
 
-      if (returnTo && returnTo.startsWith("/")) {
-        window.location.replace(returnTo);
-      } else {
-        window.history.replaceState({}, "", "/");
-      }
+      if (returnTo && returnTo.startsWith("/")) window.location.replace(returnTo);
+      else window.history.replaceState({}, "", "/");
       return;
     }
   }, []);
@@ -307,9 +262,7 @@ export default function HomePage() {
         } catch {
           setProStatus({ isPro: false, reason: "free" });
         }
-      } else {
-        setProStatus({ isPro: false, reason: "signed_out" });
-      }
+      } else setProStatus({ isPro: false, reason: "signed_out" });
 
       unsub = supabase.auth.onAuthStateChange(async (_event, session) => {
         setIsSignedIn(Boolean(session?.user));
@@ -323,204 +276,97 @@ export default function HomePage() {
           } catch {
             setProStatus({ isPro: false, reason: "free" });
           }
-        } else {
-          setProStatus({ isPro: false, reason: "signed_out" });
-        }
+        } else setProStatus({ isPro: false, reason: "signed_out" });
       });
     }
 
     init();
-
     return () => {
-      try {
-        unsub?.data?.subscription?.unsubscribe?.();
-      } catch {}
+      try { unsub?.data?.subscription?.unsubscribe?.(); } catch {}
     };
   }, []);
 
   async function requestBackup(nextWorkouts: Record<string, any>) {
-    if (!isSignedIn) return;
-    if (!proStatus.isPro) return;
-    if (!didLoadRef.current) return;
-    if (backupBusyRef.current) return;
-
+    if (!isSignedIn || !proStatus.isPro || !didLoadRef.current || backupBusyRef.current) return;
     try {
       const hash = JSON.stringify(nextWorkouts ?? {});
       if (hash === lastBackupHashRef.current) return;
       backupBusyRef.current = true;
-
       const updatedAt = await upsertBackup(nextWorkouts);
       lastBackupHashRef.current = hash;
       setLastBackupAt(updatedAt);
-    } catch {
-      // quiet
-    } finally {
+    } catch {} finally {
       backupBusyRef.current = false;
     }
   }
 
   async function onShareCalendar() {
-    if (selectedDate) {
-      showToast("Close the editor to share");
-      return;
-    }
-    if (showSettings) {
-      showToast("Close settings to share");
-      return;
-    }
-
+    if (selectedDate) { showToast("Close the editor to share"); return; }
+    if (showSettings) { showToast("Close settings to share"); return; }
     const node = calendarCaptureRef.current;
-    if (!node) {
-      showToast("Nothing to share");
-      return;
-    }
-
+    if (!node) { showToast("Nothing to share"); return; }
     try {
       showToast("Preparing image…");
       const now = new Date();
       const y = now.getFullYear();
       const m = String(now.getMonth() + 1).padStart(2, "0");
       const d = String(now.getDate()).padStart(2, "0");
-
-      await shareNodeAsPng({
-        node,
-        filename: `gym-log-calendar-${y}-${m}-${d}.png`,
-        title: "Gym Log",
-      });
-    } catch {
-      showToast("Share failed");
-    }
+      await shareNodeAsPng({ node, filename: `gym-log-calendar-${y}-${m}-${d}.png`, title: "Gym Log" });
+    } catch { showToast("Share failed"); }
   }
 
   return (
     <>
       <header className="top-bar">
-        <div className="brand">
-          <img
-            src="/icons/gym-app-logo-color-40x40.png"
-            alt="Gym Log"
-            className="brand-logo"
-            width={28}
-            height={28}
-          />
+        <button
+          type="button"
+          className="brand"
+          title="Open Gym Log home"
+          aria-label="Open Gym Log home"
+          onClick={() => { window.location.href = "/testhomepage"; }}
+          style={{ cursor: "pointer" }}
+        >
+          <img src="/icons/gym-app-logo-color-40x40.png" alt="Gym Log" className="brand-logo" width={28} height={28} />
           <h1>Gym Log</h1>
-        </div>
+        </button>
 
         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-          <button
-            className="icon-btn"
-            title={selectedDate ? "Close the editor to share" : showSettings ? "Close settings to share" : "Share"}
-            aria-label="Share calendar"
-            onClick={onShareCalendar}
-            disabled={Boolean(selectedDate) || Boolean(showSettings)}
-          >
+          <button className="icon-btn" title={selectedDate ? "Close the editor to share" : showSettings ? "Close settings to share" : "Share"} aria-label="Share calendar" onClick={onShareCalendar} disabled={Boolean(selectedDate) || Boolean(showSettings)}>
             <ShareIcon />
           </button>
-
           <button className="icon-btn" title="Toggle view" aria-label="Toggle view" onClick={() => setStacked((s) => !s)}>
             {stacked ? <ListIcon /> : <CalendarIcon />}
           </button>
-
-          <button
-            className="icon-btn nav-tooltip nav-programs-btn"
-            title="Programs"
-            aria-label="Open workout programs"
-            data-tooltip="Workout programs"
-            onClick={() => {
-              window.location.href = "/workouts";
-            }}
-          >
+          <button className="icon-btn nav-tooltip nav-programs-btn" title="Programs" aria-label="Open workout programs" data-tooltip="Workout programs" onClick={() => { window.location.href = "/workouts"; }}>
             <ProgramsIcon />
             <span className="nav-programs-label">Programs</span>
           </button>
-
-          {/* ✅ Community icon stands out */}
-          <button
-            className="icon-btn"
-            title="Community"
-            aria-label="Open community"
-            onClick={() => {
-              window.location.href = "/community";
-            }}
-            style={{
-              color: "var(--accent)",
-              background: "rgba(255,255,255,0.06)",
-              borderColor: "rgba(255,255,255,0.18)",
-              boxShadow: "0 0 0 1px rgba(0,0,0,0.10) inset",
-            }}
-          >
+          <button className="icon-btn" title="Community" aria-label="Open community" onClick={() => { window.location.href = "/community"; }} style={{ color: "var(--accent)", background: "rgba(255,255,255,0.06)", borderColor: "rgba(255,255,255,0.18)", boxShadow: "0 0 0 1px rgba(0,0,0,0.10) inset" }}>
             <PeopleIcon />
           </button>
-
           <button className="icon-btn" title="Settings" aria-label="Open settings" onClick={() => setShowSettings(true)}>
             <SettingsIcon />
           </button>
         </div>
       </header>
 
-{!isSignedIn && (
-  <div style={{
-    margin: "10px 16px",
-    padding: "8px 12px",
-    borderRadius: 10,
-    fontSize: 13,
-    background: "rgba(255,255,255,0.06)",
-    border: "1px solid rgba(255,255,255,0.12)",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 8
-  }}>
-    <span style={{opacity:0.85}}>Not signed in.</span>
-    <button
-      style={{
-        fontSize:12,
-        padding:"4px 8px",
-        borderRadius:6,
-        border:"1px solid rgba(255,255,255,0.2)",
-        background:"rgba(255,255,255,0.08)",
-        cursor:"pointer"
-      }}
-      onClick={() => setShowSettings(true)}
-    >
-      Open Settings
-    </button>
-  </div>
-)}
-
+      {!isSignedIn && (
+        <div style={{ margin: "10px 16px", padding: "8px 12px", borderRadius: 10, fontSize: 13, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+          <span style={{ opacity: 0.85 }}>Not signed in.</span>
+          <button style={{ fontSize: 12, padding: "4px 8px", borderRadius: 6, border: "1px solid rgba(255,255,255,0.2)", background: "rgba(255,255,255,0.08)", cursor: "pointer" }} onClick={() => setShowSettings(true)}>Open Settings</button>
+        </div>
+      )}
 
       <div ref={calendarCaptureRef} style={{ position: "relative" }}>
-        <WorkoutCalendar
-          workouts={workouts}
-          onSelectDate={setSelectedDate}
-          stacked={stacked}
-          weekStart={weekStart}
-          selectedDate={selectedDate}
-        />
+        <WorkoutCalendar workouts={workouts} onSelectDate={setSelectedDate} stacked={stacked} weekStart={weekStart} selectedDate={selectedDate} />
       </div>
 
       {selectedDate && (
-        <WorkoutEditor
-          date={selectedDate}
-          workouts={workouts}
-          setWorkouts={setWorkouts}
-          onSaved={(next) => requestBackup(next)}
-          onClose={() => setSelectedDate(null)}
-          toast={showToast}
-        />
+        <WorkoutEditor date={selectedDate} workouts={workouts} setWorkouts={setWorkouts} onSaved={(next) => requestBackup(next)} onClose={() => setSelectedDate(null)} toast={showToast} />
       )}
 
       {showSettings && (
-        <SettingsModal
-          workouts={workouts}
-          setWorkouts={setWorkouts}
-          onDataSaved={(next) => requestBackup(next)}
-          onClose={() => setShowSettings(false)}
-          toast={showToast}
-          weekStart={weekStart}
-          setWeekStart={setWeekStart}
-          lastBackupAt={lastBackupAt}
-        />
+        <SettingsModal workouts={workouts} setWorkouts={setWorkouts} onDataSaved={(next) => requestBackup(next)} onClose={() => setShowSettings(false)} toast={showToast} weekStart={weekStart} setWeekStart={setWeekStart} lastBackupAt={lastBackupAt} />
       )}
 
       {toast && <div className="toast">{toast}</div>}

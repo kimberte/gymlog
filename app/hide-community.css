@@ -1,0 +1,4 @@
+/* Community is temporarily hidden while the feature is being rebuilt. */
+button[title="Community"] {
+  display: none !important;
+}

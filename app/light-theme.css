@@ -135,6 +135,42 @@ html[data-theme="light"] .exercise-library-modal-close {
   color: #18202b !important;
 }
 
+/* Individual exercise pages inherit the same shared light/dark theme. */
+html[data-theme="light"] .exercise-detail-page {
+  background: #f6f8fa !important;
+  color: #18202b !important;
+}
+html[data-theme="light"] .exercise-detail-page .exercise-detail-nav,
+html[data-theme="light"] .exercise-detail-page .exercise-detail,
+html[data-theme="light"] .exercise-detail-page .exercise-detail-brand,
+html[data-theme="light"] .exercise-detail-page .exercise-back,
+html[data-theme="light"] .exercise-detail-page h1,
+html[data-theme="light"] .exercise-detail-page h2,
+html[data-theme="light"] .exercise-detail-page strong { color: #18202b; }
+html[data-theme="light"] .exercise-detail-page .exercise-lede,
+html[data-theme="light"] .exercise-detail-page .exercise-fact span,
+html[data-theme="light"] .exercise-detail-page .exercise-video-section p,
+html[data-theme="light"] .exercise-detail-page .exercise-cta p,
+html[data-theme="light"] .exercise-detail-page .exercise-related-grid span { color: #4b5563; opacity: 1; }
+html[data-theme="light"] .exercise-detail-page .exercise-fact,
+html[data-theme="light"] .exercise-detail-page .exercise-card-section,
+html[data-theme="light"] .exercise-detail-page .exercise-video-section,
+html[data-theme="light"] .exercise-detail-page .exercise-related-grid a {
+  background: #fff;
+  border-color: #dfe4ea;
+  box-shadow: 0 8px 25px rgba(16,24,40,.06);
+}
+html[data-theme="light"] .exercise-detail-page .exercise-video-link {
+  background: #f8fafc;
+  border-color: #dfe4ea;
+  color: #18202b;
+}
+html[data-theme="light"] .exercise-detail-page .exercise-cta {
+  background: #fff;
+  border-color: #dfe4ea;
+}
+html[data-theme="light"] .exercise-detail-page .exercise-related { border-top-color: #dfe4ea; }
+
 /* Appearance control is intentionally positioned immediately above Terms/Privacy. */
 .settings-appearance-slot { width: 100%; }
 

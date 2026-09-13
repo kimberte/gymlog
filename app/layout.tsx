@@ -1,5 +1,6 @@
 import "./globals.css";
 import "./light-theme.css";
+import "./brand-theme.css";
 import "./hide-community.css";
 import { Poppins } from "next/font/google";
 import { Suspense } from "react";
@@ -34,6 +35,13 @@ export const metadata: Metadata = {
     "upper lower split",
   ],
   alternates: { canonical: "/" },
+  icons: {
+    icon: [
+      { url: "/gym-log-icon.svg", type: "image/svg+xml" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+    ],
+    apple: [{ url: "/gym-log-icon.svg", type: "image/svg+xml" }],
+  },
   openGraph: {
     type: "website",
     url: "/",
@@ -49,7 +57,7 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
-export const viewport: Viewport = { themeColor: "#f5f7fa" };
+export const viewport: Viewport = { themeColor: "#FF6A00" };
 
 const poppins = Poppins({ subsets: ["latin"], weight: ["400", "500", "600"] });
 

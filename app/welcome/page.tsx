@@ -55,7 +55,7 @@ export default function WelcomePage() {
   return <main className="welcome-homepage">
     <div className="welcome-home-shell">
       <header className="welcome-home-header">
-        <div className="welcome-home-brand"><Image className="welcome-home-logo" src="/icon-192.png" alt="Gym Log" width={42} height={42} priority /><div><strong>Gym Log</strong><span>Your training, organized.</span></div></div>
+        <Link href="/" className="welcome-home-brand" aria-label="Gym Log home"><Image className="welcome-home-logo" src="/gym-log-icon.svg" alt="Gym Log" width={42} height={42} priority /><div><strong>Gym Log</strong><span>Your training, organized.</span></div></Link>
       </header>
 
       <section className="welcome-home-actions" aria-label="Gym Log navigation">
@@ -76,7 +76,7 @@ export default function WelcomePage() {
       </Link>
 
       {featured && <Link href={`/workout-programs/${featured.slug}`} className="welcome-featured-card">
-        <div className="welcome-featured-visual"><span>TRY<br/>SOMETHING NEW</span><div className="welcome-featured-mark">GYM<br/>LOG</div></div>
+        <div className="welcome-featured-visual"><span>TRY<br/>SOMETHING NEW</span><div className="welcome-featured-mark">GL</div></div>
         <div className="welcome-featured-content"><span className="welcome-section-kicker">TRY SOMETHING NEW</span><h2>{featured.name}</h2><p>{featured.description}</p><div className="welcome-featured-meta"><span>{featured.goal}</span><span>{featured.days} days/week</span><span>{featured.level}</span></div><strong>View program →</strong></div>
       </Link>}
 

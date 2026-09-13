@@ -23,6 +23,10 @@ html[data-theme="light"] {
   box-shadow: none;
 }
 
+html[data-theme="dark"] .welcome-home-logo {
+  content: url('/gym-log-wordmark-dark.svg');
+}
+
 .welcome-home-brand {
   color: inherit;
   text-decoration: none;
@@ -30,7 +34,6 @@ html[data-theme="light"] {
 }
 
 .welcome-home-brand > div { display: none; }
-
 .welcome-home-header { padding-bottom: 22px; }
 
 /* Calendar header: orange GL dumbbell mark, no old raster icon or padding. */

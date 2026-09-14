@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import SettingsModal from "../components/SettingsModal";
 import { getDayEntries, loadWorkouts } from "../lib/storage";
 import { PROGRAMS } from "../lib/programs";
+import { BLOG_POSTS } from "../blog/blogData";
 import "./welcome-homepage.css";
 
 type WeekStart = "sunday" | "monday";
@@ -34,6 +35,7 @@ export default function WelcomePage() {
   const [weekStart, setWeekStart] = useState<WeekStart>("sunday");
   const [toast, setToast] = useState("");
   const [featured, setFeatured] = useState(PROGRAMS[0]);
+  const latestBlog = BLOG_POSTS[0];
 
   useEffect(() => {
     setWorkouts(loadWorkouts());
@@ -68,6 +70,15 @@ export default function WelcomePage() {
         {workoutCount > 1 && <div className="welcome-today-extra">+ {workoutCount - 1} more workout{workoutCount - 1 === 1 ? "" : "s"}</div>}
         {!workoutCount && <div className="welcome-today-extra">Tap to log today's training</div>}
       </Link>
+
+      {latestBlog && <Link href={`/blog/${latestBlog.slug}`} className="welcome-blog-card">
+        <div className="welcome-blog-image"><img src={latestBlog.image} alt={latestBlog.imageAlt} /></div>
+        <div className="welcome-blog-content">
+          <div className="welcome-blog-top"><span className="welcome-section-kicker">LATEST FROM THE BLOG</span><span className="welcome-open-link">Read article →</span></div>
+          <h2>{latestBlog.title}</h2>
+          <p>{latestBlog.description}</p>
+        </div>
+      </Link>}
 
       {featured && <Link href={`/workout-programs/${featured.slug}`} className="welcome-featured-card">
         <div className="welcome-featured-visual"><span>TRY<br/>SOMETHING NEW</span><div className="welcome-featured-mark">GL</div></div>

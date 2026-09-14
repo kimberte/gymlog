@@ -22,7 +22,6 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
   return (
     <main className="blog-article-shell">
-      <nav className="blog-nav"><Link href="/" className="blog-brand">Gym Log</Link><div><Link href="/blog">Blog</Link><Link href="/workout-programs">Programs</Link><Link href="/">Open Workout Log</Link></div></nav>
       <article className="blog-article">
         <header className="article-header"><Link href="/blog" className="article-back">← Gym Log Blog</Link><span>{post.keyword}</span><h1>{post.title}</h1><p>{post.description}</p><small>{post.date}</small></header>
         <figure className="article-hero"><img src={post.image} alt={post.imageAlt} /><figcaption>Training should fit your goals, equipment and schedule.</figcaption></figure>

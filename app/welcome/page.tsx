@@ -22,7 +22,7 @@ const actions = [
   { label: "Workout Finder", href: "/workout-programs/find", Icon: FinderIcon },
   { label: "Exercise List", href: "/exercises", Icon: ExerciseIcon },
   { label: "Settings", Icon: SettingsIcon },
-  { label: "Blog", Icon: BlogIcon, soon: true },
+  { label: "Blog", href: "/blog", Icon: BlogIcon },
 ];
 
 function dateKey(d = new Date()) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; }
@@ -54,10 +54,9 @@ export default function WelcomePage() {
   return <main className="welcome-homepage">
     <div className="welcome-home-shell">
       <section className="welcome-home-actions" aria-label="Gym Log navigation">
-        {actions.map(({ label, href, Icon, soon }) => {
-          const content = <><span className="welcome-action-icon"><Icon size={29} /></span><span className="welcome-action-label">{label}</span>{soon && <span className="welcome-action-soon">Coming soon</span>}</>;
+        {actions.map(({ label, href, Icon }) => {
+          const content = <><span className="welcome-action-icon"><Icon size={29} /></span><span className="welcome-action-label">{label}</span></>;
           if (label === "Settings") return <button key={label} type="button" className="welcome-action-card" onClick={handleSettings}>{content}</button>;
-          if (soon) return <button key={label} type="button" className="welcome-action-card welcome-action-disabled" onClick={() => showToast("Blog is coming soon")}>{content}</button>;
           return <Link key={label} href={href!} className="welcome-action-card">{content}</Link>;
         })}
       </section>

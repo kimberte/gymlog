@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return { title: `${post.title} | Gym Log`, description: post.description, keywords: [post.keyword, "workout tracker", "Gym Log"] };
 }
 
-const workoutProgramHero = "/blog/workout-program-guide.jpg";
+const workoutProgramHero = "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1600&q=85";
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;

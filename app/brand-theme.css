@@ -8,7 +8,7 @@ html[data-theme="light"] {
   --accent-rgb: 255,106,0;
 }
 
-/* Gym Log brand system: simple GL dumbbell mark, clean typography, restrained UI. */
+/* Gym Log brand system: approved GL dumbbell mark, clean typography, restrained UI. */
 
 /* Launcher: use the horizontal Gym Log lockup, not the padded app icon. */
 .welcome-home-logo {
@@ -36,11 +36,11 @@ html[data-theme="dark"] .welcome-home-logo {
 .welcome-home-brand > div { display: none; }
 .welcome-home-header { padding-bottom: 22px; }
 
-/* Calendar header: simple orange GL dumbbell mark with no padding. */
+/* Calendar header: approved orange GL dumbbell mark with no padding. */
 .brand-logo {
   content: url('/gym-log-mark.svg');
-  width: 42px !important;
-  height: 32px !important;
+  width: 48px !important;
+  height: 30px !important;
   object-fit: contain;
   object-position: center;
   border-radius: 0 !important;
@@ -55,8 +55,8 @@ html[data-theme="dark"] .welcome-home-logo {
 /* Subscribe header uses the same compact GL mark. */
 .subscribe-page header a[aria-label="Gym Log home"] img {
   content: url('/gym-log-mark.svg');
-  width: 42px !important;
-  height: 32px !important;
+  width: 48px !important;
+  height: 30px !important;
   object-fit: contain;
   border: 0 !important;
   border-radius: 0 !important;
@@ -84,5 +84,5 @@ html[data-theme="dark"] .welcome-home-logo {
 
 @media (max-width: 520px) {
   .welcome-home-logo { width: 170px !important; height: 34px !important; }
-  .brand-logo { width: 38px !important; height: 30px !important; }
+  .brand-logo { width: 44px !important; height: 28px !important; }
 }

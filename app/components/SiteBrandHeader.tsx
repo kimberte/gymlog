@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const HIDDEN_PATHS = new Set(["/", "/launcher", "/welcome", "/subscribe"]);
+const HIDDEN_PATHS = new Set(["/", "/subscribe"]);
 
 export default function SiteBrandHeader() {
   const pathname = usePathname();

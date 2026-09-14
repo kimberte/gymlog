@@ -8,9 +8,9 @@ html[data-theme="light"] {
   --accent-rgb: 255,106,0;
 }
 
-/* Gym Log brand system: orange GL dumbbell, clean typography, restrained UI. */
+/* Gym Log brand system: simple GL dumbbell mark, clean typography, restrained UI. */
 
-/* Launcher: use the actual horizontal brand lockup, not the padded app icon. */
+/* Launcher: use the horizontal Gym Log lockup, not the padded app icon. */
 .welcome-home-logo {
   content: url('/gym-log-wordmark.svg');
   width: 188px !important;
@@ -36,11 +36,11 @@ html[data-theme="dark"] .welcome-home-logo {
 .welcome-home-brand > div { display: none; }
 .welcome-home-header { padding-bottom: 22px; }
 
-/* Calendar header: orange GL dumbbell mark, no old raster icon or padding. */
+/* Calendar header: simple orange GL dumbbell mark with no padding. */
 .brand-logo {
   content: url('/gym-log-mark.svg');
-  width: 34px !important;
-  height: 30px !important;
+  width: 42px !important;
+  height: 32px !important;
   object-fit: contain;
   object-position: center;
   border-radius: 0 !important;
@@ -51,6 +51,16 @@ html[data-theme="dark"] .welcome-home-logo {
 
 .top-bar .brand { gap: 7px !important; }
 .top-bar h1 { font-weight: 700 !important; letter-spacing: -.035em; }
+
+/* Subscribe header uses the same compact GL mark. */
+.subscribe-page header a[aria-label="Gym Log home"] img {
+  content: url('/gym-log-mark.svg');
+  width: 42px !important;
+  height: 32px !important;
+  object-fit: contain;
+  border: 0 !important;
+  border-radius: 0 !important;
+}
 
 /* Brand-orange interaction language across the calendar UI. */
 .icon-btn:hover { color: var(--accent); background: rgba(255,106,0,.08); }
@@ -72,14 +82,7 @@ html[data-theme="dark"] .welcome-home-logo {
 
 .welcome-featured-visual:before { background: rgba(255,106,0,.22); }
 
-/* Top-left page logos are temporarily removed without changing navigation or branding text. */
-.welcome-home-logo,
-.brand-logo,
-.subscribe-page header a[aria-label="Gym Log home"] img {
-  display: none !important;
-}
-
 @media (max-width: 520px) {
   .welcome-home-logo { width: 170px !important; height: 34px !important; }
-  .brand-logo { width: 32px !important; height: 28px !important; }
+  .brand-logo { width: 38px !important; height: 30px !important; }
 }

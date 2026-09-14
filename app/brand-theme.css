@@ -23,6 +23,8 @@ html[data-theme="light"] {
   margin: 0 auto;
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 14px;
 }
 
 .site-brand-link {
@@ -52,6 +54,24 @@ html[data-theme="light"] {
 
 .site-brand-link:hover { color: var(--accent); }
 
+.site-brand-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 13px;
+  border-radius: 11px;
+  background: var(--accent);
+  color: #111827;
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 900;
+  white-space: nowrap;
+  box-shadow: 0 6px 18px rgba(255,106,0,.16);
+}
+
+.site-brand-cta:hover { transform: translateY(-1px); }
+
 /* Launcher: use the horizontal Gym Log lockup, tightly framed with no padded icon treatment. */
 .welcome-home-logo {
   content: url('/gym-log-wordmark.svg');
@@ -59,6 +79,8 @@ html[data-theme="light"] {
   height: 34px !important;
   object-fit: contain;
   object-position: left center;
+  display: block !important;
+  margin: 0 !important;
   background: transparent;
   border-radius: 0;
   padding: 0 !important;
@@ -104,6 +126,9 @@ html[data-theme="dark"] .welcome-home-logo {
   border-radius: 0 !important;
 }
 
+/* Remove the page-specific navigation bar now that the shared Gym Log header owns branding + CTA. */
+.exercise-nav { display: none !important; }
+
 /* Brand-orange interaction language across the calendar UI. */
 .icon-btn:hover { color: var(--accent); background: rgba(255,106,0,.08); }
 .icon-btn:focus-visible { outline-color: rgba(255,106,0,.55); }
@@ -124,11 +149,16 @@ html[data-theme="dark"] .welcome-home-logo {
 
 .welcome-featured-visual:before { background: rgba(255,106,0,.22); }
 
+/* Launcher framing: remove the outer top padding that made the logo sit too low. */
+.welcome-homepage { padding-top: 0 !important; }
+.welcome-home-header { padding-top: 12px !important; }
+
 @media (max-width: 520px) {
   .site-brand-header-inner { width: min(100% - 22px, 1120px); min-height: 50px; }
   .site-brand-mark { width: 46px; height: 29px; }
   .site-brand-link { font-size: 15px; }
+  .site-brand-cta { padding: 8px 11px; font-size: 10px; }
   .welcome-home-logo { width: 184px !important; height: 32px !important; }
-  .welcome-home-header { padding-bottom: 18px !important; }
+  .welcome-home-header { padding-top: 10px !important; padding-bottom: 18px !important; }
   .brand-logo { width: 44px !important; height: 28px !important; }
 }

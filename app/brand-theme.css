@@ -72,6 +72,13 @@ html[data-theme="dark"] .welcome-home-logo {
 
 .welcome-featured-visual:before { background: rgba(255,106,0,.22); }
 
+/* Top-left page logos are temporarily removed without changing navigation or branding text. */
+.welcome-home-logo,
+.brand-logo,
+.subscribe-page header a[aria-label="Gym Log home"] img {
+  display: none !important;
+}
+
 @media (max-width: 520px) {
   .welcome-home-logo { width: 170px !important; height: 34px !important; }
   .brand-logo { width: 32px !important; height: 28px !important; }

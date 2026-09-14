@@ -51,8 +51,8 @@ export const BLOG_POSTS: BlogPost[] = [
     title: "Picking the Right Workout Program for You",
     description: "There are thousands of workout programs. Here's how to narrow them down based on your goal, schedule, experience, equipment and recovery.",
     keyword: "workout program",
-    image: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1a?auto=format&fit=crop&w=1600&q=85",
-    imageAlt: "Athlete preparing for a strength workout",
+    image: "/empty-gym.png",
+    imageAlt: "Gym equipment ready for a strength workout",
     date: "September 14, 2026",
     sections: [
       { paragraphs: ["There are thousands of workout programs available online: full body, upper/lower, push pull legs, strength, hypertrophy, bodybuilding, powerlifting and home workouts. More choice can make choosing harder.", "The best workout program is not necessarily the most complicated one. It is the program that matches your goal, schedule, experience and equipment—and that you can actually stick with."] },

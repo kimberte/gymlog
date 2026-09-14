@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import SettingsModal from "../components/SettingsModal";
@@ -54,10 +53,6 @@ export default function WelcomePage() {
 
   return <main className="welcome-homepage">
     <div className="welcome-home-shell">
-      <header className="welcome-home-header">
-        <Link href="/" className="welcome-home-brand" aria-label="Gym Log home"><Image className="welcome-home-logo" src="/gym-log-icon.svg" alt="Gym Log" width={42} height={42} priority /><div><strong>Gym Log</strong><span>Your training, organized.</span></div></Link>
-      </header>
-
       <section className="welcome-home-actions" aria-label="Gym Log navigation">
         {actions.map(({ label, href, Icon, soon }) => {
           const content = <><span className="welcome-action-icon"><Icon size={29} /></span><span className="welcome-action-label">{label}</span>{soon && <span className="welcome-action-soon">Coming soon</span>}</>;

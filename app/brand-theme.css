@@ -10,11 +10,53 @@ html[data-theme="light"] {
 
 /* Gym Log brand system: approved GL dumbbell mark, clean typography, restrained UI. */
 
-/* Launcher: use the horizontal Gym Log lockup, not the padded app icon. */
+/* Secondary-page brand header: the approved GL dumbbell mark stays visible on all non-app pages. */
+.site-brand-header {
+  width: 100%;
+  background: var(--bg, #f5f7fa);
+  border-bottom: 1px solid color-mix(in srgb, var(--text, #18202b) 9%, transparent);
+}
+
+.site-brand-header-inner {
+  width: min(1120px, calc(100% - 32px));
+  min-height: 54px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+}
+
+.site-brand-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: inherit;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -.025em;
+  line-height: 1;
+}
+
+.site-brand-mark {
+  width: 52px;
+  height: 32px;
+  display: block;
+  object-fit: contain;
+  padding: 0 !important;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.site-brand-link:hover { color: var(--accent); }
+
+/* Launcher: use the horizontal Gym Log lockup, tightly framed with no padded icon treatment. */
 .welcome-home-logo {
   content: url('/gym-log-wordmark.svg');
-  width: 188px !important;
-  height: 38px !important;
+  width: 196px !important;
+  height: 34px !important;
   object-fit: contain;
   object-position: left center;
   background: transparent;
@@ -34,7 +76,7 @@ html[data-theme="dark"] .welcome-home-logo {
 }
 
 .welcome-home-brand > div { display: none; }
-.welcome-home-header { padding-bottom: 22px; }
+.welcome-home-header { padding: 0 0 20px !important; }
 
 /* Calendar header: approved orange GL dumbbell mark with no padding. */
 .brand-logo {
@@ -83,6 +125,10 @@ html[data-theme="dark"] .welcome-home-logo {
 .welcome-featured-visual:before { background: rgba(255,106,0,.22); }
 
 @media (max-width: 520px) {
-  .welcome-home-logo { width: 170px !important; height: 34px !important; }
+  .site-brand-header-inner { width: min(100% - 22px, 1120px); min-height: 50px; }
+  .site-brand-mark { width: 46px; height: 29px; }
+  .site-brand-link { font-size: 15px; }
+  .welcome-home-logo { width: 184px !important; height: 32px !important; }
+  .welcome-home-header { padding-bottom: 18px !important; }
   .brand-logo { width: 44px !important; height: 28px !important; }
 }

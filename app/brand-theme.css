@@ -9,145 +9,38 @@ html[data-theme="light"] {
 }
 
 /* Gym Log brand system: approved GL dumbbell mark, clean typography, restrained UI. */
-
-/* Secondary-page brand header: the approved GL dumbbell mark stays visible on all non-app pages. */
-.site-brand-header {
-  width: 100%;
-  background: var(--bg, #f5f7fa);
-  border-bottom: 1px solid color-mix(in srgb, var(--text, #18202b) 9%, transparent);
-}
-
-.site-brand-header-inner {
-  width: min(1120px, calc(100% - 32px));
-  min-height: 54px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-}
-
-.site-brand-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  color: inherit;
-  text-decoration: none;
-  font-size: 16px;
-  font-weight: 800;
-  letter-spacing: -.025em;
-  line-height: 1;
-}
-
-.site-brand-mark {
-  width: 52px;
-  height: 32px;
-  display: block;
-  object-fit: contain;
-  padding: 0 !important;
-  margin: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-}
-
+.site-brand-header { width: 100%; background: var(--bg, #f5f7fa); border-bottom: 1px solid color-mix(in srgb, var(--text, #18202b) 9%, transparent); }
+.site-brand-header-inner { width: min(1120px, calc(100% - 32px)); min-height: 54px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+.site-brand-link { display: inline-flex; align-items: center; gap: 9px; color: inherit; text-decoration: none; font-size: 16px; font-weight: 800; letter-spacing: -.025em; line-height: 1; }
+.site-brand-mark { width: 52px; height: 32px; display: block; object-fit: contain; padding: 0 !important; margin: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
 .site-brand-link:hover { color: var(--accent); }
-
-.site-brand-cta {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 9px 13px;
-  border-radius: 11px;
-  background: var(--accent);
-  color: #111827;
-  text-decoration: none;
-  font-size: 11px;
-  font-weight: 900;
-  white-space: nowrap;
-  box-shadow: 0 6px 18px rgba(255,106,0,.16);
-}
-
+.site-brand-cta { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 13px; border-radius: 11px; background: var(--accent); color: #111827; text-decoration: none; font-size: 11px; font-weight: 900; white-space: nowrap; box-shadow: 0 6px 18px rgba(255,106,0,.16); }
 .site-brand-cta:hover { transform: translateY(-1px); }
 
-/* Launcher: use only the approved GL dumbbell mark — no wordmark or duplicate text. */
-.welcome-home-logo {
-  content: url('/gym-log-mark.svg');
-  width: 82px !important;
-  height: 38px !important;
-  object-fit: contain;
-  object-position: left center;
-  display: block !important;
-  margin: 0 !important;
-  background: transparent;
-  border-radius: 0;
-  padding: 0 !important;
-  box-shadow: none;
-}
-
-.welcome-home-brand {
-  color: inherit;
-  text-decoration: none;
-  gap: 0 !important;
-}
-
+/* Launcher branding is now supplied by the shared SiteBrandHeader. */
+.welcome-home-logo { content: url('/gym-log-mark.svg'); width: 82px !important; height: 38px !important; object-fit: contain; object-position: left center; display: block !important; margin: 0 !important; background: transparent; border-radius: 0; padding: 0 !important; box-shadow: none; }
+.welcome-home-brand { color: inherit; text-decoration: none; gap: 0 !important; }
 .welcome-home-brand > div { display: none !important; }
 .welcome-home-header { padding: 0 0 20px !important; }
 
 /* Calendar header: approved orange GL dumbbell mark with no padding. */
-.brand-logo {
-  content: url('/gym-log-mark.svg');
-  width: 48px !important;
-  height: 30px !important;
-  object-fit: contain;
-  object-position: center;
-  border-radius: 0 !important;
-  background: transparent !important;
-  padding: 0 !important;
-  box-shadow: none !important;
-}
-
+.brand-logo { content: url('/gym-log-mark.svg'); width: 48px !important; height: 30px !important; object-fit: contain; object-position: center; border-radius: 0 !important; background: transparent !important; padding: 0 !important; box-shadow: none !important; }
 .top-bar .brand { gap: 7px !important; }
 .top-bar h1 { font-weight: 700 !important; letter-spacing: -.035em; }
 
 /* Subscribe header uses the same compact GL mark. */
-.subscribe-page header a[aria-label="Gym Log home"] img {
-  content: url('/gym-log-mark.svg');
-  width: 48px !important;
-  height: 30px !important;
-  object-fit: contain;
-  border: 0 !important;
-  border-radius: 0 !important;
-}
-
-/* Remove the page-specific navigation bar now that the shared Gym Log header owns branding + CTA. */
+.subscribe-page header a[aria-label="Gym Log home"] img { content: url('/gym-log-mark.svg'); width: 48px !important; height: 30px !important; object-fit: contain; border: 0 !important; border-radius: 0 !important; }
 .exercise-nav { display: none !important; }
-
-/* Brand-orange interaction language across the calendar UI. */
 .icon-btn:hover { color: var(--accent); background: rgba(255,106,0,.08); }
 .icon-btn:focus-visible { outline-color: rgba(255,106,0,.55); }
 .calendar header button:hover { color: var(--accent); background: rgba(255,106,0,.08); }
-
-.cell.today {
-  border-color: var(--accent) !important;
-  background: rgba(255,106,0,.10) !important;
-}
-
-.welcome-action-icon {
-  background: color-mix(in srgb, #FF6A00 10%, var(--surface, #fff));
-  color: #FF6A00;
-}
-
-.welcome-section-kicker,
-.welcome-featured-content > strong { color: #FF6A00; }
-
+.cell.today { border-color: var(--accent) !important; background: rgba(255,106,0,.10) !important; }
+.welcome-action-icon { background: color-mix(in srgb, #FF6A00 10%, var(--surface, #fff)); color: #FF6A00; }
+.welcome-section-kicker, .welcome-featured-content > strong { color: #FF6A00; }
 .welcome-featured-visual:before { background: rgba(255,106,0,.22); }
 
-/* Launcher framing: tight logo placement with no extra top padding. */
-.welcome-homepage { padding-top: 0 !important; }
-.welcome-home-header { padding-top: 6px !important; }
+/* Launcher framing: leave deliberate breathing room below the shared navigation. */
+.welcome-homepage { padding-top: 22px !important; }
 
 @media (max-width: 520px) {
   .site-brand-header-inner { width: min(100% - 22px, 1120px); min-height: 50px; }
@@ -157,4 +50,5 @@ html[data-theme="light"] {
   .welcome-home-logo { width: 72px !important; height: 34px !important; }
   .welcome-home-header { padding-top: 4px !important; padding-bottom: 16px !important; }
   .brand-logo { width: 44px !important; height: 28px !important; }
+  .welcome-homepage { padding-top: 16px !important; }
 }

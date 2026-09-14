@@ -16,6 +16,7 @@ export default function SiteBrandHeader() {
           <img src="/gym-log-mark.svg" alt="Gym Log" className="site-brand-mark" width={52} height={32} />
           <span>Gym Log</span>
         </Link>
+        <Link href="/" className="site-brand-cta">Open Workout Log <span aria-hidden="true">→</span></Link>
       </div>
     </header>
   );

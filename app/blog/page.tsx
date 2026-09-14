@@ -11,7 +11,6 @@ export const metadata: Metadata = {
 export default function BlogPage() {
   return (
     <main className="blog-shell">
-      <nav className="blog-nav"><Link href="/" className="blog-brand">Gym Log</Link><div><Link href="/workout-programs">Programs</Link><Link href="/">Open Workout Log</Link></div></nav>
       <section className="blog-hero"><span>THE GYM LOG BLOG</span><h1>Train smarter. Track it. Keep going.</h1><p>Practical guides for choosing programs, training at home, making progress and fitting fitness into a busy life.</p></section>
       <section className="blog-grid" aria-label="Gym Log articles">
         {BLOG_POSTS.map(post => (

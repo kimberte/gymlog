@@ -17,7 +17,6 @@ export default function WorkoutProgramsPage() {
   return (
     <ProgramThemeShell>
       <ProgramFeaturedStyles />
-      <nav className="programs-nav"><Link href="/" className="programs-brand">Gym Log</Link><Link href="/" className="programs-back">Open Workout Log</Link></nav>
       <section className="programs-hero programs-hero-visual">
         <div className="programs-hero-image" aria-hidden="true" />
         <div className="programs-hero-content">

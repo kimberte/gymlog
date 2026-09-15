@@ -9,6 +9,7 @@ import { BLOG_POSTS } from "../blog/blogData";
 import "./welcome-homepage.css";
 
 type WeekStart = "sunday" | "monday";
+const WELCOME_SEEN_DATE_KEY = "gym-log-welcome-seen-date";
 
 function CalendarIcon({ size = 28 }: { size?: number }) { return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 2v3M17 2v3M4.5 9h15" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/><path d="M6.5 5h11A2.5 2.5 0 0 1 20 7.5v12A2.5 2.5 0 0 1 17.5 22h-11A2.5 2.5 0 0 1 4 19.5v-12A2.5 2.5 0 0 1 6.5 5Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/><path d="M7.5 13h3M13.5 13h3M7.5 17h3M13.5 17h3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>; }
 function ProgramsIcon({ size = 28 }: { size?: number }) { return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3" stroke="currentColor" strokeWidth="1.8"/><path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/><circle cx="17" cy="16" r="1.1" fill="currentColor"/></svg>; }
@@ -39,7 +40,10 @@ export default function WelcomePage() {
 
   useEffect(() => {
     setWorkouts(loadWorkouts());
-    try { setWeekStart(localStorage.getItem("gym-log-week-start") === "monday" ? "monday" : "sunday"); } catch {}
+    try {
+      setWeekStart(localStorage.getItem("gym-log-week-start") === "monday" ? "monday" : "sunday");
+      localStorage.setItem(WELCOME_SEEN_DATE_KEY, dateKey());
+    } catch {}
     if (PROGRAMS.length) setFeatured(PROGRAMS[Math.floor(Math.random() * PROGRAMS.length)]);
   }, []);
 

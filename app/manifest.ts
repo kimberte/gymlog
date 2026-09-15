@@ -13,13 +13,13 @@ export default function manifest(): MetadataRoute.Manifest {
         src: "/gym-log-splash.svg",
         sizes: "192x192",
         type: "image/svg+xml",
-        purpose: "any maskable",
+        purpose: "any",
       },
       {
         src: "/gym-log-splash.svg",
         sizes: "512x512",
         type: "image/svg+xml",
-        purpose: "any maskable",
+        purpose: "maskable",
       },
     ],
   };

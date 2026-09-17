@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import SettingsModal from "../components/SettingsModal";
 import { getDayEntries, loadWorkouts } from "../lib/storage";
 import { PROGRAMS } from "../lib/programs";
-import { BLOG_POSTS } from "../blog/blogData";
+import { ALL_BLOG_POSTS } from "../blog/blogPosts";
 import "./welcome-homepage.css";
 
 type WeekStart = "sunday" | "monday";
@@ -36,7 +36,7 @@ export default function WelcomePage() {
   const [weekStart, setWeekStart] = useState<WeekStart>("sunday");
   const [toast, setToast] = useState("");
   const [featured, setFeatured] = useState(PROGRAMS[0]);
-  const latestBlog = BLOG_POSTS[0];
+  const latestBlog = ALL_BLOG_POSTS[0];
 
   useEffect(() => {
     setWorkouts(loadWorkouts());

@@ -128,4 +128,40 @@ export const SPECIFIC_PROGRAMS_10: Record<string, SpecificProgram10> = {
     progression: "Progression is deliberately conservative: improve repetition quality and gradually add load while keeping sessions comfortably repeatable. The method is built around consistency rather than frequent failure.",
     accuracyNote: "Easy Strength has multiple implementations. This page summarizes the core frequent-practice philosophy without reproducing a particular book's complete prescription."
   }
+  "gym-log-founder-special": {
+    duration: "4-week block; 4 training days per week; 45–60 minutes per session",
+    workouts: [
+      w("Day 1", "Upper — Bench strength + hypertrophy", [
+        "Bench Press — W1 4×5 @ RPE 7; W2 5×4 @ RPE 7.5; W3 5×3 @ RPE 8; W4 4×2 @ RPE 8 + optional crisp single @ RPE 8",
+        "One-Arm Dumbbell Row or Chest-Supported Row — 3×8–12",
+        "Incline Dumbbell Press — 3×8–12",
+        "Lat Pulldown — 3×8–12",
+        "Cable Lateral Raise — 2×12–20 + Triceps Pressdown — 2×10–15",
+      ], "Start with the bench work and take 2–3 minutes between work sets. Accessories can be supersetted. Add a small amount of weight when all prescribed reps are crisp; never turn the top work into a grinder. Optional 10–15 minute incline treadmill walk after the session."),
+      w("Day 2", "Lower — Squat every other week", [
+        "Back Squat — W1 3×5 @ RPE 7; W3 4×4 @ RPE 7.5–8. W2/W4: no squat; use Bulgarian Split Squat — 3×8–10/leg",
+        "Romanian Deadlift — 3×6–10",
+        "Cable or Slider Leg Curl — 3×10–15",
+        "Dumbbell Step-Up or Reverse Lunge — 2×8–12/leg",
+        "Calf Raise or Plank — 2×10–15 or 2×30–60 sec",
+      ], "Weeks 1 and 3 keep a controlled squat exposure; weeks 2 and 4 deliberately remove squatting to manage fatigue. Keep 1–3 reps in reserve on lower-body work. On W2/W4, this is the easier lower day and can pair well with a 10–20 minute incline walk."),
+      w("Day 3", "Upper — Bench volume + back, delts and arms", [
+        "Bench Press — W1 3×6 @ RPE 7; W2 4×5 @ RPE 7–7.5; W3 3×5 @ RPE 7.5; W4 3×4 @ RPE 7.5",
+        "Seated Cable Row — 3×8–12",
+        "Dumbbell Shoulder Press — 2–3×8–12",
+        "Lat Pulldown — 3×8–12",
+        "Cable Lateral Raise — 2×12–20 + Dumbbell/Cable Curl — 2×8–15",
+      ], "This is the second weekly bench touch: enough volume to build strength and retain pressing muscle without duplicating the heavy day. Superset rows/pulldowns with delt or arm work when time is tight. Keep most sets 1–3 reps shy of failure."),
+      w("Day 4", "Lower — Posterior chain + hypertrophy", [
+        "Deadlift — W1–3: no conventional deadlift; use Barbell Hip Thrust — 3×6–10. W4: Deadlift — 3×3 @ RPE 7.5–8",
+        "Leg Press substitute: Goblet Squat or Dumbbell Split Squat — W1–3 3×8–12; W4 2×8–12",
+        "Romanian Deadlift or Cable Pull-Through — W1–3 2–3×8–12; W4 2×8–10",
+        "Cable Leg Curl — 3×10–15",
+        "Core — 2×8–15 or 30–60 sec",
+      ], "Deadlift is intentionally limited to week 4, and week 4 has no barbell squat anywhere in the block. Keep the deadlift submaximal and technically clean. If recovery is poor, use 2×3 instead of 3×3. Optional 10–15 minute incline treadmill walk after."),
+    ],
+    progression: "Use an honest Training Max or estimated 1RM only as a reference; the primary guardrail is RPE. Bench progresses each week from moderate five-rep work toward heavier doubles, with a second lower-stress bench exposure on Day 3. Squat appears only in weeks 1 and 3. Deadlift appears only in week 4, when there is no squat. For hypertrophy work, use double progression: stay within the listed rep range, add reps before load, and add load only when technique remains consistent. Most accessory sets should finish with 1–3 reps in reserve. After week 4, take several easier sessions or reduce loads/volume before starting another block.",
+    accuracyNote: "Gym Log original program designed for an experienced lifter training in a home gym with a rack, barbell, dumbbells and pulley system. The four-day block prioritizes weekly bench practice, alternating squat exposure and a single deadlift week while keeping most training focused on efficient hypertrophy and muscle maintenance. It is intentionally autoregulated rather than tied to a fixed 1RM because the intended user is an experienced lifter managing limited time and recovery.",
+  },
+
 };

@@ -127,7 +127,7 @@ export const SPECIFIC_PROGRAMS_10: Record<string, SpecificProgram10> = {
     ],
     progression: "Progression is deliberately conservative: improve repetition quality and gradually add load while keeping sessions comfortably repeatable. The method is built around consistency rather than frequent failure.",
     accuracyNote: "Easy Strength has multiple implementations. This page summarizes the core frequent-practice philosophy without reproducing a particular book's complete prescription."
-  }
+  },
   "gym-log-founder-special": {
     duration: "4-week block; 4 training days per week; 45–60 minutes per session",
     workouts: [

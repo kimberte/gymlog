@@ -28,20 +28,20 @@ function fallbackDays(program: NonNullable<ReturnType<typeof getProgram>>) {
   const category = program.category.toLowerCase();
 
   if (category.includes("powerlifting")) {
-    return offsets.map((offset, i) => ({ name: `Day ${i + 1}`, focus: "Main lift strength and supporting work", offsetDays: offset, exercises: [i % 3 === 0 ? "Back Squat — 3-5 sets" : i % 3 === 1 ? "Bench Press — 3-5 sets" : "Deadlift — 3-5 sets", i % 3 === 0 ? "Bench Press — 3-5 sets" : i % 3 === 1 ? "Deadlift — 3-5 sets" : "Back Squat — 3-5 sets", "Secondary compound lift — 3 sets", "Accessory work — 2-4 sets"] }));
+    return offsets.map((offset, i) => ({ day: `Day ${i + 1}`, focus: "Main lift strength and supporting work", offsetDays: offset, exercises: [i % 3 === 0 ? "Back Squat — 3-5 sets" : i % 3 === 1 ? "Bench Press — 3-5 sets" : "Deadlift — 3-5 sets", i % 3 === 0 ? "Bench Press — 3-5 sets" : i % 3 === 1 ? "Deadlift — 3-5 sets" : "Back Squat — 3-5 sets", "Secondary compound lift — 3 sets", "Accessory work — 2-4 sets"] }));
   }
 
   if (category.includes("hypertrophy") || category.includes("bodybuilding") || category.includes("powerbuilding")) {
     const splits = [["Chest Press — 3-4 sets", "Row — 3-4 sets", "Lateral Raise — 3 sets", "Triceps Extension — 2-3 sets", "Biceps Curl — 2-3 sets"], ["Back Squat or Leg Press — 3-4 sets", "Romanian Deadlift — 3 sets", "Leg Curl — 3 sets", "Calf Raise — 3 sets", "Core — 2-3 sets"], ["Overhead Press — 3-4 sets", "Pull-Up or Lat Pulldown — 3-4 sets", "Incline Press — 3 sets", "Lateral Raise — 3 sets", "Curl — 2-3 sets"], ["Deadlift or Hip Hinge — 3 sets", "Leg Press — 3-4 sets", "Leg Curl — 3 sets", "Calf Raise — 3 sets", "Core — 2-3 sets"], ["Bench Press — 3-4 sets", "Row — 3-4 sets", "Shoulder Press — 3 sets", "Triceps — 2-3 sets", "Biceps — 2-3 sets"], ["Squat — 3-4 sets", "Romanian Deadlift — 3 sets", "Split Squat — 3 sets", "Leg Curl — 3 sets", "Calves — 3 sets"]];
-    return offsets.map((offset, i) => ({ name: `Day ${i + 1}`, focus: "Muscle-building training", offsetDays: offset, exercises: splits[i % splits.length] }));
+    return offsets.map((offset, i) => ({ day: `Day ${i + 1}`, focus: "Muscle-building training", offsetDays: offset, exercises: splits[i % splits.length] }));
   }
 
   if (category.includes("home") || category.includes("bodyweight") || category.includes("kettlebell")) {
     const sessions = [["Squat or Goblet Squat — 3 sets", "Push-Up or Press — 3 sets", "Row or Pull-Up — 3 sets", "Hip Hinge — 3 sets", "Core — 2-3 sets"], ["Split Squat — 3 sets", "Overhead Press — 3 sets", "Row or Pull-Up — 3 sets", "Glute Bridge — 3 sets", "Plank — 2-3 sets"], ["Squat Variation — 3 sets", "Push-Up Variation — 3 sets", "Pull-Up or Row — 3 sets", "Lunge — 3 sets", "Core — 2-3 sets"]];
-    return offsets.map((offset, i) => ({ name: `Day ${i + 1}`, focus: "Home-friendly strength and fitness", offsetDays: offset, exercises: sessions[i % sessions.length] }));
+    return offsets.map((offset, i) => ({ day: `Day ${i + 1}`, focus: "Home-friendly strength and fitness", offsetDays: offset, exercises: sessions[i % sessions.length] }));
   }
 
-  return offsets.map((offset, i) => ({ name: `Day ${i + 1}`, focus: "Full-body strength and fitness", offsetDays: offset, exercises: ["Squat or Leg Press — 3 sets", "Bench Press or Push-Up — 3 sets", "Row or Pulldown — 3 sets", "Hip Hinge — 3 sets", "Core or Carry — 2-3 sets"] }));
+  return offsets.map((offset, i) => ({ day: `Day ${i + 1}`, focus: "Full-body strength and fitness", offsetDays: offset, exercises: ["Squat or Leg Press — 3 sets", "Bench Press or Push-Up — 3 sets", "Row or Pulldown — 3 sets", "Hip Hinge — 3 sets", "Core or Carry — 2-3 sets"] }));
 }
 
 export default function ImportTemplatePage() {

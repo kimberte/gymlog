@@ -49,7 +49,11 @@ export default function ImportTemplatePage() {
   const slug = String(params?.slug || "");
   const template = useMemo(() => getSeoTemplateBySlug(slug), [slug]);
   const program = useMemo(() => getProgram(slug), [slug]);
-  const days = slug === "gym-log-founder-special" ? FOUNDER_SPECIAL_WORKOUTS : (template?.days ?? (program ? fallbackDays(program) : []));
+  const rawDays = slug === "gym-log-founder-special" ? FOUNDER_SPECIAL_WORKOUTS : (template?.days ?? (program ? fallbackDays(program) : []));
+  const days = rawDays.map((day) => ({
+    ...day,
+    day: "day" in day ? day.day : day.name,
+  }));
   const name = template?.name ?? program?.name ?? "Workout Program";
   const description = template?.shortDescription ?? program?.description ?? "Import this workout program into Gym Log.";
   const [startDate, setStartDate] = useState(() => toDateInputValue(new Date()));

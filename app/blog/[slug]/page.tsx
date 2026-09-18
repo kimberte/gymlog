@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ALL_BLOG_POSTS, getBlogPost } from "../blogPosts";
+import "../blog.css";
 
 export function generateStaticParams() { return ALL_BLOG_POSTS.map(post => ({ slug: post.slug })); }
 

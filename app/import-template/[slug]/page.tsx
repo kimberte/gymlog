@@ -67,7 +67,7 @@ export default function ImportTemplatePage() {
         const current = next[date] && Array.isArray(next[date].entries) ? next[date] : { entries: [] };
         const available = Math.max(0, 3 - current.entries.length);
         if (available === 0) return;
-        const entry = { id: `program_${Date.now()}_${dayIndex}_${Math.random().toString(16).slice(2)}`, title: day.name, notes: `${day.focus}\n\n${day.exercises.join("\n")}\n\nImported from Gym Log workout program: ${name}`, createdAt: now, updatedAt: now };
+        const entry = { id: `program_${Date.now()}_${dayIndex}_${Math.random().toString(16).slice(2)}`, title: day.day, notes: `${day.focus}\n\n${day.exercises.join("\n")}\n\nImported from Gym Log workout program: ${name}`, createdAt: now, updatedAt: now };
         next[date] = { ...current, entries: [...current.entries, entry].slice(0, 3) };
         importedDates.push(date);
       });
@@ -123,9 +123,9 @@ export default function ImportTemplatePage() {
             <p className={styles.muted}>{slug === "gym-log-founder-special" ? "4 weeks × 4 training days = 16 sessions ready to add to your calendar." : `${days.length} training day${days.length === 1 ? "" : "s"} ready to add to your calendar.`}</p>
             <div className={styles.days}>
               {days.map((day, index) => (
-                <div key={day.name + day.offsetDays} className={styles.day}>
+                <div key={day.day + day.offsetDays} className={styles.day}>
                   <div className={styles.dayNumber}>{index + 1}</div>
-                  <div className={styles.dayCopy}><strong>{day.name}</strong><span>{day.focus}</span><small>{day.exercises.length} exercises · {day.offsetDays === 0 ? "Starts on your chosen date" : `${day.offsetDays} day${day.offsetDays > 1 ? "s" : ""} later`}</small></div>
+                  <div className={styles.dayCopy}><strong>{day.day}</strong><span>{day.focus}</span><small>{day.exercises.length} exercises · {day.offsetDays === 0 ? "Starts on your chosen date" : `${day.offsetDays} day${day.offsetDays > 1 ? "s" : ""} later`}</small></div>
                 </div>
               ))}
             </div>

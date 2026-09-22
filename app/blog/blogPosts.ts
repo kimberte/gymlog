@@ -4,8 +4,9 @@ import { NEW_BLOG_POSTS } from "./newPosts";
 import { DAILY_BLOG_POSTS } from "./dailyPosts";
 import { DAILY_BLOG_POSTS_2 } from "./dailyPosts2";
 import { DAILY_BLOG_POSTS_3 } from "./dailyPosts3";
+import { DAILY_BLOG_POSTS_4 } from "./dailyPosts4";
 
-export const ALL_BLOG_POSTS = [...BLOG_POSTS, ...ADDITIONAL_BLOG_POSTS, ...NEW_BLOG_POSTS, ...DAILY_BLOG_POSTS, ...DAILY_BLOG_POSTS_2, ...DAILY_BLOG_POSTS_3].sort(
+export const ALL_BLOG_POSTS = [...BLOG_POSTS, ...ADDITIONAL_BLOG_POSTS, ...NEW_BLOG_POSTS, ...DAILY_BLOG_POSTS, ...DAILY_BLOG_POSTS_2, ...DAILY_BLOG_POSTS_3, ...DAILY_BLOG_POSTS_4].sort(
   (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
 );
 
@@ -15,5 +16,6 @@ export function getBlogPost(slug: string) {
     ?? NEW_BLOG_POSTS.find(post => post.slug === slug)
     ?? DAILY_BLOG_POSTS.find(post => post.slug === slug)
     ?? DAILY_BLOG_POSTS_2.find(post => post.slug === slug)
-    ?? DAILY_BLOG_POSTS_3.find(post => post.slug === slug);
+    ?? DAILY_BLOG_POSTS_3.find(post => post.slug === slug)
+    ?? DAILY_BLOG_POSTS_4.find(post => post.slug === slug);
 }

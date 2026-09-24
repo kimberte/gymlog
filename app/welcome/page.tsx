@@ -13,7 +13,7 @@ const WELCOME_SEEN_DATE_KEY = "gym-log-welcome-seen-date";
 
 function CalendarIcon({ size = 28 }: { size?: number }) { return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 2v3M17 2v3M4.5 9h15" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/><path d="M6.5 5h11A2.5 2.5 0 0 1 20 7.5v12A2.5 2.5 0 0 1 17.5 22h-11A2.5 2.5 0 0 1 4 19.5v-12A2.5 2.5 0 0 1 6.5 5Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/><path d="M7.5 13h3M13.5 13h3M7.5 17h3M13.5 17h3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>; }
 function ProgramsIcon({ size = 28 }: { size?: number }) { return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3" stroke="currentColor" strokeWidth="1.8"/><path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/><circle cx="17" cy="16" r="1.1" fill="currentColor"/></svg>; }
-function FinderIcon({ size = 28 }: { size?: number }) { return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.3" stroke="currentColor" strokeWidth="1.8"/><path d="m15.5 15.5 5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/><path d="M8.5 10.8h4.6M10.8 8.5v4.6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>; }
+function ToolsIcon({ size = 28 }: { size?: number }) { return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3.5" y="7" width="17" height="13" rx="2.5" stroke="currentColor" strokeWidth="1.8"/><path d="M8 7V5.8A1.8 1.8 0 0 1 9.8 4h4.4A1.8 1.8 0 0 1 16 5.8V7M8 12h8M8 16h3M14 16h2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>; }
 function ExerciseIcon({ size = 28 }: { size?: number }) { return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9v6M3.8 10.2v3.6M18 9v6M20.2 10.2v3.6M6 12h12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>; }
 function SettingsIcon({ size = 28 }: { size?: number }) { return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16M4 17h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/><circle cx="9" cy="7" r="2" fill="var(--surface,#fff)" stroke="currentColor" strokeWidth="1.8"/><circle cx="15" cy="17" r="2" fill="var(--surface,#fff)" stroke="currentColor" strokeWidth="1.8"/></svg>; }
 function BlogIcon({ size = 28 }: { size?: number }) { return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 4.5h14v15H5z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/><path d="M8.5 8h7M8.5 12h7M8.5 16h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>; }
@@ -21,7 +21,7 @@ function BlogIcon({ size = 28 }: { size?: number }) { return <svg width={size} h
 const actions = [
   { label: "Calendar", href: "/", Icon: CalendarIcon },
   { label: "Workout Programs", href: "/workout-programs", Icon: ProgramsIcon },
-  { label: "Workout Finder", href: "/workout-programs/find", Icon: FinderIcon },
+  { label: "Tools", href: "/tools", Icon: ToolsIcon },
   { label: "Exercise List", href: "/exercises", Icon: ExerciseIcon },
   { label: "Settings", Icon: SettingsIcon },
   { label: "Blog", href: "/blog", Icon: BlogIcon },

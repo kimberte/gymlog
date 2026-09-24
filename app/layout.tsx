@@ -9,7 +9,7 @@ import type { Metadata, Viewport } from "next";
 import Analytics from "./components/Analytics";
 import ExerciseLibraryModal from "./components/ExerciseLibraryModal";
 import SiteBrandHeader from "./components/SiteBrandHeader";
-import ThemeControl from "./components/ThemeControl";
+import ThemeControl, { ToolTimerProvider } from "./components/ThemeControl";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://gymlogapp.com";
 
@@ -83,7 +83,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className={poppins.className}>
         <SiteBrandHeader />
-        {children}
+        <ToolTimerProvider>
+          {children}
+        </ToolTimerProvider>
         <ExerciseLibraryModal />
         <ThemeControl />
         <Suspense fallback={null}><Analytics /></Suspense>

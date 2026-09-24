@@ -136,7 +136,7 @@ function liveRemaining(timer: ToolTimerState) {
   return Math.max(0, (timer.endAt - Date.now()) / 1000);
 }
 
-function PersistentToolTimer({ timer, pause, reset }: { timer: ToolTimerState | null; pause: () => void; reset: () => void }) {
+function PersistentToolTimer({ timer, pause, resume, reset }: { timer: ToolTimerState | null; pause: () => void; resume: () => void; reset: () => void }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   if (!timer) return null;

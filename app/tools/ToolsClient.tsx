@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import styles from "./tools.module.css";
 
 import { tools } from "./tools-data";
+import { PersistentRestTimer, PersistentStopwatch, PersistentIntervalTimer } from "./PersistentTimerTools";
 
 const round = (n:number) => Math.round(n*10)/10;
 
@@ -36,6 +37,6 @@ function Interval(){const[w,setW]=useState("40"),[r,setR]=useState("20"),[rounds
 
 export function ToolsHub(){const groups=["Strength","Workout","Nutrition","Conversions"];return <><Header/><main className={styles.page}><div className={styles.hero}><span className={styles.kicker}>GYM LOG TOOLS</span><h2>Simple tools for better training.</h2><p>Quick calculators, timers and training utilities built for the gym. No account required.</p></div>{groups.map(g=><section className={styles.group} key={g}><h3>{g}</h3><div className={styles.toolGrid}>{tools.filter(t=>t[3]===g).map(t=><Link href={"/tools/"+t[0]} className={styles.toolCard} key={t[0]}><span className={styles.toolArrow}>↗</span><h4>{t[1]}</h4><p>{t[2]}</p></Link>)}</div></section>)}</main></>}
 
-export function ToolPage({slug}:{slug:string}){const map:Record<string,()=>React.ReactNode>={"one-rep-max-calculator":OneRM,"plate-calculator":Plates,"rest-timer":Rest,"workout-stopwatch":Stopwatch,"tdee-calculator":TDEE,"macro-calculator":Macros,"warm-up-calculator":Warmup,"bmi-calculator":BMI,"weight-converter":Convert,"interval-timer":Interval};const C=map[slug];return C?<C/>:<><Header/><main className={styles.page}><section className={styles.card}><h2>Tool not found</h2><Link href="/tools" className={styles.back}>Back to tools</Link></section></main></>}
+export function ToolPage({slug}:{slug:string}){const map:Record<string,()=>React.ReactNode>={"one-rep-max-calculator":OneRM,"plate-calculator":Plates,"rest-timer":PersistentRestTimer,"workout-stopwatch":PersistentStopwatch,"tdee-calculator":TDEE,"macro-calculator":Macros,"warm-up-calculator":Warmup,"bmi-calculator":BMI,"weight-converter":Convert,"interval-timer":PersistentIntervalTimer};const C=map[slug];return C?<C/>:<><Header/><main className={styles.page}><section className={styles.card}><h2>Tool not found</h2><Link href="/tools" className={styles.back}>Back to tools</Link></section></main></>}
 
 export { tools };

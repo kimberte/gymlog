@@ -1428,7 +1428,7 @@ button.secondary.danger {
 /* ---------------- PERSISTENT TOOL TIMER ---------------- */
 .persistent-tool-timer{
   position:fixed;
-  right:0;
+  left:0;
   top:50%;
   transform:translateY(-50%);
   z-index:3000;
@@ -1438,7 +1438,7 @@ button.secondary.danger {
 }
 .persistent-tool-timer-panel{
   width:250px;
-  margin-right:8px;
+  margin-left:8px;
   padding:14px;
   border:1px solid rgba(255,255,255,.14);
   border-radius:16px;
@@ -1457,5 +1457,5 @@ button.secondary.danger {
 .persistent-tool-timer-tab span{font-variant-numeric:tabular-nums}
 @media(max-width:640px){
   .persistent-tool-timer{top:auto;bottom:82px;transform:none}
-  .persistent-tool-timer-panel{width:min(270px,calc(100vw - 62px));margin-right:6px}
+  .persistent-tool-timer-panel{width:min(270px,calc(100vw - 62px));margin-left:6px}
 }

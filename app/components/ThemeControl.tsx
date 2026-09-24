@@ -114,6 +114,7 @@ type ToolTimerContextValue = {
   pause: () => void;
   reset: () => void;
   setRest: (seconds: number) => void;
+  resume: () => void;
 };
 
 const TIMER_STORAGE_KEY = "gym-log-persistent-timer";
@@ -138,7 +139,7 @@ function liveRemaining(timer: ToolTimerState) {
 function PersistentToolTimer({ timer, pause, reset }: { timer: ToolTimerState | null; pause: () => void; reset: () => void }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  if (!timer?.running) return null;
+  if (!timer) return null;
 
   const route = timer.kind === "rest" ? "/tools/rest-timer" : timer.kind === "stopwatch" ? "/tools/workout-stopwatch" : "/tools/interval-timer";
   if (pathname === route) return null;
@@ -148,18 +149,20 @@ function PersistentToolTimer({ timer, pause, reset }: { timer: ToolTimerState | 
     ? `${Math.floor(timer.elapsed / 60).toString().padStart(2, "0")}:${Math.floor(timer.elapsed % 60).toString().padStart(2, "0")}`
     : `${Math.floor(timer.remaining / 60).toString().padStart(2, "0")}:${Math.floor(timer.remaining % 60).toString().padStart(2, "0")}`;
 
+  const status = timer.running ? "Running" : "Paused";
+
   return <div className="persistent-tool-timer" data-open={open}>
     {open && <div className="persistent-tool-timer-panel">
-      <div className="persistent-tool-timer-label">{label} Timer</div>
+      <div className="persistent-tool-timer-label">{label} Timer · {status}</div>
       <div className="persistent-tool-timer-display">{display}</div>
       {timer.kind === "interval" && <div className="persistent-tool-timer-meta">{timer.phase === "work" ? "WORK" : "REST"} · Round {Math.min(timer.round, timer.rounds)} / {timer.rounds}</div>}
       <div className="persistent-tool-timer-actions">
-        <button onClick={pause}>Pause</button>
+        <button onClick={timer.running ? pause : resume}>{timer.running ? "Pause" : "Resume"}</button>
         <Link href={route} onClick={() => setOpen(false)}>Open full tool</Link>
         <button onClick={reset}>Reset</button>
       </div>
     </div>}
-    <button className="persistent-tool-timer-tab" onClick={() => setOpen(v => !v)} aria-label={open ? "Close running timer" : "Open running timer"}>
+    <button className="persistent-tool-timer-tab" onClick={() => setOpen(v => !v)} aria-label={open ? "Close timer" : "Open timer"}>
       {open ? "›" : "⏱"} <span>{display}</span>
     </button>
   </div>;
@@ -239,6 +242,13 @@ export function ToolTimerProvider({ children }: { children: React.ReactNode }) {
         return { ...prev, running: false, remaining: liveRemaining(prev), endAt: null };
       });
     },
+    resume() {
+      setTimer(prev => {
+        if (!prev || prev.running) return prev;
+        if (prev.kind === "stopwatch") return { ...prev, running: true, startedAt: Date.now() - prev.elapsed * 1000 };
+        return { ...prev, running: true, endAt: Date.now() + Math.max(0, prev.remaining) * 1000 };
+      });
+    },
     reset() { setTimer(null); try { localStorage.removeItem(TIMER_STORAGE_KEY); } catch {} },
     setRest(seconds) {
       const s = Math.max(1, Number(seconds) || 1);
@@ -246,7 +256,7 @@ export function ToolTimerProvider({ children }: { children: React.ReactNode }) {
     },
   }), [timer]);
 
-  return <ToolTimerContext.Provider value={value}>{children}<PersistentToolTimer timer={timer} pause={value.pause} reset={value.reset} /></ToolTimerContext.Provider>;
+  return <ToolTimerContext.Provider value={value}>{children}<PersistentToolTimer timer={timer} pause={value.pause} resume={value.resume} reset={value.reset} /></ToolTimerContext.Provider>;
 }
 
 export function useToolTimer() {
@@ -262,24 +272,28 @@ export function PersistentRestTimer() {
   const [preset, setPreset] = useState(90);
   const remaining = active ? active.remaining : preset;
   const choose = (v: number) => { setPreset(v); setRest(v); };
-  return <section className={toolStyles.card}>
+  return <main className={toolStyles.page}>
+    <Link href="/tools" className={toolStyles.back}>← All tools</Link>
+    <section className={toolStyles.card}>
     <h2>Rest Timer</h2><p className={toolStyles.subtitle}>Keep your rest periods consistent between sets.</p>
     <div className={toolStyles.timer}>{String(Math.floor(remaining / 60)).padStart(2, "0")}:{String(Math.floor(remaining % 60)).padStart(2, "0")}</div>
     <div className={toolStyles.presetRow}>{[30,60,90,120,180,300].map(v=><button key={v} onClick={()=>choose(v)}>{v<60?v+"s":v/60+"m"}</button>)}</div>
     <div className={toolStyles.actions}><button className={toolStyles.primary} onClick={()=>active?.running ? pause() : startRest(preset)}>{active?.running ? "Pause" : remaining===0 ? "Restart" : "Start"}</button><button onClick={()=>{reset();setPreset(90)}}>Reset</button></div>
-  </section>;
+  </section></main>;
 }
 
 export function PersistentStopwatch() {
   const { timer, startStopwatch, lapStopwatch, pause, reset } = useToolTimer();
   const active = timer?.kind === "stopwatch" ? timer : null;
   const sec = active?.elapsed || 0;
-  return <section className={toolStyles.card}>
+  return <main className={toolStyles.page}>
+    <Link href="/tools" className={toolStyles.back}>← All tools</Link>
+    <section className={toolStyles.card}>
     <h2>Workout Stopwatch</h2><p className={toolStyles.subtitle}>Track total workout time and record laps. It keeps running while you move around the site.</p>
     <div className={toolStyles.timer}>{Math.floor(sec/60).toString().padStart(2,"0")}:{Math.floor(sec%60).toString().padStart(2,"0")}</div>
     <div className={toolStyles.actions}><button className={toolStyles.primary} onClick={()=>active?.running ? pause() : startStopwatch()}>{active?.running ? "Pause" : "Start"}</button><button onClick={lapStopwatch}>Lap</button><button onClick={reset}>Reset</button></div>
     {active?.laps?.length ? <div className={toolStyles.laps}>{active.laps.map((v,i)=><div key={i}><span>Lap {i+1}</span><b>{Math.floor(v/60)}:{String(Math.floor(v%60)).padStart(2,"0")}</b></div>)}</div> : null}
-  </section>;
+  </section></main>;
 }
 
 export function PersistentIntervalTimer() {
@@ -287,7 +301,9 @@ export function PersistentIntervalTimer() {
   const active = timer?.kind === "interval" ? timer : null;
   const [w,setW]=useState(40),[r,setR]=useState(20),[rounds,setRounds]=useState(8);
   const left = active ? active.remaining : w;
-  return <section className={toolStyles.card}>
+  return <main className={toolStyles.page}>
+    <Link href="/tools" className={toolStyles.back}>← All tools</Link>
+    <section className={toolStyles.card}>
     <h2>Interval Timer</h2><p className={toolStyles.subtitle}>Set work, rest and rounds for circuits or conditioning. It keeps running while you move around the site.</p>
     <div className={toolStyles.formGrid}>
       <label className={toolStyles.field}><span>Work</span><div className={toolStyles.inputWrap}><input type="number" min="1" value={w} onChange={e=>setW(Number(e.target.value))}/><em>sec</em></div></label>
@@ -296,5 +312,5 @@ export function PersistentIntervalTimer() {
     </div>
     <div className={toolStyles.intervalPhase}>{active ? (active.phase==="work" ? "WORK" : "REST") : "READY"}<strong>{String(Math.max(0,Math.ceil(left))).padStart(2,"0")}</strong><span>Round {active ? Math.min(active.round, active.rounds) : 1} / {rounds}</span></div>
     <div className={toolStyles.actions}><button className={toolStyles.primary} onClick={()=>active?.running ? pause() : startInterval(w,r,rounds)}>{active?.running ? "Pause" : "Start"}</button><button onClick={reset}>Reset</button></div>
-  </section>;
+  </section></main>;
 }

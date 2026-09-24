@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import styles from "./tools.module.css";
 
 import { tools } from "./tools-data";
-import { PersistentRestTimer, PersistentStopwatch, PersistentIntervalTimer } from "./PersistentTimerTools";
+import { PersistentRestTimer, PersistentStopwatch, PersistentIntervalTimer } from "../components/ThemeControl";
 
 const round = (n:number) => Math.round(n*10)/10;
 

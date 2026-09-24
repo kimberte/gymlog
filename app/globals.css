@@ -1423,3 +1423,39 @@ button.secondary.danger {
     display: none;
   }
 }
+
+
+/* ---------------- PERSISTENT TOOL TIMER ---------------- */
+.persistent-tool-timer{
+  position:fixed;
+  right:0;
+  top:50%;
+  transform:translateY(-50%);
+  z-index:3000;
+  display:flex;
+  align-items:center;
+  pointer-events:none;
+}
+.persistent-tool-timer-panel{
+  width:250px;
+  margin-right:8px;
+  padding:14px;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:16px;
+  background:rgba(var(--surface-rgb),.97);
+  box-shadow:0 14px 40px rgba(0,0,0,.35);
+  backdrop-filter:blur(14px);
+  pointer-events:auto;
+}
+.persistent-tool-timer-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:600}
+.persistent-tool-timer-display{text-align:center;font-size:30px;font-weight:600;font-variant-numeric:tabular-nums;margin:8px 0}
+.persistent-tool-timer-meta{text-align:center;color:var(--muted);font-size:11px;margin:-2px 0 10px}
+.persistent-tool-timer-actions{display:flex;gap:6px;flex-wrap:wrap}
+.persistent-tool-timer-actions button,.persistent-tool-timer-actions a{flex:1;min-height:36px;border:1px solid var(--border);border-radius:9px;background:rgba(255,255,255,.05);color:var(--text);padding:0 8px;font:inherit;font-size:11px;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.persistent-tool-timer-actions a{background:var(--accent);border-color:var(--accent);color:#fff}
+.persistent-tool-timer-tab{pointer-events:auto;border:1px solid var(--accent);border-right:none;border-radius:12px 0 0 12px;background:var(--accent);color:#fff;min-width:54px;height:48px;padding:0 9px;display:flex;gap:5px;align-items:center;justify-content:center;font:inherit;font-size:12px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.25);cursor:pointer}
+.persistent-tool-timer-tab span{font-variant-numeric:tabular-nums}
+@media(max-width:640px){
+  .persistent-tool-timer{top:auto;bottom:82px;transform:none}
+  .persistent-tool-timer-panel{width:min(270px,calc(100vw - 62px));margin-right:6px}
+}

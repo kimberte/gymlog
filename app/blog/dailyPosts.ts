@@ -174,4 +174,31 @@ export const DAILY_BLOG_POSTS: BlogPost[] = [
       { label: "This Week in Fitness: Sprint Research, HYROX Changes, Olympia Week & More", href: "/blog/this-week-in-fitness-september-19-2026" }
     ]
   },
+  {
+    slug: "how-to-warm-up-before-weight-training",
+    title: "How to Warm Up Before Weight Training: A Simple Routine That Works",
+    description: "Learn how to warm up before lifting with a practical sequence for raising body temperature, rehearsing movement and preparing for heavier sets without wasting energy.",
+    keyword: "how to warm up before weight training",
+    image: "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?auto=format&fit=crop&w=1600&q=85",
+    imageAlt: "Athlete preparing for a weight training session",
+    date: "September 25, 2026",
+    sections: [
+      { paragraphs: ["A good warm-up should prepare you to train, not become a second workout. The goal is to raise your temperature, rehearse the movements you are about to perform and arrive at your working sets feeling ready rather than tired.", "A short, repeatable routine is usually more useful than a long checklist you rarely finish."] },
+      { heading: "Start With General Movement", paragraphs: ["Begin with five to ten minutes of easy movement if you are cold or stiff. Walking, cycling or rowing can help you feel more prepared without draining your energy."] },
+      { heading: "Use Specific Mobility", paragraphs: ["Use a few controlled movements that match the session: bodyweight squats before lower-body work, band pull-aparts before upper-body training and unloaded hinges before deadlifts or Romanian deadlifts."] },
+      { heading: "Ramp Up the Main Lift", paragraphs: ["The most important part of many warm-ups is a gradual series of lighter sets for the first major lift. These sets let you practice technique, assess the day and prepare for heavier work."] },
+      { heading: "Do Not Turn Warm-Ups Into Work Sets", paragraphs: ["Warm-up sets are not supposed to test your limits. Keep the reps controlled and stop well before failure so you have energy for the work that matters."] },
+      { heading: "Adjust for Heavy Exercises", paragraphs: ["A heavy squat, deadlift or overhead press generally deserves more gradual build-up than a small isolation exercise. For a curl or lateral raise, one light set may be enough."] },
+      { heading: "Track What Helps", paragraphs: ["Record whether you needed extra warm-up sets, whether a movement felt restricted and whether the session improved after a particular preparation routine. Gym Log gives you a place to keep those notes with the workout itself."] },
+      { heading: "The Bottom Line", paragraphs: ["Warm up enough to feel ready, not so much that you are already fatigued. Use specific movement practice, progressive warm-up sets and common sense adjustments based on the day."] }
+    ],
+    links: [
+      { label: "Track your workouts with Gym Log", href: "/" },
+      { label: "Browse all workout programs", href: "/workout-programs" },
+      { label: "Find a workout program", href: "/workout-programs/find" },
+      { label: "Explore the exercise library", href: "/exercises" },
+      { label: "How to Choose the Right Weight for Every Exercise", href: "/blog/how-to-choose-the-right-weight-for-every-exercise" },
+      { label: "What Are RPE and RIR? How to Use Training Intensity Without Guessing", href: "/blog/what-are-rpe-and-rir-training-intensity" }
+    ]
+  },
 ];

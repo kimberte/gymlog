@@ -6,6 +6,7 @@ export const tools = [
   ["tdee-calculator","TDEE Calculator","Estimate daily calorie needs from body size and activity.","Nutrition"],
   ["macro-calculator","Macro Calculator","Set protein, carb and fat targets from calories.","Nutrition"],
   ["warm-up-calculator","Warm-Up Set Calculator","Build a practical warm-up sequence from working weight.","Strength"],
+  ["volume-calculator","Volume Calculator","Calculate total training volume from sets, reps and weight.","Strength"],
   ["bmi-calculator","BMI Calculator","Calculate BMI from height and weight.","Nutrition"],
   ["weight-converter","Weight Converter","Convert lifting weights between pounds and kilograms.","Conversions"],
   ["interval-timer","Interval Timer","Run repeated work and rest intervals.","Workout"]

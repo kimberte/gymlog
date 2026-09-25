@@ -9,5 +9,15 @@ export const tools = [
   ["volume-calculator","Volume Calculator","Calculate total training volume from sets, reps and weight.","Strength"],
   ["bmi-calculator","BMI Calculator","Calculate BMI from height and weight.","Nutrition"],
   ["weight-converter","Weight Converter","Convert lifting weights between pounds and kilograms.","Conversions"],
-  ["interval-timer","Interval Timer","Run repeated work and rest intervals.","Workout"]
+  ["interval-timer","Interval Timer","Run repeated work and rest intervals.","Workout"],
+  ["emom-timer","EMOM Timer","Every Minute on the Minute pacing timer.","Workout"],
+  ["amrap-timer","AMRAP Timer","Time-cap your AMRAP and track rounds.","Workout"],
+  ["training-volume-calculator","Training Volume Calculator","Estimate total sets and reps across a workout.","Strength"],
+  ["volume-load-calculator","Volume Load Calculator","Calculate total weight moved from load, reps and sets.","Strength"],
+  ["rep-percentage-calculator","Rep Percentage Calculator","Calculate common training weights from your 1RM.","Strength"],
+  ["strength-standards-calculator","Strength Standards Calculator","Compare bodyweight-based illustrative strength targets.","Strength"],
+  ["powerlifting-score-calculator","Powerlifting Score Calculator","Calculate Wilks and DOTS-style powerlifting scores.","Strength"],
+  ["body-fat-calculator","Body Fat Calculator","Estimate body fat using circumference measurements.","Nutrition"],
+  ["ideal-weight-calculator","Ideal Weight Calculator","Compare a common height-based reference formula.","Nutrition"],
+  ["water-intake-calculator","Water Intake Calculator","Get a simple daily hydration starting point.","Nutrition"]
 ] as const;

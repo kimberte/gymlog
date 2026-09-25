@@ -89,7 +89,7 @@ export default function ThemeControl() {
 }
 
 
-type ToolTimerKind = "rest" | "stopwatch" | "interval";
+type ToolTimerKind = "rest" | "stopwatch" | "interval" | "emom" | "amrap";
 type ToolTimerState = {
   kind: ToolTimerKind;
   running: boolean;
@@ -111,6 +111,8 @@ type ToolTimerContextValue = {
   startStopwatch: () => void;
   lapStopwatch: () => void;
   startInterval: (work: number, rest: number, rounds: number) => void;
+  startEmom: (seconds: number, rounds: number) => void;
+  startAmrap: (seconds: number) => void;
   pause: () => void;
   reset: () => void;
   setRest: (seconds: number) => void;
@@ -141,10 +143,10 @@ function PersistentToolTimer({ timer, pause, resume, reset }: { timer: ToolTimer
   const [open, setOpen] = useState(false);
   if (!timer) return null;
 
-  const route = timer.kind === "rest" ? "/tools/rest-timer" : timer.kind === "stopwatch" ? "/tools/workout-stopwatch" : "/tools/interval-timer";
+  const route = timer.kind === "rest" ? "/tools/rest-timer" : timer.kind === "stopwatch" ? "/tools/workout-stopwatch" : timer.kind === "interval" ? "/tools/interval-timer" : timer.kind === "emom" ? "/tools/emom-timer" : "/tools/amrap-timer";
   if (pathname === route) return null;
 
-  const label = timer.kind === "rest" ? "Rest" : timer.kind === "stopwatch" ? "Workout" : "Interval";
+  const label = timer.kind === "rest" ? "Rest" : timer.kind === "stopwatch" ? "Workout" : timer.kind === "interval" ? "Interval" : timer.kind === "emom" ? "EMOM" : "AMRAP";
   const display = timer.kind === "stopwatch"
     ? `${Math.floor(timer.elapsed / 60).toString().padStart(2, "0")}:${Math.floor(timer.elapsed % 60).toString().padStart(2, "0")}`
     : `${Math.floor(timer.remaining / 60).toString().padStart(2, "0")}:${Math.floor(timer.remaining % 60).toString().padStart(2, "0")}`;
@@ -155,7 +157,7 @@ function PersistentToolTimer({ timer, pause, resume, reset }: { timer: ToolTimer
     {open && <div className="persistent-tool-timer-panel">
       <div className="persistent-tool-timer-label">{label} Timer · {status}</div>
       <div className="persistent-tool-timer-display">{display}</div>
-      {timer.kind === "interval" && <div className="persistent-tool-timer-meta">{timer.phase === "work" ? "WORK" : "REST"} · Round {Math.min(timer.round, timer.rounds)} / {timer.rounds}</div>}
+      {(timer.kind === "interval" || timer.kind === "emom") && <div className="persistent-tool-timer-meta">{timer.kind === "emom" ? `Round ${Math.min(timer.round, timer.rounds)} / ${timer.rounds}` : `${timer.phase === "work" ? "WORK" : "REST"} · Round ${Math.min(timer.round, timer.rounds)} / ${timer.rounds}`}</div>}
       <div className="persistent-tool-timer-actions">
         <button onClick={timer.running ? pause : resume}>{timer.running ? "Pause" : "Resume"}</button>
         <Link href={route} onClick={() => setOpen(false)}>Open full tool</Link>
@@ -197,6 +199,11 @@ export function ToolTimerProvider({ children }: { children: React.ReactNode }) {
 
         if (prev.kind === "rest") return { ...prev, remaining: 0, running: false, endAt: null };
 
+        if (prev.kind === "amrap") return { ...prev, remaining: 0, running: false, endAt: null };
+        if (prev.kind === "emom") {
+          if (prev.round >= prev.rounds) return { ...prev, remaining: 0, running: false, endAt: null };
+          return { ...prev, phase: "work", round: prev.round + 1, remaining: prev.work, endAt: Date.now() + prev.work * 1000 };
+        }
         if (prev.phase === "work" && prev.rest > 0) {
           return { ...prev, phase: "rest", remaining: prev.rest, endAt: Date.now() + prev.rest * 1000 };
         }
@@ -225,6 +232,14 @@ export function ToolTimerProvider({ children }: { children: React.ReactNode }) {
     },
     lapStopwatch() {
       setTimer(prev => prev?.kind === "stopwatch" && prev.running ? { ...prev, laps: [...prev.laps, prev.elapsed] } : prev);
+    },
+    startEmom(seconds, rounds) {
+      const s = Math.max(1, Number(seconds) || 1), rs = Math.max(1, Number(rounds) || 1);
+      setTimer({ ...emptyToolTimer("emom"), running: true, work: s, rounds: rs, remaining: s, endAt: Date.now() + s * 1000 });
+    },
+    startAmrap(seconds) {
+      const s = Math.max(1, Number(seconds) || 1);
+      setTimer({ ...emptyToolTimer("amrap"), running: true, remaining: s, endAt: Date.now() + s * 1000 });
     },
     startInterval(work, rest, rounds) {
       const w = Math.max(1, Number(work) || 1);

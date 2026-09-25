@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styles from "./tools.module.css";
 
 function Field({label,value,onChange,suffix,min=0,step="any"}:{label:string;value:string;onChange:(v:string)=>void;suffix?:string;min?:number;step?:string}) {
@@ -16,6 +16,7 @@ function Toggle({value,onChange,options}:{value:string;onChange:(v:string)=>void
 
 function EMOM() {
   const [minutes,setMinutes]=useState("10"), [reps,setReps]=useState("10"), [left,setLeft]=useState(60), [round,setRound]=useState(1), [run,setRun]=useState(false);
+  useEffect(()=>{if(!run)return;const id=setInterval(()=>setLeft(v=>{if(v>1)return v;if(round>=Number(minutes)){setRun(false);return 0}setRound(x=>x+1);return 60}),1000);return()=>clearInterval(id)},[run,round,minutes]);
   return <Card title="EMOM Timer" subtitle="Every Minute on the Minute. Complete your reps, then use the remaining minute to rest.">
     <div className={styles.formGrid}><Field label="Minutes" value={minutes} onChange={v=>{setMinutes(v);setRound(1);setLeft(60)}} min={1} step="1" suffix="min"/><Field label="Reps" value={reps} onChange={setReps} min={1} step="1" suffix="reps"/></div>
     <div className={styles.intervalPhase}>{run?"EMOM":"READY"}<strong>{String(left).padStart(2,"0")}</strong><span>Minute {Math.min(round,Number(minutes)||1)} / {minutes}</span></div>
@@ -26,6 +27,7 @@ function EMOM() {
 
 function AMRAP() {
   const [minutes,setMinutes]=useState("10"), [left,setLeft]=useState(600), [run,setRun]=useState(false), [rounds,setRounds]=useState("0");
+  useEffect(()=>{if(!run)return;const id=setInterval(()=>setLeft(v=>{if(v>1)return v-1;setRun(false);return 0}),1000);return()=>clearInterval(id)},[run]);
   return <Card title="AMRAP Timer" subtitle="Set a time cap for an AMRAP and track completed rounds or reps.">
     <Field label="Time cap" value={minutes} onChange={v=>{setMinutes(v);setLeft((Number(v)||0)*60)}} min={1} step="1" suffix="min"/>
     <div className={styles.intervalPhase}>{run?"AMRAP":"READY"}<strong>{Math.floor(left/60).toString().padStart(2,"0")}:{(left%60).toString().padStart(2,"0")}</strong><span>Rounds completed: {rounds}</span></div>
@@ -65,7 +67,7 @@ function RepPercent() {
 function StrengthStandards() {
   const [weight,setWeight]=useState("200"),[lift,setLift]=useState("bench"),[level,setLevel]=useState("intermediate");
   const standards:{[k:string]:number[]}={bench:[0.5,0.75,1,1.25,1.5],squat:[0.75,1.1,1.4,1.75,2.1],deadlift:[1,1.4,1.75,2.1,2.5],ohp:[0.3,0.5,0.7,0.9,1.1]};
-  const names=["Beginner","Novice","Intermediate","Advanced","Elite"], ratio=standards[lift][names.indexOf(level)]||1, target=Number(weight)*ratio;
+  const names=["Beginner","Novice","Intermediate","Advanced","Elite"], ratio=standards[lift][names.map(n=>n.toLowerCase()).indexOf(level)]||1, target=Number(weight)*ratio;
   return <Card title="Strength Standards Calculator" subtitle="See illustrative strength targets relative to bodyweight.">
     <Toggle value={lift} onChange={setLift} options={[["bench","Bench"],["squat","Squat"],["deadlift","Deadlift"],["ohp","OHP"]]}/>
     <div className={styles.formGrid}><Field label="Bodyweight" value={weight} onChange={setWeight} min={1} suffix="lb"/></div>

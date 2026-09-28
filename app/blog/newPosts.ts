@@ -182,4 +182,109 @@ export const NEW_BLOG_POSTS: BlogPost[] = [
       { label: "Picking the Right Workout Program for You", href: "/blog/how-to-pick-the-right-workout-program" },
     ],
   },
+
+  {
+    slug: "how-many-days-a-week-should-you-work-out",
+    title: "How Many Days a Week Should You Work Out? A Practical Guide",
+    description: "How often should you train for muscle, strength and general fitness? Build a weekly schedule around your goal, recovery and real life.",
+    keyword: "how many days a week should you work out",
+    image: "/empty-gym.png",
+    imageAlt: "Gym equipment ready for training",
+    date: "September 28, 2026",
+    sections: [
+      { paragraphs: ["How many days a week should you work out? There is no single number that guarantees better results. Training frequency is a tool for distributing useful work across the week, and the right amount depends on your goal, experience, recovery and schedule.", "For most people, the best starting point is the number of sessions they can perform consistently while still recovering. A realistic three-day routine can outperform an ambitious six-day plan that is repeatedly missed."] },
+      { heading: "Start With Your Goal", paragraphs: ["Strength, muscle growth, general fitness and sport performance can all use different schedules. The goal determines what needs to be trained and how often it makes sense to expose those muscles or movements to productive work."] },
+      { heading: "Two Days Can Be Enough to Start", paragraphs: ["Two full-body sessions can cover the major movement patterns and provide a strong foundation for beginners or busy lifters. If two days are all your schedule reliably allows, build around those days first."] },
+      { heading: "Three to Four Days Gives You More Flexibility", paragraphs: ["Three days is a useful middle ground because it allows full-body training or a simple split while leaving recovery days between sessions. Four days can make it easier to spread volume across upper- and lower-body sessions.", "The extra day is valuable when it improves the quality and distribution of your training, not simply because more gym visits sound better."] },
+      { heading: "Five or More Days Is a Bigger Commitment", paragraphs: ["Higher-frequency schedules can work for experienced lifters who enjoy training and can recover from the workload. They also require more planning around sleep, nutrition and fatigue.", "More days do not automatically mean more progress. If additional sessions reduce performance or make your routine difficult to sustain, they may be solving the wrong problem."] },
+      { heading: "Frequency and Weekly Volume Are Connected", paragraphs: ["Training frequency matters partly because it determines how you distribute your weekly work. Rather than chasing a magic number of gym days, think about the amount of productive work you need and then distribute it into sessions you can execute well."] },
+      { heading: "Use Recovery as Feedback", paragraphs: ["Persistent drops in strength, unusually poor sleep, soreness that interferes with training or a growing inability to complete planned sessions are useful reasons to reassess workload. Recovery is part of the training process, not a sign that your program is failing."] },
+      { heading: "Build a Week You Can Repeat", paragraphs: ["A simple weekly structure might be Monday, Wednesday and Friday for full-body training, or four sessions split across upper and lower body. The exact days matter less than having a pattern that fits your life.", "Gym Log makes that pattern visible by putting completed workouts on a calendar."] },
+      { heading: "The Bottom Line", paragraphs: ["For many people, two to four weekly sessions are practical starting points. Beginners can make substantial progress without training every day, while experienced lifters may use higher frequency to distribute larger workloads.", "Choose the lowest frequency that lets you make the progress you want, then increase it only when there is a clear reason."] }
+    ],
+    links: [
+      { label: "Track your workouts with Gym Log", href: "/" },
+      { label: "Browse all workout programs", href: "/workout-programs" },
+      { label: "Find a workout program", href: "/workout-programs/find" },
+      { label: "Explore the exercise library", href: "/exercises" },
+      { label: "How to Build a Workout Routine That Actually Fits Your Life", href: "/blog/how-to-build-a-workout-routine-that-fits-your-life" }
+    ]
+  },
+  {
+    slug: "velocity-based-training-load-prescription-older-adults-2026",
+    title: "Can Bar Speed Help You Choose the Right Weight? New Resistance-Training Study Offers a Clue",
+    description: "A 2026 randomized trial compared percentage-based, RPE-based and velocity-based load prescription in older adults. Here's what it found.",
+    keyword: "velocity based training load prescription",
+    image: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=1600&q=85",
+    imageAlt: "Athlete performing a barbell strength exercise",
+    date: "September 28, 2026",
+    sections: [
+      { paragraphs: ["How do you know when the weight on the bar is right? A 2026 randomized trial tested three approaches: fixed percentages of one-rep max, RPE-based autoregulation and using the speed of the final repetition to prescribe loads.", "The 12-week study included 36 older adults. It found some advantages for velocity-based prescription, but not across every exercise or outcome."] },
+      { heading: "The Main Bench-Press Finding", paragraphs: ["The velocity-based group improved four-repetition-maximum bench press by about 12.2 kg on average, compared with about 6.8 kg in the percentage-based group and 8.5 kg in the RPE group. The study reported a significant group-by-time interaction for bench press.", "For back squat, the group difference was not statistically significant. All three groups improved squat strength."] },
+      { heading: "Muscle Size Also Showed a Difference", paragraphs: ["The study reported a larger increase in knee-extensor muscle thickness in the velocity-based group than the RPE group. Other outcomes did not show the same clear pattern.", "Because this was a relatively small pilot study, the findings are useful evidence rather than a final answer about the best way to program resistance training."] },
+      { heading: "Why Bar Speed Could Be Useful", paragraphs: ["Velocity-based training can respond to day-to-day changes in readiness. If a prescribed weight moves unusually slowly, the athlete may be more fatigued than expected. If it moves quickly, the athlete may be capable of more work.", "That gives coaches another measurement tool alongside percentages, RPE and training history."] },
+      { heading: "You Do Not Need a Velocity Tracker", paragraphs: ["The study does not mean everyone needs a device attached to the bar. Percentage-based programming and effort-based autoregulation remain practical approaches, and all three groups improved.", "For most recreational lifters, consistent exercise selection, sensible progression and accurate workout records are likely to matter more than adding another measurement system."] },
+      { heading: "The Bigger Lesson: Autoregulation Has a Place", paragraphs: ["Training loads are estimates. Sleep, stress and previous training can change how a weight feels on a given day. A good program can leave some room to adjust rather than forcing the exact same load regardless of performance."] },
+      { heading: "How to Apply the Idea Without Equipment", paragraphs: ["If you do not have velocity equipment, use performance as feedback. Record the load and repetitions, and note when a weight feels unusually easy or difficult. That history can guide future sessions.", "Gym Log gives you a place to keep that record alongside your sets, reps and weight."] },
+      { heading: "The Bottom Line", paragraphs: ["This 2026 trial adds evidence that objective velocity-based load prescription can be useful for some strength and muscle outcomes in older adults. It did not show a universal advantage across every exercise.", "For everyday lifters, the practical takeaway is simple: use your performance to inform progression, keep good records and choose the level of autoregulation that makes training repeatable."] }
+    ],
+    links: [
+      { label: "Track your workouts with Gym Log", href: "/" },
+      { label: "Browse all workout programs", href: "/workout-programs" },
+      { label: "Find a workout program", href: "/workout-programs/find" },
+      { label: "How Long Should You Rest Between Sets?", href: "/blog/how-long-to-rest-between-sets" }
+    ]
+  },
+  {
+    slug: "crossfit-athx-games-partnership-september-2026",
+    title: "CrossFit Partners With ATHX Games: What the New Partnership Means for Functional Fitness",
+    description: "CrossFit has announced ATHX Games as a Partner Event Series member, adding another major functional-fitness competition to its official event ecosystem.",
+    keyword: "CrossFit ATHX Games partnership 2026",
+    image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1600&q=85",
+    imageAlt: "Athlete training in a gym",
+    date: "September 28, 2026",
+    sections: [
+      { paragraphs: ["CrossFit announced a new partnership with ATHX Games on September 28, bringing the functional-fitness competition into the official CrossFit Partner Event Series. ATHX now joins XENOM within the new event structure.", "The announcement adds another major competition to an increasingly connected functional-fitness landscape."] },
+      { heading: "Why the Partnership Matters", paragraphs: ["CrossFit's event ecosystem includes partner competitions that can give athletes additional opportunities to compete and build experience. Adding ATHX expands that network and reflects the growing overlap between strength, endurance and functional fitness."] },
+      { heading: "The Growth of Hybrid Fitness", paragraphs: ["HYROX, ATHX and CrossFit all operate in a fitness environment where participants increasingly want both strength and endurance. The formats differ, but the demand is similar: measurable challenges that test more than one physical quality.", "For athletes, that creates more competition options. For recreational lifters, it is a reminder that strength and conditioning can coexist without every workout becoming a competition simulation."] },
+      { heading: "What It Means for Everyday Lifters", paragraphs: ["You do not need to train like a professional functional-fitness athlete to learn from the trend. Keep resistance training as a foundation, add conditioning that fits your goal and avoid adding so much variety that recovery and progression suffer."] },
+      { heading: "Competition Is Not the Same as General Training", paragraphs: ["A competition format is designed to test performance. A normal gym routine is usually designed to improve fitness, strength, muscle or health over a longer period.", "If ATHX or CrossFit inspires you, borrow the principles that fit your goal rather than copying an elite competitor's complete workload."] },
+      { heading: "What to Watch Next", paragraphs: ["The partnership arrives during a busy autumn for strength and functional fitness. The 2026 Olympia has just concluded, HYROX continues its international season and the Rogue Invitational is scheduled for October.", "As the calendar grows, the functional-fitness ecosystem will be worth watching for athletes, coaches and fans."] },
+      { heading: "The Gym Log Takeaway", paragraphs: ["Functional fitness is becoming a broader ecosystem rather than a single competition format. The fundamentals of training have not changed: establish a goal, choose appropriate work, recover and track what you actually do."] }
+    ],
+    links: [
+      { label: "Track your workouts with Gym Log", href: "/" },
+      { label: "Browse all workout programs", href: "/workout-programs" },
+      { label: "Find a workout program", href: "/workout-programs/find" },
+      { label: "Explore the exercise library", href: "/exercises" }
+    ]
+  },
+  {
+    slug: "this-week-in-fitness-september-28-2026",
+    title: "This Week in Fitness: Olympia Results, CrossFit-ATHX, HYROX Growth & New Research",
+    description: "The latest fitness stories from bodybuilding, functional fitness, HYROX, exercise science and the wider training industry as September comes to a close.",
+    keyword: "fitness news this week September 28 2026",
+    image: "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?auto=format&fit=crop&w=1600&q=85",
+    imageAlt: "Strength athlete training",
+    date: "September 28, 2026",
+    sections: [
+      { paragraphs: ["September's final week delivered a packed mix of competition results, new partnerships and fresh exercise research. The 2026 Olympia is complete, functional fitness is expanding its event network and researchers continue to test ways of making resistance training more precise.", "Here are the biggest stories worth knowing as the week closes."] },
+      { heading: "Nick Walker Wins the 2026 Mr. Olympia", paragraphs: ["Nick Walker finished first in the 2026 IFBB Mr. Olympia Men's Bodybuilding contest on September 26. NPC News Online lists the result as his first Mr. Olympia victory.", "The official Olympia coverage confirms the Men's Open final took place Saturday, September 26, after prejudging and other division finals across the weekend."] },
+      { heading: "Keone Pearson Takes the 212 Title", paragraphs: ["The IFBB Pro results list Keone Pearson first in Men's 212, ahead of Lucas Garcia and Shaun Clarida. Andrea Shaw finished first in Women's Bodybuilding, while Niall Darwen won Classic Physique.", "Olympia week remains one of the few events where so many distinct physique divisions are brought together in the same weekend."] },
+      { heading: "CrossFit Adds ATHX Games", paragraphs: ["CrossFit announced on September 28 that ATHX Games is joining its Partner Event Series. The partnership adds another functional-fitness competition to CrossFit's broader ecosystem.", "The development comes as athletes increasingly move between strength, endurance and functional-fitness formats."] },
+      { heading: "HYROX Training Expands in Canada", paragraphs: ["Fitness World announced new HYROX Training Club classes at South Surrey Signature and TRAIN by FW University Village, with a third affiliate location planned at Brentwood Signature. The announcement comes ahead of HYROX Vancouver in December, which Fitness World says sold out in minutes.", "For Canadian recreational athletes, competition-specific training is increasingly moving into mainstream gyms."] },
+      { heading: "New Study Tests Velocity-Based Load Prescription", paragraphs: ["A 12-week randomized trial in 36 older adults compared fixed percentage-based training, RPE-based autoregulation and last-repetition velocity-based training. The velocity-based group improved bench-press 4RM more than the percentage-based group, while the groups did not differ significantly for squat 4RM.", "The study is a useful reminder that autoregulation can be more nuanced than simply adding weight every week. It is also a small pilot study, so the results should not be treated as a universal prescription."] },
+      { heading: "Another Study Looks at Eccentric Work and Blood-Flow Restriction", paragraphs: ["A randomized trial published September 24 compared high-intensity resistance training incorporating periodic eccentric-only exercise with blood-flow restriction training in older men. Both approaches improved strength compared with a non-exercising control, while the physiological demands differed.", "The practical lesson is that different methods can create different stress profiles even when both improve performance."] },
+      { heading: "The Fitness Conversation Is Getting Broader", paragraphs: ["This week's stories show how broad the fitness landscape has become. Bodybuilding remains a major spectator sport, while CrossFit, ATHX and HYROX are building interconnected competition pathways and researchers continue to examine resistance-training prescription.", "For everyday lifters, the useful thread is consistency. New methods and competitions can be interesting, but progress still comes from choosing appropriate training and repeating it long enough to see what happens."] },
+      { heading: "The Gym Log Takeaway", paragraphs: ["The competition calendar may change every week, but your own training history remains the most useful source of information about your progress. Choose a plan that fits your goal, log the work and use your results to guide the next session."] }
+    ],
+    links: [
+      { label: "Track your workouts with Gym Log", href: "/" },
+      { label: "Browse all workout programs", href: "/workout-programs" },
+      { label: "Find a workout program", href: "/workout-programs/find" },
+      { label: "Explore the exercise library", href: "/exercises" },
+      { label: "CrossFit Partners With ATHX Games", href: "/blog/crossfit-athx-games-partnership-september-2026" },
+      { label: "Can Bar Speed Help You Choose the Right Weight?", href: "/blog/velocity-based-training-load-prescription-older-adults-2026" }
+    ]
+  },
 ];

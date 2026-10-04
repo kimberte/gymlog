@@ -32,8 +32,8 @@ export const DAILY_BLOG_POSTS_5: BlogPost[] = [
     title: "Could Eccentric Quasi-Isometric Training Build Strength Like Traditional Lifting?",
     description: "A new six-week study compared eccentric quasi-isometric training with traditional dynamic resistance training in untrained men.",
     keyword: "eccentric quasi-isometric training study",
-    image: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=1600&q=85",
-    imageAlt: "Athlete performing resistance training",
+    image: "https://images.unsplash.com/photo-1599058917212-d750089bc07e?auto=format&fit=crop&w=1600&q=85",
+    imageAlt: "Athlete performing resistance exercise",
     date: "September 23, 2026",
     sections: [
       { paragraphs: ["A new study compared eccentric quasi-isometric (EQI) training with traditional dynamic resistance training over six weeks in untrained young men. Both training groups improved compared with a non-training control group.", "The headline is interesting, but it is not proof that one method replaces every conventional lift."] },

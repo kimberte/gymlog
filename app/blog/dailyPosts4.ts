@@ -6,8 +6,8 @@ export const DAILY_BLOG_POSTS_4: BlogPost[] = [
     title: "How Many Days a Week Should You Work Out? A Practical Guide for Every Goal",
     description: "Find a realistic weekly workout frequency for building muscle, getting stronger, improving fitness or simply staying consistent.",
     keyword: "how many days a week should you work out",
-    image: "/empty-gym.png",
-    imageAlt: "Gym equipment ready for a weekly workout routine",
+    image: "https://images.unsplash.com/photo-1576678927484-cc907957088c?auto=format&fit=crop&w=1600&q=85",
+    imageAlt: "Woman training with dumbbells",
     date: "September 22, 2026",
     sections: [
       { paragraphs: ["How many days a week should you work out? There is no single answer for everyone. The right frequency depends on your goal, experience, available time, recovery and how much work you can perform well in each session.", "For most people, the best starting point is the smallest repeatable schedule that provides enough productive training to move forward."] },
@@ -35,8 +35,8 @@ export const DAILY_BLOG_POSTS_4: BlogPost[] = [
     title: "New Powerlifting Research Is Looking More Closely at Shoulder Mechanics in the Bench Press",
     description: "A new 2026 study used markerless motion capture to examine shoulder joint movement during the bench press in competitive powerlifters.",
     keyword: "bench press shoulder mechanics research",
-    image: "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?auto=format&fit=crop&w=1600&q=85",
-    imageAlt: "Athlete performing a barbell bench press",
+    image: "https://images.unsplash.com/photo-1538805060514-97d9cc17730c?auto=format&fit=crop&w=1600&q=85",
+    imageAlt: "Athlete performing a bench press",
     date: "September 22, 2026",
     sections: [
       { paragraphs: ["A new paper published ahead of print in the Journal of Strength and Conditioning Research examined shoulder-joint kinematics during the barbell bench press in competitive powerlifters.", "The study is useful because it focuses on how the shoulder moves during a real strength exercise rather than reducing technique to one cue or universal rule."] },
@@ -62,8 +62,8 @@ export const DAILY_BLOG_POSTS_4: BlogPost[] = [
     title: "This Week in Fitness: Olympia Week, HYROX Debate, Walking Research & More",
     description: "The latest fitness stories from September 22, 2026, spanning bodybuilding, HYROX, running, exercise science, strength training and the wider fitness industry.",
     keyword: "fitness news September 22 2026",
-    image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1600&q=85",
-    imageAlt: "Athlete training in a modern gym",
+    image: "https://images.unsplash.com/photo-1517832207067-4db24a2ae47c?auto=format&fit=crop&w=1600&q=85",
+    imageAlt: "Athlete training in a fitness facility",
     date: "September 22, 2026",
     sections: [
       { paragraphs: ["The fitness conversation is moving quickly as Olympia week arrives and hybrid competition continues to grow. This week's roundup covers the stories getting attention across bodybuilding, HYROX, running, exercise science and the wider industry.", "Here are the developments worth knowing as of September 22, 2026."] },

@@ -6,8 +6,8 @@ export const DAILY_BLOG_POSTS_5: BlogPost[] = [
     title: "How to Choose the Right Weight for Each Exercise",
     description: "A practical guide to choosing starting weights, adjusting loads and progressing without guessing.",
     keyword: "how to choose the right weight for an exercise",
-    image: "/empty-gym.png",
-    imageAlt: "Gym equipment ready for a strength workout",
+    image: "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?auto=format&fit=crop&w=1600&q=85",
+    imageAlt: "Athlete selecting weights for a workout",
     date: "September 23, 2026",
     sections: [
       { paragraphs: ["Choosing the right weight is not about finding one perfect number forever. It is about selecting a load that lets you complete the target reps with controlled technique and enough effort to create a useful training stimulus.", "Start conservatively, then use the first working set as information. A weight that looks impressive on paper is not useful if it changes the exercise or makes the rest of the workout impossible."] },

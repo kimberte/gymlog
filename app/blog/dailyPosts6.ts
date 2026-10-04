@@ -6,8 +6,8 @@ export const DAILY_BLOG_POSTS_6: BlogPost[] = [
     title: "How to Warm Up Before Lifting: A Practical Strength-Training Guide",
     description: "Learn how to warm up before lifting, how many warm-up sets to use and how to prepare for heavy training without wasting energy.",
     keyword: "how to warm up before lifting",
-    image: "/empty-gym.png",
-    imageAlt: "Gym equipment ready for a strength workout",
+    image: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=1600&q=85",
+    imageAlt: "Athlete warming up before strength training",
     date: "October 4, 2026",
     sections: [
       { paragraphs: [
@@ -61,8 +61,8 @@ export const DAILY_BLOG_POSTS_6: BlogPost[] = [
     title: "Rhys Calland Retains Strongman World Title in Canada",
     description: "Rhys Calland retained the men's open title at the 2026 WHEA World Championships in Canada as military strength athletes filled the podium.",
     keyword: "Rhys Calland strongman 2026",
-    image: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=1600&q=85",
-    imageAlt: "Athlete performing heavy strength training",
+    image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1600&q=85",
+    imageAlt: "Athlete training with weights in a gym",
     date: "October 4, 2026",
     sections: [
       { paragraphs: [
@@ -103,8 +103,8 @@ export const DAILY_BLOG_POSTS_6: BlogPost[] = [
     title: "This Week in Fitness: Strongman, Powerlifting, Bodybuilding, Nutrition & New Research",
     description: "The week's biggest stories across strongman, powerlifting, bodybuilding, nutrition and exercise science, with the Gym Log takeaway from each.",
     keyword: "fitness news October 2026",
-    image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1600&q=85",
-    imageAlt: "Athlete training in a modern gym",
+    image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1600&q=85",
+    imageAlt: "Strength athlete training with a barbell",
     date: "October 4, 2026",
     sections: [
       { paragraphs: [

@@ -6,8 +6,8 @@ export const DAILY_BLOG_POSTS_6: BlogPost[] = [
     title: "How to Warm Up Before Lifting: A Practical Strength-Training Guide",
     description: "Learn how to warm up before lifting, how many warm-up sets to use and how to prepare for heavy training without wasting energy.",
     keyword: "how to warm up before lifting",
-    image: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=1600&q=85",
-    imageAlt: "Athlete warming up before strength training",
+    image: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=1600&q=85",
+    imageAlt: "Adult athlete preparing for strength training",
     date: "October 4, 2026",
     sections: [
       { paragraphs: [

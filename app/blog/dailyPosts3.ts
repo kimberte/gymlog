@@ -61,8 +61,8 @@ export const DAILY_BLOG_POSTS_3: BlogPost[] = [
     title: "This Week in Fitness: Olympia Week, HYROX Growth, Strongman Records & More",
     description: "The latest fitness stories from September 21, 2026, including Olympia week, HYROX growth, strongman results, unusual exercise research and what is next on the competition calendar.",
     keyword: "fitness news September 21 2026",
-    image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1600&q=85",
-    imageAlt: "Athlete training in a gym",
+    image: "https://images.unsplash.com/photo-1554284126-aa88f22d8b2b?auto=format&fit=crop&w=1600&q=85",
+    imageAlt: "Athlete preparing for a fitness workout",
     date: "September 21, 2026",
     sections: [
       { paragraphs: ["The fall fitness calendar is getting crowded. This week's stories cross bodybuilding, HYROX, strongman, exercise science and the growing business of fitness events.", "Here is a flexible roundup of the developments worth knowing as of September 21, 2026."] },

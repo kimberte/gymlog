@@ -57,8 +57,8 @@ export const DAILY_BLOG_POSTS_5: BlogPost[] = [
     title: "This Week in Fitness: Olympia, HYROX Oslo, Rogue Invitational & More",
     description: "The biggest fitness stories from September 23, 2026, across bodybuilding, HYROX, CrossFit, strongman, running and exercise science.",
     keyword: "fitness news September 23 2026",
-    image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1600&q=85",
-    imageAlt: "Athlete training in a modern gym",
+    image: "https://images.unsplash.com/photo-1526506118085-60ce8714f8c5?auto=format&fit=crop&w=1600&q=85",
+    imageAlt: "Busy gym floor during strength training",
     date: "September 23, 2026",
     sections: [
       { paragraphs: ["The final week of September is bringing a crowded fitness calendar: the Olympia is about to begin, HYROX is staging events across multiple cities and the autumn strength-sports schedule is taking shape.", "Here are the stories worth watching as of September 23, 2026."] },

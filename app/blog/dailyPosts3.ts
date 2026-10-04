@@ -6,8 +6,8 @@ export const DAILY_BLOG_POSTS_3: BlogPost[] = [
     title: "How to Deload: When and How to Reduce Your Training Without Losing Progress",
     description: "Learn what a deload is, when you may need one, how long it should last and how to reduce training without turning recovery into complete inactivity.",
     keyword: "how to deload",
-    image: "/empty-gym.png",
-    imageAlt: "Barbell and plates ready for a lighter training week",
+    image: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=1600&q=85",
+    imageAlt: "Barbell and plates prepared for strength training",
     date: "September 21, 2026",
     sections: [
       { paragraphs: ["A deload is a planned reduction in training stress. It is not quitting, and it is not a sign that your program has failed. The goal is to reduce fatigue while keeping enough practice and movement to return to harder training ready to perform.", "Many lifters wait until they feel completely wrecked before backing off. A better approach is to recognize the signs early and use a short, deliberate reduction before fatigue starts dragging down the rest of the plan."] },

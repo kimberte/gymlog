@@ -725,6 +725,42 @@ body {
   flex: 1;
 }
 
+/* Keep workout saving reachable on narrow phones and above the home indicator. */
+@media (max-width: 480px) {
+  .editor-full {
+    height: 100dvh;
+    max-height: 100dvh;
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
+
+  .editor-actions {
+    flex: 0 0 auto;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+    padding-top: 10px;
+    padding-bottom: 4px;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .editor-actions button {
+    min-width: 0;
+    width: 100%;
+    padding-inline: 4px;
+    font-size: 12px;
+    min-height: 42px;
+  }
+
+  .editor-actions button.primary {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    min-height: 48px;
+    font-size: 16px;
+  }
+}
+
+
 .editor button.close {
   position: absolute;
   top: 12px;

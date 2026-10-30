@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toDateKey } from "../lib/date";
 import { getDayEntries, WorkoutEntry, WorkoutMap } from "../lib/storage";
 
@@ -80,6 +80,7 @@ type Props = {
   stacked: boolean;
   weekStart: "sunday" | "monday";
   selectedDate?: string | null;
+  onHoldDate?: (date: string) => void;
 };
 
 export default function WorkoutCalendar({
@@ -88,11 +89,23 @@ export default function WorkoutCalendar({
   stacked,
   weekStart,
   selectedDate,
+  onHoldDate,
 }: Props) {
   // IMPORTANT:
   // Next.js can pre-render client components on the server. If we initialize dates
   // during that render, the serialized state can be "stale" (e.g., the day the HTML
   // was generated/cached). We correct both the cursor month and "today" after mount.
+  const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const heldRef = useRef(false);
+  function cancelHold() { if (holdTimer.current) clearTimeout(holdTimer.current); holdTimer.current = null; }
+  function holdProps(key: string) { return {
+    onPointerDown: (e: React.PointerEvent) => { if (e.pointerType === "mouse" && e.button !== 0) return; cancelHold(); heldRef.current = false; holdTimer.current = setTimeout(() => { heldRef.current = true; onHoldDate?.(key); }, 550); },
+    onPointerUp: cancelHold,
+    onPointerLeave: cancelHold,
+    onPointerCancel: cancelHold,
+    onContextMenu: (e: React.MouseEvent) => { if (!onHoldDate) return; e.preventDefault(); cancelHold(); heldRef.current = true; onHoldDate(key); },
+  }; }
+  function selectUnlessHeld(key: string) { if (heldRef.current) { heldRef.current = false; return; } onSelectDate(key); }
   const [cursor, setCursor] = useState(() => new Date());
   const [todayKey, setTodayKey] = useState<string>("");
 
@@ -290,8 +303,9 @@ export default function WorkoutCalendar({
               return (
                 <div
                   key={key}
+                  {...holdProps(key)}
                   className={`cell ${isTodayCell ? "today" : ""} ${isSelected ? "selected" : ""}`}
-                  onClick={() => onSelectDate(key)}
+                  onClick={() => selectUnlessHeld(key)}
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => {
@@ -428,8 +442,9 @@ export default function WorkoutCalendar({
               return (
                 <div
                   key={key}
+                  {...holdProps(key)}
                   className={`stacked-row ${isTodayRow ? "today" : ""} ${isSelected ? "selected" : ""}`}
-                  onClick={() => onSelectDate(key)}
+                  onClick={() => selectUnlessHeld(key)}
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => {

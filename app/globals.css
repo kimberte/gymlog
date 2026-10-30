@@ -1495,3 +1495,30 @@ button.secondary.danger {
   .persistent-tool-timer{top:auto;bottom:82px;transform:none}
   .persistent-tool-timer-panel{width:min(270px,calc(100vw - 62px));margin-left:6px}
 }
+
+/* Compact mobile header: allow two rows instead of overlapping navigation. */
+@media (max-width: 600px) {
+  .top-bar {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px 0;
+    padding: 8px 8px;
+  }
+  .top-bar .brand {
+    flex: 0 0 100%;
+    justify-content: center;
+  }
+  .top-bar > div {
+    flex: 0 1 100%;
+    min-width: 0;
+    justify-content: space-evenly;
+    gap: 0 !important;
+  }
+  .top-bar .icon-btn,
+  .top-bar .nav-programs-btn {
+    flex: 0 1 40px;
+    min-width: 36px;
+    width: 40px;
+    height: 40px;
+  }
+}

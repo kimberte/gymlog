@@ -10,7 +10,7 @@ export const FOUNDER_SPECIAL_V2_WORKOUTS: FounderV2ImportDay[] = [
       "Weighted Pull-Up / Lat Pulldown — 3×6–10",
       "Incline Dumbbell Press — 2×8–12",
       "Chest-Supported Dumbbell Row — 2×8–12",
-      "Cable Lateral Raise — 2×12–20",
+      "Dumbbell Lateral Raise — 2×12–20",
       "Rope Triceps Pushdown — 2×10–15"
     ],
     "guidance": "5–7 min ramp-up; 2–3 min bench rests, 60–90 sec accessories. Superset incline press with rows and lateral raises with pushdowns. Stop heavy sets with 1–2 reps in reserve. Target 55–60 min.",
@@ -38,7 +38,7 @@ export const FOUNDER_SPECIAL_V2_WORKOUTS: FounderV2ImportDay[] = [
       "One-Arm Dumbbell Row — 3×8–12/side",
       "Seated Dumbbell Shoulder Press — 2×8–12",
       "Lat Pulldown — 2×10–15",
-      "Cable Lateral Raise — 3×12–20",
+      "Dumbbell Lateral Raise — 3×12–20",
       "Cable Curl — 3×10–15",
       "Overhead Cable Triceps Extension — 3×10–15"
     ],
@@ -69,7 +69,7 @@ export const FOUNDER_SPECIAL_V2_WORKOUTS: FounderV2ImportDay[] = [
       "Weighted Pull-Up / Lat Pulldown — 3×6–10",
       "Incline Dumbbell Press — 2×8–12",
       "Chest-Supported Dumbbell Row — 2×8–12",
-      "Cable Lateral Raise — 2×12–20",
+      "Dumbbell Lateral Raise — 2×12–20",
       "Rope Triceps Pushdown — 2×10–15"
     ],
     "guidance": "5–7 min ramp-up; 2–3 min bench rests, 60–90 sec accessories. Superset incline press with rows and lateral raises with pushdowns. Stop heavy sets with 1–2 reps in reserve. Target 55–60 min.",
@@ -97,7 +97,7 @@ export const FOUNDER_SPECIAL_V2_WORKOUTS: FounderV2ImportDay[] = [
       "One-Arm Dumbbell Row — 3×8–12/side",
       "Seated Dumbbell Shoulder Press — 2×8–12",
       "Lat Pulldown — 2×10–15",
-      "Cable Lateral Raise — 3×12–20",
+      "Dumbbell Lateral Raise — 3×12–20",
       "Cable Curl — 3×10–15",
       "Overhead Cable Triceps Extension — 3×10–15"
     ],
@@ -128,7 +128,7 @@ export const FOUNDER_SPECIAL_V2_WORKOUTS: FounderV2ImportDay[] = [
       "Weighted Pull-Up / Lat Pulldown — 3×6–10",
       "Incline Dumbbell Press — 2×8–12",
       "Chest-Supported Dumbbell Row — 2×8–12",
-      "Cable Lateral Raise — 2×12–20",
+      "Dumbbell Lateral Raise — 2×12–20",
       "Rope Triceps Pushdown — 2×10–15"
     ],
     "guidance": "5–7 min ramp-up; 2–3 min bench rests, 60–90 sec accessories. Superset incline press with rows and lateral raises with pushdowns. Stop heavy sets with 1–2 reps in reserve. Target 55–60 min.",
@@ -156,7 +156,7 @@ export const FOUNDER_SPECIAL_V2_WORKOUTS: FounderV2ImportDay[] = [
       "One-Arm Dumbbell Row — 3×8–12/side",
       "Seated Dumbbell Shoulder Press — 2×8–12",
       "Lat Pulldown — 2×10–15",
-      "Cable Lateral Raise — 3×12–20",
+      "Dumbbell Lateral Raise — 3×12–20",
       "Cable Curl — 3×10–15",
       "Overhead Cable Triceps Extension — 3×10–15"
     ],
@@ -187,7 +187,7 @@ export const FOUNDER_SPECIAL_V2_WORKOUTS: FounderV2ImportDay[] = [
       "Weighted Pull-Up / Lat Pulldown — 3×6–10",
       "Incline Dumbbell Press — 2×8–12",
       "Chest-Supported Dumbbell Row — 2×8–12",
-      "Cable Lateral Raise — 2×12–20",
+      "Dumbbell Lateral Raise — 2×12–20",
       "Rope Triceps Pushdown — 2×10–15"
     ],
     "guidance": "5–7 min ramp-up; 2–3 min bench rests, 60–90 sec accessories. Superset incline press with rows and lateral raises with pushdowns. Stop heavy sets with 1–2 reps in reserve. Target 55–60 min.",
@@ -215,7 +215,7 @@ export const FOUNDER_SPECIAL_V2_WORKOUTS: FounderV2ImportDay[] = [
       "One-Arm Dumbbell Row — 3×8–12/side",
       "Seated Dumbbell Shoulder Press — 2×8–12",
       "Lat Pulldown — 2×10–15",
-      "Cable Lateral Raise — 3×12–20",
+      "Dumbbell Lateral Raise — 3×12–20",
       "Cable Curl — 3×10–15",
       "Overhead Cable Triceps Extension — 3×10–15"
     ],

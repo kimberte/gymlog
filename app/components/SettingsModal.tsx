@@ -1074,6 +1074,8 @@ async function updatePassword() {
             <strong>General</strong>
           </div>
 
+          <a href="/tools" style={{ display: "inline-block", marginTop: 12, padding: "9px 12px", borderRadius: 10, color: "var(--text)", background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.18)", textDecoration: "none", fontSize: 13, fontWeight: 600 }}>Open workout tools →</a>
+
           <div style={{ marginTop: 10, fontSize: 13, opacity: 0.9 }}>
             Week starts on
           </div>

@@ -1533,3 +1533,16 @@ button.secondary.danger {
     padding: 0;
   }
 }
+
+/* Compact, labeled navigation with breathing room around the logo. */
+.top-bar .main-nav { display: flex; align-items: center; gap: 6px; }
+.top-bar .nav-item { width: auto; min-width: 46px; height: 52px; padding: 5px 7px; flex-direction: column; gap: 4px; line-height: 1; }
+.top-bar .nav-label { font-size: 10px; font-weight: 600; line-height: 1.1; white-space: nowrap; }
+@media (max-width: 600px) {
+  .top-bar { padding: 8px 12px 8px 16px; gap: 5px; }
+  .top-bar .brand { flex: 0 0 28px; min-width: 28px; }
+  .top-bar .main-nav { flex: 1 1 auto; min-width: 0; justify-content: space-between; gap: 0; }
+  .top-bar .main-nav .nav-item { flex: 1 1 0; min-width: 0; width: auto; height: 50px; padding: 4px 1px; }
+  .top-bar .nav-label { font-size: clamp(8px, 2.25vw, 10px); }
+  .top-bar .main-nav .nav-item svg { width: 19px; height: 19px; flex-shrink: 0; }
+}

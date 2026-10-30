@@ -1496,29 +1496,40 @@ button.secondary.danger {
   .persistent-tool-timer-panel{width:min(270px,calc(100vw - 62px));margin-left:6px}
 }
 
-/* Compact mobile header: allow two rows instead of overlapping navigation. */
+/* One-row mobile navigation: logo only, compact evenly spaced icons. */
 @media (max-width: 600px) {
   .top-bar {
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 6px 0;
-    padding: 8px 8px;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    gap: 4px;
+    padding: 8px 6px;
   }
   .top-bar .brand {
-    flex: 0 0 100%;
+    flex: 0 0 30px;
+    min-width: 30px;
+    padding: 0;
     justify-content: center;
   }
+  .top-bar .brand h1 {
+    display: none;
+  }
+  .top-bar .brand-logo {
+    width: 28px;
+    height: 28px;
+  }
   .top-bar > div {
-    flex: 0 1 100%;
+    display: flex;
+    flex: 1 1 auto;
     min-width: 0;
-    justify-content: space-evenly;
+    justify-content: space-between;
     gap: 0 !important;
   }
   .top-bar .icon-btn,
   .top-bar .nav-programs-btn {
     flex: 0 1 40px;
-    min-width: 36px;
-    width: 40px;
+    min-width: 0;
+    width: auto;
     height: 40px;
+    padding: 0;
   }
 }

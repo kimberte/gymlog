@@ -7,6 +7,7 @@ import { getSeoTemplateBySlug } from "../../lib/seoWorkoutTemplates";
 import { getProgram } from "../../lib/programs";
 import { loadWorkouts, saveWorkouts } from "../../lib/storage";
 import styles from "./import-template.module.css";
+import { FOUNDER_SPECIAL_V2_WORKOUTS } from "../../workout-programs/founderSpecialV2";
 import { FOUNDER_SPECIAL_WORKOUTS } from "../../workout-programs/founderSpecial";
 
 function toDateInputValue(date: Date) {
@@ -49,7 +50,7 @@ export default function ImportTemplatePage() {
   const slug = String(params?.slug || "");
   const template = useMemo(() => getSeoTemplateBySlug(slug), [slug]);
   const program = useMemo(() => getProgram(slug), [slug]);
-  const rawDays = slug === "gym-log-founder-special" ? FOUNDER_SPECIAL_WORKOUTS : (template?.days ?? (program ? fallbackDays(program) : []));
+  const rawDays = slug === "gym-log-founder-special-v2" ? FOUNDER_SPECIAL_V2_WORKOUTS : slug === "gym-log-founder-special" ? FOUNDER_SPECIAL_WORKOUTS : (template?.days ?? (program ? fallbackDays(program) : []));
   const days = rawDays.map((day) => ({
     ...day,
     day: "day" in day ? day.day : day.name,
@@ -124,7 +125,7 @@ export default function ImportTemplatePage() {
           <aside className={styles.card}>
             <div className={styles.step}>2</div>
             <h2>Here's what you'll get</h2>
-            <p className={styles.muted}>{slug === "gym-log-founder-special" ? "4 weeks × 4 training days = 16 sessions ready to add to your calendar." : `${days.length} training day${days.length === 1 ? "" : "s"} ready to add to your calendar.`}</p>
+            <p className={styles.muted}>{(slug === "gym-log-founder-special" || slug === "gym-log-founder-special-v2") ? "4 weeks × 4 training days = 16 sessions ready to add to your calendar." : `${days.length} training day${days.length === 1 ? "" : "s"} ready to add to your calendar.`}</p>
             <div className={styles.days}>
               {days.map((day, index) => (
                 <div key={day.day + day.offsetDays} className={styles.day}>

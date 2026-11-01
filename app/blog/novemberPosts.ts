@@ -7,8 +7,8 @@ export const NOVEMBER_BLOG_POSTS: BlogPost[] = [
     "title": "Reps in Reserve (RIR): How Hard Should You Train for Muscle and Strength?",
     "description": "Learn what reps in reserve means, how to estimate RIR, when to train close to failure, and how to use it to make better workout decisions.",
     "keyword": "reps in reserve RIR",
-    "image": "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1600&q=85",
-    "imageAlt": "Adult strength-training athlete working out in a gym",
+    "image": "https://images.unsplash.com/photo-1718633561231-864a4c466991?auto=format&fit=crop&w=1600&q=85",
+    "imageAlt": "Adult woman performing a barbell squat in a gym",
     "date": "November 1, 2026",
     "sections": [
       {

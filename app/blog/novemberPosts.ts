@@ -153,7 +153,7 @@ export const NOVEMBER_BLOG_POSTS: BlogPost[] = [
       },
       {
         "label": "How Long Should You Rest Between Sets?",
-        "href": "/blog/how-long-should-you-rest-between-sets-for-muscle-and-strength"
+        "href": "/blog/how-long-to-rest-between-sets"
       },
       {
         "label": "Reps in Reserve: How Hard Should You Train?",

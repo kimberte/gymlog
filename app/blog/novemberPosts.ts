@@ -3,6 +3,157 @@ import type { BlogPost } from "./blogData";
 // New posts are added here one at a time; the shared index sorts all posts by date.
 export const NOVEMBER_BLOG_POSTS: BlogPost[] = [
 {
+  "slug": "how-often-train-muscle-per-week-hypertrophy-frequency",
+  "title": "How Often Should You Train Each Muscle Per Week? What the Research Says",
+  "description": "Should you train a muscle once, twice or three times weekly? Understand volume-equated research and build a realistic 2-, 3- or 4-day plan.",
+  "keyword": "how often train each muscle per week",
+  "image": "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=1600&q=85",
+  "imageAlt": "Adult strength athlete performing a resistance training workout in a gym",
+  "date": "November 4, 2026",
+  "sections": [
+    {
+      "paragraphs": [
+        "How often should you train the same muscle to build muscle? You will hear that once per week is too little, twice per week is essential, or that every muscle must be hit three times. The research supports a more useful answer: weekly training volume and the quality of your sets matter enormously, while frequency is largely a way to distribute that work across days.",
+        "A chest workout with twelve challenging sets on Monday and two chest sessions with six sets each are not automatically different growth programs. They are two ways to schedule twelve sets. The right choice depends on whether you can perform those sets productively, recover, and keep showing up."
+      ]
+    },
+    {
+      "heading": "The short answer: choose a frequency that makes your weekly work sustainable",
+      "paragraphs": [
+        "Training a muscle twice per week is a practical default for many lifters, not a universal physiological requirement. If you are getting productive sets, progressing, and recovering with once-weekly training, you do not need to overhaul everything. If a single marathon leg day leaves you exhausted or sore for days, dividing the work across two sessions may improve the quality of your training.",
+        "Frequency should be decided alongside weekly sets, exercise selection, effort, and your actual calendar. Increasing the number of days without managing total workload can simply increase fatigue."
+      ]
+    },
+    {
+      "heading": "What counts as training a muscle twice per week?",
+      "paragraphs": [
+        "Count meaningful resistance-training exposures, not just the name on the calendar. A Monday bench press and a Thursday incline dumbbell press both train the chest. Squats and leg presses contribute quadriceps work, although their stimulus is not identical. Rows and pulldowns overlap for parts of the back, but emphasize different movement patterns.",
+        "Indirect work complicates counting. Triceps assist on presses and biceps assist on pulls. That does not mean one pressing set is necessarily equal to one hard triceps-isolation set. Use direct hard sets as a simple baseline, then consider overlapping work and your recovery instead of pretending every set maps perfectly to one muscle."
+      ]
+    },
+    {
+      "heading": "What the research says about frequency and muscle growth",
+      "paragraphs": [
+        "A 2019 systematic review and meta-analysis by Schoenfeld, Grgic and Krieger examined 25 studies. When weekly training volume was equated, higher versus lower training frequencies did not produce a significant difference in muscle hypertrophy. In studies without matched volume, higher frequency sometimes looked better, but it also often allowed more total work. This distinction matters: frequency and volume are not the same variable.",
+        "A 2016 meta-analysis suggested a benefit to training muscles twice versus once weekly, but later reviews with more studies found the independent effect of frequency to be small or unclear when total volume was held constant. These are group averages, not proof that every person responds identically. The practical takeaway is that splitting weekly work can be valuable without claiming a magic frequency threshold.",
+        "A 2023 systematic review and network meta-analysis in the British Journal of Sports Medicine found that a wide range of resistance-training prescriptions improved strength and hypertrophy versus no exercise. Multiple-set prescriptions ranked favorably for hypertrophy. It does not establish that one particular weekly schedule is best for every lifter."
+      ]
+    },
+    {
+      "heading": "Why spreading sets across the week can still help",
+      "paragraphs": [
+        "Suppose you plan fourteen challenging quad sets each week. Performing all fourteen after work on Friday may make later sets feel increasingly sloppy, especially if you also train hamstrings and calves. Seven sets Tuesday and seven Saturday may let you use better technique and more consistent effort across the week.",
+        "That is a practical fatigue-management argument, not proof that seven-plus-seven always grows more muscle than fourteen in one day. If you are already handling a once-weekly session well, your training log may show no urgent reason to change."
+      ]
+    },
+    {
+      "heading": "Example: one versus two chest sessions",
+      "paragraphs": [
+        "Option A is a single chest-focused day: bench press four working sets, incline dumbbell press four sets, and a cable or dumbbell fly for three sets. That is eleven direct sets in one session. Option B divides the same work: Monday bench press three sets plus incline press three sets; Thursday bench press one set, incline press one set and fly three sets. Both total eleven direct sets, but the order and distribution differ.",
+        "For a cleaner comparison, keep the same exercises, total sets, repetition targets and effort as similar as practical. Track whether your later sets maintain their performance and whether your shoulders and elbows feel recovered. If the second day makes the week easier to complete, that is already a meaningful benefit."
+      ]
+    },
+    {
+      "heading": "Two-day full-body training",
+      "paragraphs": [
+        "If you can train only twice weekly, make both sessions full-body. For example, Tuesday: squat, bench press, row, Romanian deadlift and a small amount of arm or shoulder work. Saturday: leg press, overhead press, pulldown, hip hinge and an optional isolation exercise. Choose manageable set counts rather than copying a six-day bodybuilding split into two enormous workouts.",
+        "This structure gives most major movement patterns two weekly opportunities and is easier to recover from for many busy lifters. You can find a ready-made two-day routine in the Gym Log program library, then record actual sets and repetitions rather than relying on memory."
+      ]
+    },
+    {
+      "heading": "Three-day full-body versus push/pull/legs",
+      "paragraphs": [
+        "Three full-body days can expose major muscles to training roughly three times weekly, with different emphasis each day. A traditional three-day push/pull/legs schedule usually trains each major movement category once that week. Neither label guarantees results: the actual number of challenging sets, exercise choices and progression are what you should compare.",
+        "For someone training only three days, full-body often makes it easier to spread sets across the week. Push/pull/legs can still work, particularly if it fits your preferences and you are completing enough productive work. Do not abandon a consistent plan just because another split has a more fashionable name."
+      ]
+    },
+    {
+      "heading": "Four-day upper/lower: a straightforward middle ground",
+      "paragraphs": [
+        "A four-day upper/lower split usually trains upper body Monday and Thursday and lower body Tuesday and Friday. This gives most major muscle groups two exposures with rest days between similar sessions. You can emphasize heavy compound movements on the first exposure and moderate-repetition or machine work on the second.",
+        "For example, Monday bench and row lead the upper workout; Thursday incline press and pulldown lead. Tuesday squat and Romanian deadlift lead the lower workout; Friday leg press and leg curl lead. Adjust volume to your capacity and do not assume four sessions are necessary if you can consistently complete only two or three."
+      ]
+    },
+    {
+      "heading": "When once-weekly training may be enough",
+      "paragraphs": [
+        "Once-weekly training can still produce gains, especially for people new to resistance training, those maintaining muscle, or those whose schedules limit gym time. The relevant question is whether the weekly work is challenging, repeatable and sufficient for the goal. More frequent training is an option, not a moral obligation.",
+        "A warning sign is cramming so many sets into one day that the last half becomes rushed or poorly executed. If that happens, redistribute the work before automatically adding more sets."
+      ]
+    },
+    {
+      "heading": "When three or more exposures make sense",
+      "paragraphs": [
+        "Higher frequency can help if you are specializing in a lift, practicing a technically demanding movement, or trying to distribute substantial weekly volume. A powerlifter may bench multiple times weekly to practice technique and manage heavy and lighter sessions. A bodybuilder may spread calf or side-delt work across several short sessions.",
+        "Do not turn every exposure into a maximum-effort workout. If your performance declines repeatedly, soreness interferes with the next session, or joint irritation accumulates, review total volume, exercise selection and effort before adding another day."
+      ]
+    },
+    {
+      "heading": "How to change your schedule without accidentally doubling volume",
+      "paragraphs": [
+        "If you currently do ten direct sets of back training on Wednesday and want to train back twice weekly, start by moving five sets to Saturday. Do not immediately perform ten sets on both days. That would double your weekly volume and make it impossible to know whether any change came from frequency or the added work.",
+        "Run the new schedule for several weeks, recording exercises, loads, reps and perceived effort. Compare similar movements under similar conditions. If you are progressing and recovering, you may not need to add more work at all."
+      ]
+    },
+    {
+      "heading": "Common mistakes when choosing training frequency",
+      "bullets": [
+        "Counting gym visits rather than muscle-group exposures and actual hard sets.",
+        "Assuming more days automatically means more growth.",
+        "Doubling weekly sets when splitting a workout across two days.",
+        "Treating all indirect compound-lift work as identical to direct isolation work.",
+        "Judging a program after one unusually good or bad workout.",
+        "Following a six-day split when your schedule only reliably allows three sessions.",
+        "Ignoring persistent pain or unusual fatigue in the pursuit of a frequency target."
+      ]
+    },
+    {
+      "heading": "Use your workout log to find your own answer",
+      "paragraphs": [
+        "Gym Log makes this question concrete. Look back four to six weeks and count how often each major muscle or movement pattern appeared, how many working sets you actually completed, and whether weights or repetitions improved. Your log may reveal that you planned three sessions but usually completed two. A realistic two-day plan beats an imaginary five-day one.",
+        "When you change frequency, keep the overall workload relatively stable at first. Note whether later sets improve, whether you recover in time, and whether your schedule becomes easier to maintain. This gives you more useful evidence than comparing yourself with someone else's training split."
+      ]
+    },
+    {
+      "heading": "Bottom line",
+      "paragraphs": [
+        "There is no single mandatory weekly training frequency for hypertrophy. Research suggests that when total weekly volume is matched, frequency by itself has little clear impact on average muscle growth. Two exposures per muscle per week are a useful scheduling default, but one or three can also work.",
+        "Pick a frequency that lets you complete quality work, recover, and progressively train over months. Record what you actually do, not what a perfect week was supposed to look like."
+      ]
+    }
+  ],
+  "links": [
+    {
+      "label": "Track your weekly training in Gym Log",
+      "href": "/"
+    },
+    {
+      "label": "Browse two-day and four-day workout programs",
+      "href": "/workout-programs"
+    },
+    {
+      "label": "How to prioritize exercises within a workout",
+      "href": "/blog/exercise-order-workout-compound-vs-isolation-first"
+    },
+    {
+      "label": "How hard should your sets be? RIR guide",
+      "href": "/blog/reps-in-reserve-rir-guide-strength-hypertrophy"
+    },
+    {
+      "label": "Schoenfeld et al. 2019 frequency meta-analysis (PubMed)",
+      "href": "https://pubmed.ncbi.nlm.nih.gov/30558493/"
+    },
+    {
+      "label": "Grgic et al. 2019 frequency review (PubMed)",
+      "href": "https://pubmed.ncbi.nlm.nih.gov/30236847/"
+    },
+    {
+      "label": "2023 resistance training prescription network meta-analysis (PubMed)",
+      "href": "https://pubmed.ncbi.nlm.nih.gov/37414459/"
+    }
+  ]
+},
+{
   "slug": "top-sets-back-off-sets-strength-training-guide",
   "title": "Top Sets and Back-Off Sets: How to Structure Your Strength Workouts",
   "description": "A practical guide to top sets and back-off sets, with squat and bench examples, progression and effort management.",

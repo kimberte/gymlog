@@ -81,6 +81,8 @@ type Props = {
   weekStart: "sunday" | "monday";
   selectedDate?: string | null;
   onHoldDate?: (date: string) => void;
+  multiSelect?: boolean;
+  selectedDates?: string[];
 };
 
 export default function WorkoutCalendar({
@@ -90,6 +92,8 @@ export default function WorkoutCalendar({
   weekStart,
   selectedDate,
   onHoldDate,
+  multiSelect = false,
+  selectedDates = [],
 }: Props) {
   // IMPORTANT:
   // Next.js can pre-render client components on the server. If we initialize dates
@@ -294,7 +298,7 @@ export default function WorkoutCalendar({
               const markers = entries.map(markerType).filter(Boolean) as Array<"full" | "half">;
 
               const { first, extra, activeCount } = summarizeTitles(entries);
-              const isSelected = Boolean(selectedDate && key === selectedDate);
+              const isSelected = multiSelect ? selectedDates.includes(key) : Boolean(selectedDate && key === selectedDate);
 
               const { hasPhoto, hasVideo } = getMediaFlags(workouts, key);
               const pb = hasPb(workouts, key);
@@ -309,7 +313,7 @@ export default function WorkoutCalendar({
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") onSelectDate(key);
+                    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelectDate(key); }
                   }}
                   style={{ position: "relative" }}
                 >
@@ -434,7 +438,7 @@ export default function WorkoutCalendar({
                   : [];
               const titleLines = displayTitles.length ? displayTitles : ["—"];
 
-              const isSelected = Boolean(selectedDate && key === selectedDate);
+              const isSelected = multiSelect ? selectedDates.includes(key) : Boolean(selectedDate && key === selectedDate);
               const { hasPhoto, hasVideo } = getMediaFlags(workouts, key);
               const pb = hasPb(workouts, key);
               const isTodayRow = Boolean(todayKey && key === todayKey);
@@ -448,7 +452,7 @@ export default function WorkoutCalendar({
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") onSelectDate(key);
+                    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelectDate(key); }
                   }}
                 >
                   {/* ✅ DATE FIRST, icons AFTER */}

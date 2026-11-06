@@ -6,21 +6,11 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "Gym Log",
     start_url: "/",
     display: "standalone",
-    background_color: "#0F0F0F",
+    background_color: "#FFFFFF",
     theme_color: "#FF6A00",
     icons: [
-      {
-        src: "/gym-log-splash.svg",
-        sizes: "192x192",
-        type: "image/svg+xml",
-        purpose: "any",
-      },
-      {
-        src: "/gym-log-splash.svg",
-        sizes: "512x512",
-        type: "image/svg+xml",
-        purpose: "maskable",
-      },
+      { src: "/gym-log-icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" },
+      { src: "/gym-log-splash.svg", sizes: "any", type: "image/svg+xml", purpose: "maskable" },
     ],
   };
 }

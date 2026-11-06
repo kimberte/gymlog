@@ -9,8 +9,8 @@ export default function manifest(): MetadataRoute.Manifest {
     background_color: "#FFFFFF",
     theme_color: "#FF6A00",
     icons: [
-      { src: "/gym-log-icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" },
-      { src: "/gym-log-splash.svg", sizes: "any", type: "image/svg+xml", purpose: "maskable" },
+      { src: "/gym-log-icon.svg?v=3", sizes: "any", type: "image/svg+xml", purpose: "any" },
+      { src: "/gym-log-splash.svg?v=3", sizes: "any", type: "image/svg+xml", purpose: "maskable" },
     ],
   };
 }

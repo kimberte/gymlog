@@ -2,6 +2,8 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { Program } from "../lib/programs";
+import WorkoutFinder from "./WorkoutFinder";
+import { getProgramMetadata } from "./programMetadata";
 
 const QUICK_SEARCHES = ["strength", "muscle building", "beginner", "powerlifting", "dumbbell", "home"];
 
@@ -29,7 +31,7 @@ function ProgramCard({ program, compact = false }: { program: Program; compact?:
 }
 
 export default function ProgramLibraryV2({ programs }: { programs: Program[] }) {
-  const [tab, setTab] = useState<"all" | "discover">("all");
+  const [tab, setTab] = useState<"all" | "discover" | "finder">("all");
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All");
   const [days, setDays] = useState("All");
@@ -37,6 +39,7 @@ export default function ProgramLibraryV2({ programs }: { programs: Program[] }) 
   const [equipment, setEquipment] = useState("All");
   const [goal, setGoal] = useState("All");
   const [sort, setSort] = useState("featured");
+  const finderPrograms = useMemo(() => programs.map(getProgramMetadata), [programs]);
   const categories = useMemo(() => ["All", ...Array.from(new Set(programs.map(p => p.category))).sort()], [programs]);
   const levels = ["All", "Beginner", "Intermediate", "Advanced", "All Levels"];
   const equipmentOptions = useMemo(() => ["All", ...Array.from(new Set(programs.map(p => p.equipment))).sort()], [programs]);
@@ -64,11 +67,11 @@ export default function ProgramLibraryV2({ programs }: { programs: Program[] }) 
   };
 
   return <section className="program-library-v2" aria-labelledby="all-programs-heading">
-    <div className="program-tabs" role="tablist" aria-label="Workout program views"><button type="button" role="tab" aria-selected={tab === "all"} className={tab === "all" ? "active" : ""} onClick={() => setTab("all")}>All Programs</button><button type="button" role="tab" aria-selected={tab === "discover"} className={tab === "discover" ? "active" : ""} onClick={() => setTab("discover")}>Discover &amp; Recommendations</button></div>
-    <div className="program-library-heading">
+    <div className="program-tabs" role="tablist" aria-label="Workout program views"><button type="button" role="tab" aria-selected={tab === "all"} className={tab === "all" ? "active" : ""} onClick={() => setTab("all")}>All Programs</button><button type="button" role="tab" aria-selected={tab === "discover"} className={tab === "discover" ? "active" : ""} onClick={() => setTab("discover")}>Discover</button><button type="button" role="tab" aria-selected={tab === "finder"} className={tab === "finder" ? "active" : ""} onClick={() => setTab("finder")}>Find My Program</button></div>
+    {tab === "finder" && <WorkoutFinder programs={finderPrograms} />}
+    {tab !== "finder" && <div className="program-library-heading">
       <div><div className="program-detail-kicker">EXPLORE THE LIBRARY</div><h2 id="all-programs-heading">Find your next workout program</h2><p>Search every program in one place, then narrow results by your schedule, experience and goals.</p></div>
-      <Link href="/workout-programs/find" className="program-finder-button">Not sure? Find my workout <span>→</span></Link>
-    </div>
+    </div>}
 
     {tab === "discover" && <div className="program-discovery" aria-label="Program collections">
       {BROWSE_SECTIONS.map(section => { const items = browsePrograms(section); if (!items.length) return null; return <div className="program-discovery-section" key={section.title}>
@@ -77,7 +80,7 @@ export default function ProgramLibraryV2({ programs }: { programs: Program[] }) 
       </div>; })}
     </div>}
 
-    {tab === "all" && <div className="program-all-results"><div id="program-library-results" className="program-browse-divider"><div><span className="program-detail-kicker">FULL LIBRARY</span><h3>Browse all {programs.length}+ programs</h3><p>Search and filter the complete collection.</p></div>{!hasFilters && <span className="program-browse-hint">← Swipe rows above</span>}</div>
+    {tab === "all" && <div className="program-all-results"><div id="program-library-results" className="program-browse-divider"><div><span className="program-detail-kicker">FULL LIBRARY</span><h3>Browse all {programs.length} programs</h3><p>Search and filter the complete collection.</p></div>{!hasFilters && <span className="program-browse-hint">← Swipe rows above</span>}</div>
     <div className="program-search-panel"><div className="program-search-row"><label className="program-search-box"><span className="program-search-icon" aria-hidden="true">⌕</span><span className="sr-only">Search workout programs</span><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search programs, goals, equipment..." /></label><button type="button" className="program-clear-button" onClick={clearFilters} disabled={!hasFilters}>Clear</button></div><div className="program-quick-searches" aria-label="Popular searches"><span>Popular searches</span>{QUICK_SEARCHES.map(term => <button type="button" key={term} onClick={() => setQuery(term)}>{term}</button>)}</div></div>
     <div className="program-filter-grid"><label><span>Goal</span><select value={goal} onChange={e => setGoal(e.target.value)}>{goals.map(x => <option key={x}>{x}</option>)}</select></label><label><span>Training style</span><select value={category} onChange={e => setCategory(e.target.value)}>{categories.map(x => <option key={x}>{x}</option>)}</select></label><label><span>Days per week</span><select value={days} onChange={e => setDays(e.target.value)}><option value="All">Any schedule</option>{[2,3,4,5,6].map(n => <option key={n} value={String(n)}>{n} days</option>)}</select></label><label><span>Experience</span><select value={level} onChange={e => setLevel(e.target.value)}>{levels.map(x => <option key={x}>{x}</option>)}</select></label><label><span>Equipment</span><select value={equipment} onChange={e => setEquipment(e.target.value)}>{equipmentOptions.map(x => <option key={x}>{x}</option>)}</select></label><label><span>Sort</span><select value={sort} onChange={e => setSort(e.target.value)}><option value="featured">Recommended</option><option value="name">A–Z</option><option value="days">Fewest days</option></select></label></div>
     <div className="program-results-toolbar"><div><strong>{filtered.length}</strong> {filtered.length === 1 ? "program" : "programs"}</div><span>{hasFilters ? "Filters applied" : "Full library"}</span></div>
@@ -85,7 +88,7 @@ export default function ProgramLibraryV2({ programs }: { programs: Program[] }) 
     {!filtered.length && <div className="program-empty-v2"><div className="program-empty-icon">⌕</div><h3>No programs match those filters.</h3><p>Try a broader search or reset the library filters.</p><button type="button" onClick={clearFilters}>Reset library</button></div>}
     </div>}
     <style jsx global>{`
-      .program-tabs{display:flex;gap:8px;margin:0 0 22px;padding:5px;border-radius:15px;background:rgba(127,127,127,.09);border:1px solid rgba(127,127,127,.14)}.program-tabs button{flex:1;min-width:0;padding:13px 12px;border:0;border-radius:11px;background:transparent;color:inherit;font:inherit;font-size:13px;font-weight:800;cursor:pointer}.program-tabs button.active{background:var(--accent,#ff6a00);color:#171717;box-shadow:0 4px 14px rgba(0,0,0,.12)}.program-tabs button:focus-visible{outline:2px solid var(--accent,#ff6a00);outline-offset:2px}.program-all-results{min-width:0}
+      .program-tabs{display:flex;gap:8px;margin:0 0 22px;padding:5px;border-radius:15px;background:rgba(127,127,127,.09);border:1px solid rgba(127,127,127,.14)}.program-tabs button{flex:1;min-width:0;padding:13px 8px;border:0;border-radius:11px;background:transparent;color:inherit;font:inherit;font-size:13px;font-weight:800;cursor:pointer}.program-tabs button.active{background:var(--accent,#ff6a00);color:#171717;box-shadow:0 4px 14px rgba(0,0,0,.12)}.program-tabs button:focus-visible{outline:2px solid var(--accent,#ff6a00);outline-offset:2px}.program-all-results{min-width:0}
 
       .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
       .program-library-v2{max-width:1100px;margin:auto;padding:20px 20px 72px}.program-library-heading{display:flex;align-items:end;justify-content:space-between;gap:24px;margin-bottom:20px}.program-library-heading h2{font-size:clamp(29px,4vw,40px);line-height:1.06;margin:8px 0 10px;letter-spacing:-.035em}.program-library-heading p{margin:0;max-width:700px;line-height:1.65;opacity:.62;font-size:14px}.program-finder-button{flex-shrink:0;padding:12px 16px;border-radius:13px;background:var(--accent,#ff5722);color:#111827;text-decoration:none;font-size:13px;font-weight:900;box-shadow:0 8px 24px rgba(0,0,0,.15)}

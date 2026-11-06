@@ -39,9 +39,9 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: "/gym-log-icon.svg", type: "image/svg+xml" },
-      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      
     ],
-    apple: [{ url: "/gym-log-icon.svg", type: "image/svg+xml" }],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
   openGraph: {
     type: "website",

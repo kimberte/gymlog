@@ -6,8 +6,8 @@ export const NOVEMBER_7_BLOG_POSTS: BlogPost[] = [
     "title": "Returning to the Gym After a Break: A Two-Week Strength Training Restart Plan",
     "description": "Back to lifting after weeks or months off? Learn what detraining research says and follow a realistic two-week workout restart without chasing old personal bests.",
     "keyword": "return to gym after break",
-    "image": "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1600&q=85",
-    "imageAlt": "Adult training area with barbells and weight equipment ready for a workout",
+    "image": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=1600&q=85",
+    "imageAlt": "Adult athlete exercising in a strength-training gym",
     "date": "November 7, 2026",
     "sections": [
       {

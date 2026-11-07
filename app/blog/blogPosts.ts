@@ -10,8 +10,9 @@ import { DAILY_BLOG_POSTS_6 } from "./dailyPosts6";
 import { FRESH_BLOG_POSTS } from "./freshPosts";
 import { RECOVERY_BLOG_POSTS } from "./recoveryPosts";
 import { NOVEMBER_BLOG_POSTS } from "./novemberPosts";
+import { NOVEMBER_7_BLOG_POSTS } from "./november7Post";
 
-export const ALL_BLOG_POSTS = [...BLOG_POSTS, ...ADDITIONAL_BLOG_POSTS, ...NEW_BLOG_POSTS, ...DAILY_BLOG_POSTS, ...DAILY_BLOG_POSTS_2, ...DAILY_BLOG_POSTS_3, ...DAILY_BLOG_POSTS_4, ...DAILY_BLOG_POSTS_5, ...DAILY_BLOG_POSTS_6, ...FRESH_BLOG_POSTS, ...RECOVERY_BLOG_POSTS, ...NOVEMBER_BLOG_POSTS].sort(
+export const ALL_BLOG_POSTS = [...BLOG_POSTS, ...ADDITIONAL_BLOG_POSTS, ...NEW_BLOG_POSTS, ...DAILY_BLOG_POSTS, ...DAILY_BLOG_POSTS_2, ...DAILY_BLOG_POSTS_3, ...DAILY_BLOG_POSTS_4, ...DAILY_BLOG_POSTS_5, ...DAILY_BLOG_POSTS_6, ...FRESH_BLOG_POSTS, ...RECOVERY_BLOG_POSTS, ...NOVEMBER_BLOG_POSTS, ...NOVEMBER_7_BLOG_POSTS].sort(
   (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
 );
 
@@ -27,5 +28,6 @@ export function getBlogPost(slug: string) {
     ?? DAILY_BLOG_POSTS_6.find(post => post.slug === slug)
     ?? FRESH_BLOG_POSTS.find(post => post.slug === slug)
     ?? RECOVERY_BLOG_POSTS.find(post => post.slug === slug)
-    ?? NOVEMBER_BLOG_POSTS.find(post => post.slug === slug);
+    ?? NOVEMBER_BLOG_POSTS.find(post => post.slug === slug)
+    ?? NOVEMBER_7_BLOG_POSTS.find(post => post.slug === slug);
 }

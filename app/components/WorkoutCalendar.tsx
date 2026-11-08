@@ -33,6 +33,12 @@ function hasWorkoutContent(e: WorkoutEntry) {
   return Boolean(String(e?.title ?? "").trim() || String(e?.notes ?? "").trim());
 }
 
+function dotColor(entry: WorkoutEntry, dateKey: string, todayKey: string): string {
+  if (entry.completedAt) return "#22c55e";
+  if (todayKey && dateKey > todayKey) return "#9ca3af";
+  return "#ff5721";
+}
+
 function markerType(e: WorkoutEntry): "full" | "half" | null {
   const hasTitle = Boolean(String(e?.title ?? "").trim());
   const hasNotes = Boolean(String(e?.notes ?? "").trim());
@@ -295,7 +301,7 @@ export default function WorkoutCalendar({
 
               const key = toDateKey(d);
               const entries = getDayEntries(workouts, key).slice(0, 3);
-              const markers = entries.map(markerType).filter(Boolean) as Array<"full" | "half">;
+              const markers = entries.map((entry) => ({ entry, type: markerType(entry) })).filter((marker) => marker.type !== null);
 
               const { first, extra, activeCount } = summarizeTitles(entries);
               const isSelected = multiSelect ? selectedDates.includes(key) : Boolean(selectedDate && key === selectedDate);
@@ -376,7 +382,7 @@ export default function WorkoutCalendar({
                   {markers.length > 0 && (
                     <div className="workout-dots" aria-hidden="true">
                       {markers.slice(0, 3).map((m, i) =>
-                        m === "half" ? <span key={i} className="workout-half-dot" /> : <span key={i} className="workout-dot" />
+                        m.type === "half" ? <span key={i} className="workout-half-dot" style={{ background: `linear-gradient(90deg, ${dotColor(m.entry, key, todayKey)} 50%, transparent 50%)`, borderColor: dotColor(m.entry, key, todayKey) }} /> : <span key={i} className="workout-dot" style={{ background: dotColor(m.entry, key, todayKey) }} />
                       )}
                     </div>
                   )}
@@ -424,7 +430,7 @@ export default function WorkoutCalendar({
             {stackedDays.map((d) => {
               const key = toDateKey(d);
               const entries = getDayEntries(workouts, key).slice(0, 3);
-              const markers = entries.map(markerType).filter(Boolean) as Array<"full" | "half">;
+              const markers = entries.map((entry) => ({ entry, type: markerType(entry) })).filter((marker) => marker.type !== null);
 
               const titles = entries
                 .filter(hasWorkoutContent)
@@ -462,7 +468,7 @@ export default function WorkoutCalendar({
                     {markers.length > 0 && (
                       <span className="workout-dots-inline" aria-hidden="true">
                         {markers.slice(0, 3).map((m, i) =>
-                          m === "half" ? <span key={i} className="workout-half-dot" /> : <span key={i} className="workout-dot" />
+                          m.type === "half" ? <span key={i} className="workout-half-dot" style={{ background: `linear-gradient(90deg, ${dotColor(m.entry, key, todayKey)} 50%, transparent 50%)`, borderColor: dotColor(m.entry, key, todayKey) }} /> : <span key={i} className="workout-dot" style={{ background: dotColor(m.entry, key, todayKey) }} />
                         )}
                       </span>
                     )}

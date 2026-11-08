@@ -228,6 +228,7 @@ export default function WorkoutEditor({
         title: String(e?.title ?? ""),
         notes: String(e?.notes ?? ""),
         media: (e as any)?.media ?? null,
+      completedAt: e.completedAt ?? null,
       }));
     return entries.length ? entries : [{ id: "w1", title: "", notes: "", media: null }];
   }, [workouts, date]);
@@ -836,6 +837,7 @@ function exerciseGroupVolume(indices: number[]) {
       title: String(e.title ?? ""),
       notes: buildNotes(e),
       media: (e as any)?.media ?? null,
+      completedAt: e.completedAt ?? null,
     }));
 
     day.entries = merged;
@@ -845,6 +847,20 @@ function exerciseGroupVolume(indices: number[]) {
     (next as any)[date] = day;
     setWorkouts(next as any);
     onSaved?.(next as any);
+  }
+
+  function toggleWorkoutComplete() {
+    if (!active || !hasContent(active)) {
+      toast("Add a workout before marking it complete");
+      return;
+    }
+    const nextCompletedAt = active.completedAt ? null : new Date().toISOString();
+    const nextEntries = entries.map((e, i) =>
+      i === activeIdx ? { ...e, completedAt: nextCompletedAt } : e
+    );
+    setEntries(nextEntries);
+    persistEntriesToWorkouts(nextEntries);
+    toast(nextCompletedAt ? "Workout completed" : "Workout marked incomplete");
   }
 
   function handleSave() {
@@ -870,6 +886,7 @@ function exerciseGroupVolume(indices: number[]) {
         title: String(e.title ?? ""),
         notes: buildNotes(e),
         media: (e as any)?.media ?? null,
+      completedAt: e.completedAt ?? null,
       }));
 
     const cleaned = merged.filter((e) => hasContent(e) || (e as any)?.media?.path);
@@ -1357,6 +1374,21 @@ return (
           style={{ paddingBottom: keyboardPad ? keyboardPad + 12 : 0 }}
         >
           
+          <button
+            type="button"
+            onClick={toggleWorkoutComplete}
+            aria-pressed={Boolean(active?.completedAt)}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 8,
+              marginTop: 10, padding: "9px 14px", borderRadius: 10,
+              border: active?.completedAt ? "1px solid #22c55e" : "1px solid var(--border)",
+              background: active?.completedAt ? "rgba(34,197,94,0.14)" : "transparent",
+              color: active?.completedAt ? "#22c55e" : "var(--text)",
+              fontWeight: 600, cursor: "pointer"
+            }}
+          >
+            {active?.completedAt ? "✓ Completed · Undo" : "✓ Mark Complete"}
+          </button>
           {/* Editor mode toggle */}
           <div
             style={{

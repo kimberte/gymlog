@@ -24,6 +24,8 @@ export type WorkoutEntry = {
 
   createdAt?: string;
   updatedAt?: string;
+  /** Explicit user confirmation; never inferred from the scheduled date. */
+  completedAt?: string | null;
 
   // ✅ NEW: per-workout media (image OR video)
   media?: WorkoutMedia | null;
@@ -134,6 +136,7 @@ function normalizeEntry(raw: any, fallbackId?: string): WorkoutEntry {
     notes,
     createdAt: raw?.createdAt,
     updatedAt: raw?.updatedAt,
+    completedAt: typeof raw?.completedAt === "string" ? raw.completedAt : null,
     media: normalizeMedia(raw?.media),
     mode: raw?.mode,
     structured: raw?.structured,

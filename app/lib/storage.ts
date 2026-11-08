@@ -21,6 +21,7 @@ export type WorkoutEntry = {
   id: string;
   title: string;
   notes: string;
+  completedAt?: string | null;
 
   createdAt?: string;
   updatedAt?: string;
@@ -132,6 +133,7 @@ function normalizeEntry(raw: any, fallbackId?: string): WorkoutEntry {
     id,
     title,
     notes,
+    completedAt: typeof raw?.completedAt === "string" ? raw.completedAt : null,
     createdAt: raw?.createdAt,
     updatedAt: raw?.updatedAt,
     media: normalizeMedia(raw?.media),

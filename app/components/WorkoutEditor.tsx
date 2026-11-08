@@ -869,6 +869,7 @@ function exerciseGroupVolume(indices: number[]) {
         id: `w${i + 1}`,
         title: String(e.title ?? ""),
         notes: buildNotes(e),
+        completedAt: e.completedAt ?? null,
         media: (e as any)?.media ?? null,
       }));
 
@@ -2021,6 +2022,23 @@ return (
 
 
 
+        </div>
+
+        <div style={{ marginTop: 12, marginBottom: 8 }}>
+          <button
+            type="button"
+            className="secondary"
+            aria-pressed={Boolean(active?.completedAt)}
+            onClick={() => setEntries((prev) => prev.map((entry, index) =>
+              index === activeIdx ? { ...entry, completedAt: entry.completedAt ? null : new Date().toISOString() } : entry
+            ))}
+            style={{ width: "100%", borderColor: active?.completedAt ? "var(--accent)" : undefined }}
+          >
+            {active?.completedAt ? "✓ Workout completed — tap to undo" : "✓ Mark workout complete"}
+          </button>
+          <div style={{ fontSize: 12, opacity: 0.7, marginTop: 6 }}>
+            Completion is manual. Press Save to keep this change.
+          </div>
         </div>
 
         <div className="editor-actions">

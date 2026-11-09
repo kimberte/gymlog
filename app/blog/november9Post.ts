@@ -52,7 +52,7 @@ export const NOVEMBER_9_BLOG_POSTS: BlogPost[] = [
         "paragraphs": [
           "Repetitions in reserve, or RIR, estimates how many additional technically sound repetitions you could complete before failure. If you finish a set and believe you could do two more, that is approximately two RIR. You can pair a rep-range target with an effort target to avoid progressing on sloppy repetitions.",
           "RIR estimates are imperfect, especially for less experienced lifters, and accuracy can vary by exercise and proximity to failure. Still, the concept is useful for comparing effort across sessions. If you reach the top of a rep range only by grinding every set to absolute failure, it may be sensible to repeat the load before increasing it.",
-          "A 2023 systematic review and meta-analysis by Grgic and colleagues examined resistance training to failure versus not to failure and found no clear overall hypertrophy advantage to consistently reaching momentary muscular failure when other relevant factors were considered. The details vary by outcome and study design; the result does not imply that training effort is irrelevant. Source: https://pubmed.ncbi.nlm.nih.gov/36334240/"
+          "A 2023 systematic review and meta-analysis by Refalo and colleagues examined resistance training to failure versus not to failure and found no clear overall hypertrophy advantage to consistently reaching momentary muscular failure when other relevant factors were considered. The details vary by outcome and study design; the result does not imply that training effort is irrelevant. Source: https://pubmed.ncbi.nlm.nih.gov/36334240/"
         ]
       },
       {
@@ -123,7 +123,7 @@ export const NOVEMBER_9_BLOG_POSTS: BlogPost[] = [
         "heading": "Research and further reading",
         "paragraphs": [
           "Schoenfeld BJ et al. (2017). Strength and hypertrophy adaptations between low- vs. high-load resistance training: a systematic review and meta-analysis. https://pubmed.ncbi.nlm.nih.gov/28834797/",
-          "Grgic J et al. (2023). Effects of resistance training performed to repetition failure or non-failure on muscular strength and hypertrophy: a systematic review and meta-analysis. https://pubmed.ncbi.nlm.nih.gov/36334240/"
+          "Refalo MC et al. (2023). Influence of Resistance Training Proximity-to-Failure on Skeletal Muscle Hypertrophy: A Systematic Review with Meta-analysis. https://pubmed.ncbi.nlm.nih.gov/36334240/"
         ]
       }
     ],

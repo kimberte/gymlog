@@ -2,132 +2,128 @@ import type { BlogPost } from "./blogData";
 
 export const NOVEMBER_9_BLOG_POSTS: BlogPost[] = [
   {
-    "slug": "warm-up-sets-before-lifting-guide",
-    "title": "How Many Warm-Up Sets Before Lifting? A Practical Strength Training Guide",
-    "description": "Learn how to warm up for squats, bench presses and deadlifts without wasting energy, with research-backed guidance and example ramp-up sets.",
-    "keyword": "how many warm up sets before lifting",
-    "image": "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1600&q=85",
-    "imageAlt": "Adult weightlifter preparing for a barbell strength training session",
+    "slug": "double-progression-workout-rep-ranges-guide",
+    "title": "Double Progression Explained: When to Add Reps and When to Increase Weight",
+    "description": "Learn the double progression method for strength and muscle growth, with practical rep-range examples for dumbbells, barbells and machines.",
+    "keyword": "double progression workout",
+    "image": "https://images.unsplash.com/photo-1532029837206-abbe2b7620e3?auto=format&fit=crop&w=1600&q=85",
+    "imageAlt": "Adult athlete lifting dumbbells in a gym",
     "date": "November 9, 2026",
     "sections": [
       {
-        "heading": "The quick answer: warm up for the lift you are about to do",
+        "heading": "What double progression means",
         "paragraphs": [
-          "A useful strength-training warm-up is not a second workout. Start with a few minutes of easy movement if you feel stiff or have been sitting, rehearse the exercise with a light load, and gradually approach the weight you plan to use. For a heavy barbell squat, that may mean several progressively heavier sets. For a light cable curl after a full upper-body session, it may mean one easy practice set or none.",
-          "The goal is to arrive at your first hard set feeling coordinated, comfortable, and ready—not tired. There is no universal number of sets or mandatory percentage ladder proven to work best for everyone. The examples in this guide are practical templates to adjust, not rules established by a particular trial."
+          "Double progression is a simple way to increase training difficulty without forcing a weight increase every session. Choose a rep range, such as six to ten repetitions, and keep the same load while you build repetitions across your prescribed sets. Once you can complete the upper end of the range with repeatable technique and an appropriate effort level, increase the weight slightly and start near the lower end again.",
+          "It is called double progression because you progress in two dimensions: first repetitions, then load. It works well for barbells, dumbbells, cables, and many machines. It is a practical programming method rather than a scientifically mandated formula. The best range and size of each weight jump depend on the movement, your equipment, and your training experience."
         ]
       },
       {
-        "heading": "What does research actually show?",
+        "heading": "A practical example: dumbbell bench press",
         "paragraphs": [
-          "A 2021 systematic review by Ribeiro and colleagues examined 11 studies on warm-up strategies before resistance exercise. Results were mixed: some experiments found benefits from exercise-specific warm-ups, others found little difference, and the combination of general and specific warm-ups was not consistently superior. The review suggested that warm-ups using loads closer to maximal efforts may sometimes improve maximal strength or repetition performance, but emphasized the need for better research. Read the review: https://doi.org/10.6063/motricidade.21143",
-          "A broader 2010 systematic review and meta-analysis by Fradkin and colleagues assessed 32 studies across different physical activities. Warm-up improved performance on most of the outcomes assessed, but these were not exclusively barbell-training experiments. It supports preparing for demanding activity without identifying an exact squat or bench-press warm-up sequence. Source: https://pubmed.ncbi.nlm.nih.gov/19996770/",
-          "A 2015 review by McCrary and colleagues found that dynamic, relatively high-load upper-body warm-ups could enhance strength and power outcomes. Crucially, that review found no studies directly testing upper-body warm-ups for injury prevention. Claims that a specific three-set routine guarantees injury prevention go beyond that evidence. Source: https://pubmed.ncbi.nlm.nih.gov/25694615/",
-          "The practical takeaway is to use a brief, task-specific progression, assess how you feel and perform, and avoid presenting a particular warm-up formula as settled science."
+          "Suppose you prescribe three sets of six to ten dumbbell bench presses. In week one, you use 25 kg dumbbells and perform 10, 8, and 7 repetitions. That is a productive starting point, but it is not time to increase the weight if your rule requires all three sets to reach ten.",
+          "Over the next sessions you might record 10/9/8, then 10/10/9, then 10/10/10. When you achieve all three sets of ten with controlled technique and an effort level consistent with your plan, move to the next available dumbbells. If those are 27.5 kg, you might return to 8/7/6 and begin building again.",
+          "These numbers are an illustration, not a prediction. Your reps will not always rise each week. Sleep, stress, training order, and normal day-to-day variation affect performance. Progression should be judged across several sessions rather than by one unusually good or bad day."
         ]
       },
       {
-        "heading": "General warm-up versus exercise-specific warm-up",
+        "heading": "Why rep ranges are more useful than chasing a fixed number",
         "paragraphs": [
-          "A general warm-up raises activity gradually: brisk walking, easy cycling, rowing, or a few controlled bodyweight movements. It can be particularly helpful if you arrive cold, stiff, or mentally distracted. It does not have to be elaborate. Five minutes of easy movement is a reasonable starting option, not a universal minimum.",
-          "An exercise-specific warm-up practices the pattern you will actually train. Before squatting, you squat with an empty bar and then progressively heavier loads. Before bench pressing, you bench press with a light load. These sets let you check grip, stance, range of motion, bracing, and the path of the weight. They also give you an opportunity to notice discomfort before a demanding set.",
-          "Neither phase should leave you breathless. If ten minutes of cardio makes your heavy squats feel worse, shorten it or lower the intensity. If you feel ready after several easy squat sets, you may not need an extended cardio block at all."
+          "A fixed prescription of three sets of eight is easy to read, but it does not tell you when to increase weight. A range such as six to ten creates a clear decision rule. You can improve performance at the same load before moving up, reducing the temptation to increase weight while cutting range of motion or rushing repetitions.",
+          "A range also helps with real-world equipment constraints. If your gym's dumbbells jump by five pounds, that next jump may be significant on a lateral raise but modest on a heavy row. Building more repetitions first gives you a way to bridge the gap. The progression rule is a tool for decision-making, not a guarantee that every rep increase reflects new muscle tissue."
         ]
       },
       {
-        "heading": "Example 1: warming up for a heavy squat",
+        "heading": "How to choose your rep range",
         "paragraphs": [
-          "Imagine your first working set is 100 kg for five repetitions. One possible ramp is: empty bar for eight controlled reps; 40 kg for five; 60 kg for three; 80 kg for two; then 100 kg for your planned work. Take short rests between early sets and a little more rest before the first demanding set. The warm-up repetitions get lower as the load gets higher so you practice the movement without accumulating much fatigue.",
-          "Those exact weights are illustrative. A beginner whose working weight is 35 kg needs fewer steps. An advanced lifter approaching a much heavier top set may prefer additional intermediate jumps. The useful principle is gradual exposure to the working load while keeping each preparation set comfortably below failure.",
-          "If your first working set feels unusually heavy, check sleep, recovery, technique, and whether the warm-up was rushed. Do not automatically add ten more preparation sets; sometimes the sensible response is to reduce the day's working load."
+          "For a heavy compound lift, a moderate range such as five to eight or six to ten can make tracking straightforward. For a machine row or press, eight to twelve may be convenient. For lateral raises or other smaller isolation exercises, ten to fifteen or twelve to twenty may help you avoid making an oversized weight jump too soon.",
+          "These are examples, not hard boundaries between strength and hypertrophy. Research shows that resistance training can increase muscle size across a broad range of loading conditions when sets are sufficiently challenging, while heavier loading is especially relevant to maximizing one-repetition-maximum strength. A 2017 systematic review and meta-analysis by Schoenfeld and colleagues compared lower- and higher-load training and reported broadly similar hypertrophy outcomes, with greater maximal-strength gains under heavier loading. Source: https://pubmed.ncbi.nlm.nih.gov/28834797/",
+          "Choose a range that lets you control the movement, apply the intended effort, and make useful increments with the equipment you have. You can use different ranges for different exercises in the same workout."
         ]
       },
       {
-        "heading": "Example 2: warming up for bench press",
+        "heading": "Should every set reach the top before adding weight?",
         "paragraphs": [
-          "Suppose your working weight is 70 kg for six to eight repetitions. You might do an empty-bar set of eight to ten, 40 kg for five, 55 kg for two or three, then start the work sets. If your shoulders feel better with a few light rows or controlled arm movements first, include them—but treat them as preparation rather than an exhausting circuit.",
-          "Keep your shoulder blades, grip width, touch point, and tempo reasonably consistent across the warm-up and work sets. Avoid turning a light warm-up into a maximal-speed contest. The purpose is to rehearse the bench press you intend to perform, not to chase a personal record before the session begins."
+          "There are two common approaches. The strict approach increases weight only when every prescribed set reaches the top of the range. It is easy to understand and useful for beginners because it discourages premature load increases. The more flexible approach increases when the first set reaches the top and the remaining sets meet a predefined minimum, provided technique and effort remain appropriate.",
+          "Neither rule has been proven universally superior. The important thing is to decide before you train, use it consistently, and avoid changing the rule merely to justify a heavier number. For example, a three-set target of eight to twelve might require 12/12/12 before increasing, while another program might allow 12/11/10. Both can be reasonable if the lifter understands the standard."
         ]
       },
       {
-        "heading": "Example 3: deadlifts and other hinges",
+        "heading": "How hard should your sets feel?",
         "paragraphs": [
-          "For deadlifts, begin with a load that allows a comfortable setup and repeatable brace. Some lifters find an empty bar too light or awkward for pulling from the floor; in that case, start with a light loaded bar at an appropriate height. Add weight in a few jumps, reducing repetitions as you approach the first work set.",
-          "A deadlift warm-up should confirm that the bar starts close to your body, your feet are stable, and your back and hips move together. If a hinge feels sharp or painful, do not try to warm through it with increasingly heavy pulls. Stop, reassess, and seek qualified guidance if symptoms persist."
+          "Repetitions in reserve, or RIR, estimates how many additional technically sound repetitions you could complete before failure. If you finish a set and believe you could do two more, that is approximately two RIR. You can pair a rep-range target with an effort target to avoid progressing on sloppy repetitions.",
+          "RIR estimates are imperfect, especially for less experienced lifters, and accuracy can vary by exercise and proximity to failure. Still, the concept is useful for comparing effort across sessions. If you reach the top of a rep range only by grinding every set to absolute failure, it may be sensible to repeat the load before increasing it.",
+          "A 2023 systematic review and meta-analysis by Grgic and colleagues examined resistance training to failure versus not to failure and found no clear overall hypertrophy advantage to consistently reaching momentary muscular failure when other relevant factors were considered. The details vary by outcome and study design; the result does not imply that training effort is irrelevant. Source: https://pubmed.ncbi.nlm.nih.gov/36334240/"
         ]
       },
       {
-        "heading": "Do you need warm-up sets for every exercise?",
+        "heading": "What if you stall at the same weight?",
         "paragraphs": [
-          "Usually not the same number. Your first demanding compound lift often deserves the most preparation. Later exercises use muscles and joints that are already active, so the warm-up can often be shorter. For example, after several bench-press sets, you may need only one light set before dumbbell incline presses. After squats, you may not need a separate long warm-up before a moderate leg extension.",
-          "However, changing to an unfamiliar exercise, a very different range of motion, or a new piece of equipment may justify an extra practice set. A heavy overhead press after leg training also deserves more specific preparation than a light triceps pushdown after pressing. Judge the demands of the next movement rather than applying one rule to every line of your program."
+          "First, distinguish a genuine plateau from normal variation. If you perform nine, nine, and eight reps one week and nine, eight, and eight the next, that is not necessarily a programming failure. Repeat the same load, check recovery, and give the movement another opportunity.",
+          "If several comparable sessions pass without progress, review your rest periods, technique, exercise order, and whether you are accumulating excessive fatigue. If your sets consistently fall below the lower end of the range, the load may be too heavy. If the movement causes discomfort, change the exercise or setup rather than forcing the progression.",
+          "You can also widen a rep range modestly when the next available load jump is large. For instance, progressing a small dumbbell isolation lift from twelve to eighteen repetitions before moving up may be more practical than forcing a big increase at twelve. Avoid changing too many variables at once, or it becomes difficult to tell what helped."
         ]
       },
       {
-        "heading": "How many warm-up reps should you do?",
+        "heading": "Double progression for squats, deadlifts, and bench press",
         "paragraphs": [
-          "Use enough repetitions at light loads to find the movement, then fewer repetitions as weight rises. Eight easy reps with an empty bar might be useful; eight hard reps at 90 percent of your working load are more likely to cost performance. Warm-up sets should not be counted as your hard hypertrophy sets or used to chase muscular failure.",
-          "An easy set can still be productive preparation even when it does not create a training stimulus. Distinguish preparation volume from working volume in your log so you can compare week-to-week performance honestly. If a warm-up starts to feel like an extra working set, you may be doing too much."
+          "For squats and bench presses, choose a range appropriate to your training block and leave enough repetitions in reserve to maintain sound technique. Three sets of five to eight is one possible format. Once you can complete the upper end consistently, add a modest load increment and work back up.",
+          "Deadlifts can be more fatiguing for some lifters. You may prefer fewer working sets or a narrower range. If your program already uses a top set followed by lighter back-off sets, apply double progression to those sets separately rather than treating them as identical weights. For example, progress a top set within four to six reps and back-off sets within six to eight.",
+          "A consistent range of motion and setup matter more than reaching a particular number on paper. A squat to a shallower depth or a bench press with a bounced bar is not necessarily equivalent to your previous clean repetitions."
         ]
       },
       {
-        "heading": "What about stretching, mobility drills, and foam rolling?",
+        "heading": "How double progression works for machines and cables",
         "paragraphs": [
-          "Use mobility drills when they solve a specific problem: for example, a few controlled ankle movements if you struggle to reach your normal squat depth, or light shoulder movement if your upper-body setup feels restricted. You do not need a twenty-minute sequence of unrelated drills before every session.",
-          "Static stretching is not automatically forbidden before lifting. But lengthy, intense stretches immediately before maximal efforts are not the same as gentle mobility work. The upper-body review by McCrary and colleagues reported that short-duration static stretching did not reduce power outcomes in the comparisons they examined. Choose the approach that lets you perform the intended movement comfortably, without turning the warm-up into the main event.",
-          "Foam rolling can be a personal preference, but it is not a prerequisite for effective strength training. If it helps you feel ready, use it briefly. If it simply delays your workout, skip it."
+          "Machines make small, repeatable increases convenient when the weight stack has manageable increments. For a seated row prescribed at three sets of eight to twelve, hold the same pin setting while building reps. Move the pin only when you meet the chosen standard.",
+          "Cable exercises can have different resistance profiles from free weights, so compare performance on the same machine and setup where possible. Record attachment, seat position, or other details when they change the exercise substantially. A ten-rep cable curl on one machine may not correspond to the same external load on another.",
+          "If you switch gyms or equipment, treat the first session as a new baseline instead of assuming that identical stack numbers represent identical resistance."
         ]
       },
       {
-        "heading": "How to warm up when you only have 45 minutes",
+        "heading": "A four-week example you can actually follow",
         "paragraphs": [
-          "Try a time-efficient sequence: two to four minutes of easy movement if needed; three to five minutes of progressively heavier sets for the first big lift; then one short rehearsal set before any later exercise that feels unfamiliar or demanding. This is a sample schedule, not a prescribed minimum.",
-          "For a 45-minute full-body session, you could warm up for squats, perform your work sets, do a short lighter set before bench pressing, and move into rows with a brief practice set. Spend your limited time preparing for the lifts that need it, not repeating a long generic routine before every exercise.",
-          "If you train early in the morning, in a cold room, or after a long period of sitting, you may prefer more gradual preparation. If you have already been walking and moving, you may need less. A warm-up should adapt to the day."
+          "Week one: pick a load you can perform for three sets of eight to ten with good control, within an eight-to-twelve target range. Record the exact repetitions for every set. Week two: use the same load and try to add one or two total repetitions while keeping technique and rest reasonably consistent.",
+          "Week three: repeat the process, without forcing an increase if fatigue is high. Week four: if you achieve twelve repetitions on all prescribed sets at your planned effort, increase the load by the smallest sensible increment next time. If you have not reached the top, keep building. Four weeks is just an example window; it is not a deadline to add weight.",
+          "For a beginner, an extra repetition at the same load is a useful, concrete sign of improvement. For an advanced lifter, gains may come more slowly. Double progression works for both because it does not require artificial weekly increases."
         ]
       },
       {
-        "heading": "Common warm-up mistakes",
-        "bullets": [
-          "Starting with a working weight before you have rehearsed the movement, especially on a heavy or technical lift.",
-          "Doing so many repetitions at moderate-to-heavy loads that your first working set is already fatigued.",
-          "Assuming an elaborate mobility circuit is necessary even when it does not improve your setup or comfort.",
-          "Using exactly the same warm-up for a heavy squat and a light isolation exercise.",
-          "Treating warm-up sets as progressive-overload working sets and inflating your training volume.",
-          "Ignoring sharp pain or unusual symptoms and simply adding more warm-up weight."
+        "heading": "What to log in Gym Log",
+        "paragraphs": [
+          "Record the exercise name, load, repetitions for each set, and notes about technique or effort. For example: 'Incline dumbbell press, 25 kg each: 10/9/8, roughly 2 RIR, controlled lowering.' At your next session, you can compare like with like.",
+          "If you use different loads for a top set and back-off sets, label them separately. If your equipment only offers large jumps, add a note explaining your chosen progression rule. Your training history becomes more useful when the numbers represent consistent movement standards.",
+          "Use https://www.gymlogapp.com/ to log workouts and browse https://www.gymlogapp.com/workout-programs for routines. For related reading, see the Gym Log guide to progressive overload at https://www.gymlogapp.com/blog/progressive-overload and the guide to reps in reserve at https://www.gymlogapp.com/blog/reps-in-reserve-rir-guide-strength-hypertrophy."
         ]
       },
       {
-        "heading": "How to track warm-up sets in Gym Log",
+        "heading": "Mistakes that make double progression less effective",
         "paragraphs": [
-          "Record your actual working sets consistently and use the notes field for warm-up details when they matter. For example: 'Squat warm-up: bar x 8, 40 x 5, 60 x 3, 80 x 2; work: 100 x 5 x 3.' If your structured workout editor supports separate preparation rows in your current setup, label them clearly; otherwise, plain notes are enough.",
-          "Tracking your ramp-up can help when you repeat a workout. If you regularly feel sluggish on your first set, compare whether you rushed the warm-up or took unusually large weight jumps. If you are exhausted before the first working set, check whether your preparation has become too demanding.",
-          "Build a repeatable strength routine from https://www.gymlogapp.com/workout-programs, log your sessions at https://www.gymlogapp.com/, and read the related guide to top sets and back-off sets at https://www.gymlogapp.com/blog/top-sets-and-back-off-sets-strength-training-guide."
+          "Increasing weight the moment your first set reaches the top, even though later sets are far below the planned range, can undermine a strict progression rule. So can changing the exercise, tempo, rest, and range of motion every week while assuming the numbers are comparable.",
+          "Another mistake is treating a missed repetition as failure of the entire program. Strength fluctuates. Evaluate the trend across sessions. Finally, do not let the progression rule override pain, poor technique, or recovery needs. A training log is a decision aid, not an instruction to lift heavier regardless of circumstances."
         ]
       },
       {
         "heading": "Frequently asked questions",
         "paragraphs": [
-          "Are warm-up sets necessary for muscle growth? Warm-up sets are preparation, not a proven independent driver of hypertrophy. Their value is helping you perform planned training with appropriate technique and readiness.",
-          "Should I do cardio before lifting? A few easy minutes can be useful, especially if you feel cold or stiff. Long, fatiguing cardio immediately before your most important heavy sets may be counterproductive for that session.",
-          "Can I use the same warm-up weight every week? Yes, if it still prepares you well. As your working weights rise substantially, you may want to adjust the intermediate steps.",
-          "Do I need to stretch before squats? Not automatically. Use controlled mobility if it helps you reach a comfortable, consistent position, and avoid forcing painful ranges.",
-          "How long should I rest after my last warm-up? Long enough to feel ready rather than breathless. Heavier efforts usually benefit from more recovery than an empty-bar set; there is no single universally validated interval."
+          "Is double progression better than adding weight every week? It is often more realistic, especially when weekly weight increases are no longer sustainable. But there is no universal trial proving it superior to every other progression system.",
+          "Can I use double progression for hypertrophy? Yes. It is an easy way to manage progressive overload within a rep range while keeping effort and technique reasonably consistent.",
+          "What if I only have one set? You can still build repetitions at a fixed load until you reach the top of your range, then increase the weight. The method is not limited to three-set exercises.",
+          "Do I have to hit the exact same reps in all sets? No. Repetitions often decline as fatigue accumulates. Choose a clear progression standard and track your actual results.",
+          "When should I change the rep range? When your goals, equipment, training phase, or response justify it—not simply because one workout felt difficult."
         ]
       },
       {
-        "heading": "Bottom line",
+        "heading": "The bottom line",
         "paragraphs": [
-          "The best warm-up is specific enough to prepare you and short enough to preserve energy for the work that matters. Start easy, practice the movement, add load in sensible jumps, and keep the warm-up comfortably away from failure. Adjust the number of sets to the lift, your experience, and how you feel on that day.",
-          "Research supports the potential performance benefits of warm-up but does not establish one perfect percentage ladder. Consistency, good judgment, and a clear distinction between warm-up and working sets will take you further than any rigid ritual."
+          "Double progression makes progressive overload measurable without making it frantic. Choose a rep range, use a repeatable technique standard, gradually earn more repetitions, then make a sensible load increase. Keep enough flexibility to account for recovery and equipment.",
+          "The method's biggest advantage is clarity. You know what you are trying to improve in the next session, and your workout log tells you whether you did it. That is more useful than adding weight on a calendar schedule regardless of performance."
         ]
       },
       {
         "heading": "Research and further reading",
-        "bullets": [
-          "Ribeiro B et al. (2021). The effect of warm-up in resistance training and strength performance: a systematic review. Motricidade. https://doi.org/10.6063/motricidade.21143",
-          "Fradkin AJ et al. (2010). Effects of warming-up on physical performance: a systematic review with meta-analysis. Journal of Strength and Conditioning Research. https://pubmed.ncbi.nlm.nih.gov/19996770/",
-          "McCrary JM et al. (2015). A systematic review of the effects of upper body warm-up on performance and injury. British Journal of Sports Medicine. https://pubmed.ncbi.nlm.nih.gov/25694615/"
+        "paragraphs": [
+          "Schoenfeld BJ et al. (2017). Strength and hypertrophy adaptations between low- vs. high-load resistance training: a systematic review and meta-analysis. https://pubmed.ncbi.nlm.nih.gov/28834797/",
+          "Grgic J et al. (2023). Effects of resistance training performed to repetition failure or non-failure on muscular strength and hypertrophy: a systematic review and meta-analysis. https://pubmed.ncbi.nlm.nih.gov/36334240/"
         ]
       }
     ],
@@ -137,12 +133,12 @@ export const NOVEMBER_9_BLOG_POSTS: BlogPost[] = [
         "label": "Find a workout program"
       },
       {
-        "href": "/blog/top-sets-and-back-off-sets-strength-training-guide",
-        "label": "Top sets and back-off sets"
+        "href": "/blog/reps-in-reserve-rir-guide-strength-hypertrophy",
+        "label": "Reps in reserve guide"
       },
       {
-        "href": "/blog/return-to-lifting-after-break-two-week-workout-plan",
-        "label": "Returning after a break"
+        "href": "/blog/how-often-should-you-change-workout-exercises",
+        "label": "When to change exercises"
       }
     ]
   }

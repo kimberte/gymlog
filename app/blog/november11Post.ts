@@ -169,7 +169,7 @@ export const NOVEMBER_11_BLOG_POSTS: BlogPost[] = [
       },
       {
         "label": "Reps in reserve explained",
-        "href": "/blog/reps-in-reserve-how-hard-should-you-train"
+        "href": "/blog/reps-in-reserve-rir-guide-strength-hypertrophy"
       }
     ]
   }

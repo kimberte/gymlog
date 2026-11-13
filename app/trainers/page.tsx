@@ -1,8 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import { supabase } from "../lib/supabaseClient";
+import { useMemo, useState } from "react";
 import "./trainer-dashboard.css";
 
 type Session = { date: string; title: string; exercises: string[]; done?: boolean };
@@ -18,7 +16,6 @@ const demo: Client[] = [
 const dateKey=(d:Date)=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-");
 const monday=(d:Date)=>{const v=new Date(d);v.setDate(v.getDate()-((v.getDay()+6)%7));v.setHours(12,0,0,0);return v;};
 export default function TrainersPage(){
- const [auth,setAuth]=useState<"loading"|"signed-out"|"unauthorized"|"ready">("loading");
  const [clients,setClients]=useState<Client[]>(demo);
  const [selected,setSelected]=useState(demo[0].id);
  const [week,setWeek]=useState(()=>monday(new Date("2026-11-16T12:00:00")));
@@ -27,7 +24,6 @@ export default function TrainersPage(){
  const [title,setTitle]=useState("");
  const [exercises,setExercises]=useState("");
  const [notice,setNotice]=useState("");
- useEffect(()=>{let active=true;(async()=>{try{const {data:{user}}=await supabase.auth.getUser();if(!active)return;if(!user){setAuth("signed-out");return;}const {data,error}=await supabase.from("trainer_profiles").select("user_id").eq("user_id",user.id).maybeSingle();if(!active)return;setAuth(!error&&data?"ready":"unauthorized");}catch{if(active)setAuth("unauthorized");}})();return()=>{active=false}},[]);
  const client=clients.find(c=>c.id===selected)||clients[0];
  const visible=clients.filter(c=>(c.name+" "+c.goal).toLowerCase().includes(query.toLowerCase()));
  const days=useMemo(()=>Array.from({length:7},(_,i)=>{const d=new Date(week);d.setDate(d.getDate()+i);return d;}),[week]);
@@ -35,8 +31,6 @@ export default function TrainersPage(){
  const openEditor=(date:string)=>{const session=client.sessions.find(s=>s.date===date);setEditing(date);setTitle(session?.title||"");setExercises(session?.exercises.join("\n")||"");setNotice("");};
  const save=()=>{if(!editing||!title.trim())return;setClients(prev=>prev.map(c=>c.id!==selected?c:{...c,sessions:[...c.sessions.filter(s=>s.date!==editing),{date:editing,title:title.trim(),exercises:exercises.split("\n").map(s=>s.trim()).filter(Boolean)}]}));setEditing(null);setNotice("Demo workout saved locally. No real client calendar was changed.");};
  const moveWeek=(delta:number)=>setWeek(prev=>{const d=new Date(prev);d.setDate(d.getDate()+7*delta);return d;});
- if(auth==="loading")return <main className="trainer-gate">Loading trainer workspace…</main>;
- if(auth!=="ready")return <main className="trainer-gate"><h1>Gym Log for Trainers</h1><p>{auth==="signed-out"?"Sign in to your Gym Log account to open the trainer workspace.":"This account does not have an active trainer profile."}</p><Link className="trainer-action" href="/">Open Gym Log</Link></main>;
  return <main className="trainer-shell">
   <header className="trainer-hero"><div><span className="trainer-eyebrow">GYM LOG / TRAINER WORKSPACE</span><h1>Your coaching command centre</h1><p>Plan confidently. Keep every client's training on track.</p></div><div className="trainer-demo-tag">● Demo workspace · No invitations sent</div></header>
   <div className="trainer-stats"><div><span>Sample clients</span><strong>{clients.length}</strong><small>Ready to explore</small></div><div><span>Planned workouts</span><strong>{sessions}</strong><small>Across demo calendars</small></div><div><span>Active program plans</span><strong>{clients.length}</strong><small>Individual coaching goals</small></div></div>

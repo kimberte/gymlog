@@ -2,10 +2,10 @@ import type { BlogPost } from "./blogData";
 
 export const NOVEMBER_14_BLOG_POSTS: BlogPost[] = [
   {
-    "slug": "deload-week-strength-training-when-how-guide",
-    "title": "Do You Need a Deload Week? What Strength-Training Research Actually Says",
-    "description": "Learn when a deload week makes sense, what recent studies found, and how to reduce sets or effort without losing your training momentum.",
-    "keyword": "deload week strength training",
+    "slug": "2026-deload-study-training-volume-strength-research",
+    "title": "New 2026 Deload Study: Does Cutting Training Volume Cost Muscle?",
+    "description": "A new 2026 controlled study tested reduced training volume and frequency. Here's what it found, what earlier research says, and what lifters should not conclude.",
+    "keyword": "2026 deload study resistance training",
     "image": "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1600&q=85",
     "imageAlt": "Adult strength-training gym with barbells and workout equipment",
     "date": "November 14, 2026",

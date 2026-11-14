@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import "./trainer-dashboard.css";
+import Link from "next/link";
 
 type Session = { date: string; title: string; exercises: string[]; done?: boolean };
 type Client = { id: string; name: string; initials: string; goal: string; level: string; color: string; sessions: Session[] };
@@ -37,7 +38,7 @@ export default function TrainersPage(){
  const save=()=>{if(!editing||!title.trim())return;setClients(prev=>prev.map(c=>c.id!==selected?c:{...c,sessions:[...c.sessions.filter(s=>s.date!==editing),{date:editing,title:title.trim(),exercises:exercises.split("\n").map(s=>s.trim()).filter(Boolean)}]}));setEditing(null);setNotice("Demo workout saved in this browser. No real client calendar was changed.");};
  const moveWeek=(delta:number)=>setWeek(prev=>{const d=new Date(prev);d.setDate(d.getDate()+7*delta);return d;});
  return <main className="trainer-shell">
-  <header className="trainer-hero"><div><span className="trainer-eyebrow">GYM LOG / TRAINER WORKSPACE</span><h1>Your coaching command centre</h1><p>Plan confidently. Keep every client's training on track.</p></div><div className="trainer-demo-tag">● Demo workspace · No invitations sent</div></header>
+  <header className="trainer-hero"><div><span className="trainer-eyebrow">GYM LOG / TRAINER WORKSPACE</span><h1>Your coaching command centre</h1><p>Plan confidently. Keep every client's training on track.</p></div><div className="trainer-demo-tag">● Demo workspace · No invitations sent</div><Link className="trainer-action" href="/trainers/live">Live workspace</Link></header>
   <div className="trainer-stats"><div><span>Sample clients</span><strong>{clients.length}</strong><small>Ready to explore</small></div><div><span>Planned workouts</span><strong>{sessions}</strong><small>Across demo calendars</small></div><div><span>Active program plans</span><strong>{clients.length}</strong><small>Individual coaching goals</small></div></div>
   <div className="trainer-layout"><aside className="trainer-sidebar"><div className="trainer-panel-head"><h2>Clients</h2><span>{visible.length}</span></div><input aria-label="Search clients" placeholder="Search clients or goals…" value={query} onChange={e=>setQuery(e.target.value)}/><div className="trainer-client-list">{visible.map(c=><button key={c.id} className={"trainer-client "+(selected===c.id?"is-active":"")} onClick={()=>{selectClient(c.id)}}><span className="trainer-avatar" style={{background:c.color}}>{c.initials}</span><span><strong>{c.name}</strong><small>{c.goal}</small></span><span aria-hidden="true">›</span></button>)}</div><p className="trainer-hint">These are fictional sample profiles. No real Gym Log users or private workout data are included.</p></aside>
   <section className="trainer-main"><div className="trainer-client-header"><span className="trainer-avatar trainer-avatar-large" style={{background:client.color}}>{client.initials}</span><div><span className="trainer-eyebrow">CLIENT CALENDAR</span><h2>{client.name}</h2><p>{client.goal} · {client.level}</p></div></div>

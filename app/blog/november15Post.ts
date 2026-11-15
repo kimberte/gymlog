@@ -3,9 +3,9 @@ import type { BlogPost } from "./blogData";
 export const NOVEMBER_15_BLOG_POSTS: BlogPost[] = [
   {
     "slug": "training-frequency-muscle-growth-2026-research",
-    "title": "How Often Should You Train Each Muscle? What New 2026 Research Says",
-    "description": "A new 2026 preprint revisits once-, twice- and three-times-weekly muscle training. Learn what volume-equated evidence says and how to choose your split.",
-    "keyword": "training frequency muscle growth",
+    "title": "New 2026 Muscle-Frequency Meta-Analysis: Does Splitting Sets Across Days Matter?",
+    "description": "An October 2026 preprint reanalyzes volume-matched muscle-frequency trials. We examine its findings, uncertainty and what changes for lifters.",
+    "keyword": "2026 training frequency meta analysis",
     "image": "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1600&q=85",
     "imageAlt": "Adult weight-training gym with barbells and strength equipment",
     "date": "November 15, 2026",

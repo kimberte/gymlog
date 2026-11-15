@@ -83,5 +83,6 @@ export const NOVEMBER_14_BLOG_POSTS: BlogPost[] = [
         ]
       }
     ]
+    ,"links": [{"label":"Workout programs","href":"/workout-programs"},{"label":"Workout calendar","href":"/"}]
   }
 ];

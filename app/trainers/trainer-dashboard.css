@@ -57,3 +57,39 @@
 .trainer-product .trainer-editor select{background:var(--surface);color:inherit;padding:10px;border:1px solid var(--border);border-radius:9px}
 @media(max-width:800px){.trainer-overview-grid{grid-template-columns:1fr}.trainer-product .trainer-layout{grid-template-columns:1fr}.trainer-program-list{grid-template-columns:1fr}}
 @media(max-width:600px){.trainer-product{padding:0 12px 90px}.trainer-appbar{min-height:66px;margin-bottom:25px}.trainer-appbar-pill{display:none}.trainer-product .trainer-hero{gap:16px}.trainer-product .trainer-stats{gap:8px}.trainer-product .trainer-stats>div{padding:14px 10px}.trainer-product .trainer-stats span,.trainer-product .trainer-stats small{font-size:10px}.trainer-tabs{gap:0;justify-content:space-between}.trainer-tabs button{padding:11px 9px;font-size:11px}.trainer-overview-head{align-items:flex-start;flex-direction:column}.trainer-overview-card{padding:17px}.trainer-product .trainer-client-list{grid-template-columns:1fr}.trainer-product .trainer-client>span:last-child{display:block}.trainer-top-link{font-size:11px}}
+
+.coach-calendar-panel{margin:24px 0;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:20px;min-width:0}
+.coach-calendar-header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.coach-calendar-header h3{font-size:23px;margin:6px 0;letter-spacing:-.03em}
+.coach-calendar-header p{color:var(--muted);font-size:12px;margin:0}
+.coach-calendar-nav{display:flex;align-items:center;gap:12px}
+.coach-calendar-nav strong{min-width:125px;text-align:center;font-size:13px}
+.coach-calendar-nav button{width:34px;height:34px;border:1px solid var(--border);background:rgba(128,128,128,.08);color:inherit;border-radius:9px;font-size:23px;cursor:pointer}
+.coach-calendar-legend{display:flex;gap:18px;flex-wrap:wrap;margin:20px 0 14px;font-size:11px;color:var(--muted)}
+.coach-calendar-legend span{display:flex;align-items:center;gap:6px}
+.coach-legend-dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+.coach-legend-dot.orange{background:#ff6b22}.coach-legend-dot.green{background:#36c77a}.coach-legend-dot.grey{background:#88929d}
+.coach-month-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.coach-dow{text-align:center;color:var(--muted);font-size:11px;padding:8px 0}
+.coach-day{min-width:0;min-height:92px;border:1px solid var(--border);border-radius:10px;background:rgba(128,128,128,.04);color:inherit;text-align:left;padding:8px;cursor:pointer}
+.coach-day.empty{background:transparent;border-color:transparent;cursor:default}
+.coach-day.active{border-color:#ff6b22;background:rgba(255,107,34,.10)}
+.coach-day.today .coach-day-number{background:#ff6b22;color:#151515;border-radius:7px;padding:3px 6px}
+.coach-day-number{font-size:12px;font-weight:800}
+.coach-day-events{display:grid;gap:3px;margin-top:7px}
+.coach-day-event{font-size:10px;line-height:1.25;padding:4px 5px;border-radius:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.coach-day-event.assigned{background:rgba(255,107,34,.18);color:#ffb180}
+.coach-day-event.done{background:rgba(45,191,108,.15);color:#6de5a1}
+.coach-day-event.personal{background:rgba(138,151,166,.18);color:var(--text)}
+.coach-day-events small{font-size:9px;color:var(--muted)}
+.coach-calendar-details{margin-top:18px;padding-top:15px;border-top:1px solid var(--border)}
+.coach-calendar-details-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.coach-calendar-details-head h4{margin:0 0 12px;font-size:16px}
+.coach-calendar-details-head span{color:var(--muted);font-size:12px}
+.coach-detail-card{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid rgba(255,107,34,.3);border-radius:12px;padding:14px;margin:8px 0}
+.coach-detail-card.personal{border-color:var(--border)}
+.coach-detail-card h4{margin:5px 0;font-size:14px}
+.coach-detail-card p,.coach-calendar-footnote{font-size:11px;color:var(--muted);line-height:1.5;margin:0}
+.coach-calendar-footnote{margin-top:14px}
+.coach-calendar-error{color:#fda4af;font-size:12px}
+@media(max-width:700px){.coach-calendar-panel{padding:12px}.coach-calendar-header{align-items:flex-start}.coach-month-grid{gap:3px}.coach-day{min-height:56px;padding:5px;border-radius:7px}.coach-day-event{font-size:0;width:8px;height:8px;padding:0;border-radius:50%;display:inline-block;margin-right:2px}.coach-day-events{display:block}.coach-day-number{font-size:11px}.coach-detail-card{align-items:flex-start;flex-direction:column}.coach-calendar-nav{width:100%;justify-content:space-between}}

@@ -67,6 +67,7 @@ export default function WelcomePage() {
         })}
       </section>
 
+      <Link href="/trainers/connections" style={{ display: "block", padding: "10px 14px", marginBottom: 12, borderRadius: 10, border: "1px solid rgba(255,107,34,.28)", textDecoration: "none", color: "inherit", fontSize: 13 }}><strong>Trainer connections</strong><span style={{ float: "right", color: "#ff6b22" }}>View requests →</span></Link>
       <Link href="/" className="welcome-today-card">
         <div className="welcome-today-top"><span className="welcome-section-kicker">TODAY</span><span className="welcome-open-link">Open calendar →</span></div>
         <div className="welcome-today-date">{formatToday()}</div>

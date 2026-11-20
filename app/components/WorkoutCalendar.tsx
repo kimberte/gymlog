@@ -82,6 +82,7 @@ function hasPb(workouts: WorkoutMap, dateKey: string) {
 
 type Props = {
   workouts: WorkoutMap;
+  trainerPlans?: {id:string;date_key:string;title:string;completed_at:string|null}[];
   onSelectDate: (d: string) => void;
   stacked: boolean;
   weekStart: "sunday" | "monday";
@@ -93,6 +94,7 @@ type Props = {
 
 export default function WorkoutCalendar({
   workouts,
+  trainerPlans = [],
   onSelectDate,
   stacked,
   weekStart,
@@ -239,10 +241,10 @@ export default function WorkoutCalendar({
     for (const d of monthDays) {
       const key = toDateKey(d);
       const entries = getDayEntries(workouts, key);
-      count += entries.filter(hasWorkoutContent).length;
+      count += entries.filter(hasWorkoutContent).length + trainerPlans.filter(p=>p.date_key===key).length;
     }
     return count;
-  }, [monthDays, workouts]);
+  }, [monthDays, workouts, trainerPlans]);
 
   const monthWorkoutLabel = monthWorkoutCount === 1 ? "1 workout this month" : `${monthWorkoutCount} workouts this month`;
 
@@ -301,7 +303,8 @@ export default function WorkoutCalendar({
 
               const key = toDateKey(d);
               const entries = getDayEntries(workouts, key).slice(0, 3);
-              const markers = entries.map((entry) => ({ entry, type: markerType(entry) })).filter((marker) => marker.type !== null);
+              const assigned=trainerPlans.filter(p=>p.date_key===key);
+              const markers = [...entries, ...assigned.map(p=>({title:p.title,notes:"",completedAt:p.completed_at||undefined} as WorkoutEntry))].slice(0,3).map((entry) => ({ entry, type: markerType(entry) })).filter((marker) => marker.type !== null);
 
               const { first, extra, activeCount } = summarizeTitles(entries);
               const isSelected = multiSelect ? selectedDates.includes(key) : Boolean(selectedDate && key === selectedDate);

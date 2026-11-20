@@ -1436,6 +1436,12 @@ async function updatePassword() {
           )}
         </div>
 
+        {/* Trainer connections are available even when the consumer Pro subscription is inactive. */}
+        <div style={{ marginTop: 18, padding: 14, border: "1px solid rgba(255,255,255,0.16)", borderRadius: 12 }}>
+          <div style={{ fontWeight: 700, marginBottom: 5 }}>Trainer connections</div>
+          <p style={{ fontSize: 13, opacity: .8, margin: "0 0 10px" }}>Review trainer access requests and manage connected trainers.</p>
+          <a href="/trainers/connections" className="app-link" style={{ display: "inline-block", padding: "9px 12px", borderRadius: 8, background: "#ff6b22", color: "#161616", fontWeight: 700 }}>View trainer requests</a>
+        </div>
         {/* Footer links + version */}
         <div
           style={{

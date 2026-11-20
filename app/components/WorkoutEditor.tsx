@@ -6,6 +6,7 @@ import {
   useState,
 } from "react";
 import { WorkoutEntry, WorkoutMap, getDayEntries } from "../lib/storage";
+import "./WorkoutEditorCompact.css";
 import { getSessionUser } from "../lib/backup";
 import { compressImageToWebp } from "../lib/imageCompress";
 import { shareWorkoutVerticalImage } from "../lib/shareImage";
@@ -2055,7 +2056,7 @@ return (
 
         </div>
 
-        <div className="editor-actions">
+        <div className="editor-actions editor-actions-compact" role="toolbar" aria-label="Workout actions">
           <button
             onClick={togglePb}
             className="secondary"
@@ -2063,7 +2064,7 @@ return (
             title={isPb ? "Unmark PB" : "Mark PB"}
             style={{
               flex: "0 0 auto",
-              width: 54,
+              width: 42,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",

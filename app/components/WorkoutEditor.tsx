@@ -893,6 +893,7 @@ function exerciseGroupVolume(indices: number[]) {
       }));
 
     const cleaned = merged.filter((e) => hasContent(e) || (e as any)?.media?.path);
+    for (const e of merged) { if (e.id.startsWith("trainer_")) { void supabase.rpc("save_trainer_workout_log",{p_workout_id:e.id.slice(8),p_log:{notes:e.notes}}).then(({error})=>{if(error)toast("Saved locally, but trainer notes could not sync: "+error.message);}); } }
 
     const next = { ...(workouts as any) };
     const existingImage = (next as any)?.[date]?.image; // legacy day image meta

@@ -9,3 +9,7 @@
 .top-bar.gym-compact-header .nav-label{display:none!important}
 .top-bar.gym-compact-header .gym-menu-toggle{width:42px;height:42px}
 @media(max-width:380px){.top-bar.gym-compact-header{padding:8px 10px!important;gap:6px!important}.top-bar.gym-compact-header>div{gap:5px!important}.top-bar.gym-compact-header .main-nav.gym-compact-actions{gap:3px!important}}
+
+/* Same source asset and natural square dimensions in both placements. */
+.top-bar.gym-compact-header .brand-logo{width:40px!important;height:40px!important;object-fit:contain!important}
+.gym-drawer-brand .gym-drawer-logo{display:block;width:40px;height:40px;object-fit:contain;flex:none}

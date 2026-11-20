@@ -35,6 +35,7 @@ export default function HomePage() {
   const [workouts, setWorkouts] = useState<Record<string, any>>({});
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
+  useEffect(()=>{if(new URLSearchParams(window.location.search).get("settings")==="1")setShowSettings(true);},[]);
   const [stacked, setStacked] = useState(false);
   const [holdDate, setHoldDate] = useState<string | null>(null);
   const [clipboard, setClipboard] = useState<WorkoutEntry[] | null>(null);

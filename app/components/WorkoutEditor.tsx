@@ -8,6 +8,7 @@ import {
 import { WorkoutEntry, WorkoutMap, getDayEntries } from "../lib/storage";
 import "./WorkoutEditorCompact.css";
 import { getSessionUser } from "../lib/backup";
+import { supabase } from "../lib/supabaseClient";
 import { compressImageToWebp } from "../lib/imageCompress";
 import { shareWorkoutVerticalImage } from "../lib/shareImage";
 import { ensureTrialStarted, getProStatus, type ProStatus } from "../lib/entitlements";
@@ -834,7 +835,7 @@ function exerciseGroupVolume(indices: number[]) {
 
     // Persist up to 3
     const merged = nextEntries.slice(0, 3).map((e, i) => ({
-      id: `w${i + 1}`,
+      id: String(e.id || `w${i + 1}`),
       title: String(e.title ?? ""),
       notes: buildNotes(e),
       media: (e as any)?.media ?? null,
@@ -861,6 +862,7 @@ function exerciseGroupVolume(indices: number[]) {
     );
     setEntries(nextEntries);
     persistEntriesToWorkouts(nextEntries);
+    if (String(active.id).startsWith("trainer_")) { void supabase.rpc("set_trainer_workout_completion",{p_workout_id:String(active.id).slice(8),p_completed:Boolean(nextCompletedAt)}).then(({error})=>{if(error)toast("Saved locally, but trainer status could not sync: "+error.message);}); }
     toast(nextCompletedAt ? "Workout completed" : "Workout marked incomplete");
   }
 
@@ -883,7 +885,7 @@ function exerciseGroupVolume(indices: number[]) {
     const merged = entries
       .slice(0, 3)
       .map((e, i) => ({
-        id: `w${i + 1}`,
+        id: String(e.id || `w${i + 1}`),
         title: String(e.title ?? ""),
         notes: buildNotes(e),
         media: (e as any)?.media ?? null,
@@ -1191,7 +1193,7 @@ function exerciseGroupVolume(indices: number[]) {
         const incoming = (dayParsed.entries ?? [])
           .slice(0, 3)
           .map((e, i) => ({
-            id: `w${i + 1}`,
+            id: String(e.id || `w${i + 1}`),
             title: String(e?.title ?? ""),
             notes: String(e?.notes ?? ""),
             media: null,

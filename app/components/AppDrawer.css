@@ -20,3 +20,7 @@
 .gym-shared-actions{display:flex;align-items:center;gap:12px;margin-left:auto;flex:0 0 auto!important}
 .gym-shared-back{color:inherit;text-decoration:none;font-size:13px;font-weight:650}
 @media(max-width:380px){.gym-shared-back{font-size:12px}.gym-shared-actions{gap:8px}}
+
+/* Official wide GL dumbbell mark — never crop into a square. */
+.gym-shared-logo img,.top-bar.gym-compact-header .brand-logo{width:88px!important;height:40px!important;max-width:88px!important;object-fit:contain!important;object-position:left center!important}
+.gym-drawer-brand .gym-drawer-logo{width:100px!important;height:46px!important;object-fit:contain!important;object-position:left center!important}

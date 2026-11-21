@@ -63,3 +63,6 @@ export default function TrainersPage(){
    {notice&&<p role="status" className="trainer-notice">{notice}</p>}
    <div className="trainer-next"><h3>Like what you see?</h3><p>Explore the real coach workspace to connect clients, assign multiweek workouts and track their training. This demo is private to your browser and uses fictional clients.</p><div className="coach-landing-actions"><Link href="/trainers/live" className="trainer-action">Open coach workspace →</Link><button type="button" className="coach-landing-secondary" onClick={()=>{localStorage.removeItem(DEMO_STORAGE_KEY);localStorage.removeItem(DEMO_STORAGE_KEY+"-programs");setPrograms([]);setClients(currentDemoClients());setNotice("Demo reset to sample workouts.");}}>Reset demo</button></div></div>
   </section></div>}<CoachAssignedModal count={showAssigned} onClose={()=>setShowAssigned(null)}/>
+
+ </main>;
+}

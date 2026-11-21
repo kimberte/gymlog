@@ -885,7 +885,7 @@ function exerciseGroupVolume(indices: number[]) {
     const merged = entries
       .slice(0, 3)
       .map((e, i) => ({
-        id: String(e.id || `w${i + 1}`),
+        id: `w${i + 1}`,
         title: String(e.title ?? ""),
         notes: buildNotes(e),
         media: (e as any)?.media ?? null,
@@ -1194,7 +1194,7 @@ function exerciseGroupVolume(indices: number[]) {
         const incoming = (dayParsed.entries ?? [])
           .slice(0, 3)
           .map((e, i) => ({
-            id: String(e.id || `w${i + 1}`),
+            id: `w${i + 1}`,
             title: String(e?.title ?? ""),
             notes: String(e?.notes ?? ""),
             media: null,

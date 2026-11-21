@@ -99,7 +99,7 @@ export const NOVEMBER_21_BLOG_POSTS: BlogPost[] = [
     "links": [
       {
         "label": "How to use supersets",
-        "href": "/blog/how-to-use-supersets"
+        "href": "/blog/how-to-use-supersets-for-strength-and-muscle"
       },
       {
         "label": "Cluster sets versus traditional sets",

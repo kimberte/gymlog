@@ -835,7 +835,7 @@ function exerciseGroupVolume(indices: number[]) {
 
     // Persist up to 3
     const merged = nextEntries.slice(0, 3).map((e, i) => ({
-      id: String(e.id || `w${i + 1}`),
+      id: `w${i + 1}`,
       title: String(e.title ?? ""),
       notes: buildNotes(e),
       media: (e as any)?.media ?? null,

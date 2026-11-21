@@ -153,3 +153,7 @@
 .coach-landing-bottom h2,.coach-landing-bottom p{margin-inline:auto}
 @media(max-width:850px){.coach-landing-hero{grid-template-columns:1fr;padding-top:15px}.coach-feature-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.coach-landing-split{grid-template-columns:1fr}}
 @media(max-width:540px){.coach-landing-visual{transform:none;padding:14px}.coach-visual-person em{font-size:9px}.coach-feature-grid{grid-template-columns:1fr}.coach-landing-section{padding:52px 0}.coach-landing-split{padding:24px}.coach-landing-copy h1{font-size:40px}.coach-landing-proof{justify-content:flex-start;font-size:10px}}
+
+/* Navigation links across trainer/client surfaces must read as deliberate controls. */
+.trainer-shell .trainer-hero a:not(.trainer-action),.trainer-shell .trainer-hint a,.trainer-shell .trainer-next a:not(.trainer-action){display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 13px;margin:3px 4px 3px 0;border:1px solid var(--border);border-radius:10px;background:rgba(128,128,128,.08);color:inherit;text-decoration:none;font-weight:700;font-size:12px}
+.trainer-shell .trainer-hero a:not(.trainer-action):hover,.trainer-shell .trainer-hint a:hover,.trainer-shell .trainer-next a:not(.trainer-action):hover{border-color:#ff873f;background:rgba(255,107,34,.10)}

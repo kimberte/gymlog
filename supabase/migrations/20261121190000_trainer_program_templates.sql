@@ -1,0 +1,8 @@
+create table if not exists public.trainer_program_templates (id uuid primary key default gen_random_uuid(),trainer_id uuid not null references auth.users(id) on delete cascade,name text not null check(char_length(trim(name)) between 1 and 120),description text not null default '',weeks integer not null check(weeks between 1 and 52),sessions jsonb not null default '[]'::jsonb check(jsonb_typeof(sessions)='array' and pg_column_size(sessions)<65536),created_at timestamptz not null default now(),updated_at timestamptz not null default now());
+create index if not exists trainer_program_templates_owner_idx on public.trainer_program_templates(trainer_id,updated_at desc);
+alter table public.trainer_program_templates enable row level security;
+create policy "trainer templates own read" on public.trainer_program_templates for select to authenticated using(trainer_id=(select auth.uid()));
+create policy "trainer templates own insert" on public.trainer_program_templates for insert to authenticated with check(trainer_id=(select auth.uid()) and exists(select 1 from public.trainer_profiles tp where tp.user_id=(select auth.uid())));
+create policy "trainer templates own update" on public.trainer_program_templates for update to authenticated using(trainer_id=(select auth.uid())) with check(trainer_id=(select auth.uid()));
+create policy "trainer templates own delete" on public.trainer_program_templates for delete to authenticated using(trainer_id=(select auth.uid()));
+grant select,insert,update,delete on public.trainer_program_templates to authenticated;

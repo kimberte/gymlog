@@ -1,4 +1,4 @@
 self.addEventListener("install",()=>self.skipWaiting());
 self.addEventListener("activate",event=>event.waitUntil(self.clients.claim()));
-self.addEventListener("push",event=>{let data={};try{data=event.data.json()}catch{}event.waitUntil(self.registration.showNotification(data.title||"Gym Log",{body:data.body||"You have a new training update.",icon:"/apple-touch-icon.png",tag:data.tag||"gym-log",data:{url:data.url||"/"}}));});
+self.addEventListener("push",event=>{let data={};try{data=event.data.json()}catch{}event.waitUntil(self.registration.showNotification(data.title||"Gym Log",{body:data.body||"You have a new training update.",icon:"/brand-icon.png?v=4",tag:data.tag||"gym-log",data:{url:data.url||"/"}}));});
 self.addEventListener("notificationclick",event=>{event.notification.close();const url=new URL(event.notification.data?.url||"/",self.location.origin);if(url.origin!==self.location.origin)return;event.waitUntil(self.clients.matchAll({type:"window",includeUncontrolled:true}).then(async clients=>{for(const client of clients){if(client.url===url.href){return client.focus();}}return self.clients.openWindow(url.href);}));});

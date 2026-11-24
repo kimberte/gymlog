@@ -41,7 +41,7 @@ export const metadata: Metadata = {
       { url: "/gym-log-icon.svg?v=3", type: "image/svg+xml" },
       
     ],
-    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+    apple: [{ url: "/brand-icon.png?v=4", sizes: "512x512", type: "image/png" }],
   },
   openGraph: {
     type: "website",

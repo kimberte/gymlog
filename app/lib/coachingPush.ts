@@ -4,9 +4,15 @@ export function allowedPushEndpoint(value:string){
 }
 function hmac(key:Buffer,data:Buffer){return createHmac("sha256",key).update(data).digest();}
 function expand(key:Buffer,info:Buffer,len:number){return hmac(key,Buffer.concat([info,Buffer.from([1])])).subarray(0,len);}
+export function vapidPublicKey(){
+ const privateKey=Buffer.from(process.env.VAPID_PRIVATE_KEY||"","base64url");
+ if(privateKey.length!==32)throw new Error("Push credentials invalid");
+ const key=createECDH("prime256v1");key.setPrivateKey(privateKey);
+ return key.getPublicKey().toString("base64url");
+}
 export async function sendPush(device:{endpoint:string;p256dh:string;auth:string},payload:{title:string;body:string;url:string;tag:string}){
  if(!allowedPushEndpoint(device.endpoint))return 400;
- const publicKey=Buffer.from(process.env.VAPID_PUBLIC_KEY||"","base64url"),privateKey=process.env.VAPID_PRIVATE_KEY||"";
+ const publicKey=Buffer.from(vapidPublicKey(),"base64url"),privateKey=process.env.VAPID_PRIVATE_KEY||"";
  if(publicKey.length!==65||!privateKey)throw new Error("Push not configured");
  const receiver=Buffer.from(device.p256dh,"base64url"),auth=Buffer.from(device.auth,"base64url");
  if(receiver.length!==65||auth.length!==16)return 400;

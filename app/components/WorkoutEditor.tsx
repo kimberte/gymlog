@@ -769,9 +769,14 @@ function exerciseGroupVolume(indices: number[]) {
     setTimeout(() => notesRef.current?.focus(), 50);
   }
 
-  function deleteActiveWorkout() {
+  async function deleteActiveWorkout() {
     const ok = window.confirm("Delete this workout?");
     if (!ok) return;
+    const removedId=String(entries[activeIdx]?.id||"");
+    if(removedId.startsWith("trainer_")){
+      const {error}=await supabase.rpc("remove_trainer_workouts",{p_workout_ids:[removedId.slice(8)]});
+      if(error){toast("Could not remove trainer workout: "+error.message);return;}
+    }
 
     if (entries.length === 1) {
       const next = { ...(workouts as any) };
@@ -798,10 +803,9 @@ function exerciseGroupVolume(indices: number[]) {
       return;
     }
 
-    setEntries((prev) => {
-      const next = prev.filter((_, i) => i !== activeIdx);
-      return next.map((e, i) => ({ ...e, id: `w${i + 1}` }));
-    });
+    const remaining=entries.filter((_,i)=>i!==activeIdx);
+    setEntries(remaining);
+    persistEntriesToWorkouts(remaining);
     setActiveIdx((i) => Math.max(0, i - 1));
     toast("Workout removed");
   }
@@ -835,7 +839,7 @@ function exerciseGroupVolume(indices: number[]) {
 
     // Persist up to 3
     const merged = nextEntries.slice(0, 3).map((e, i) => ({
-      id: `w${i + 1}`,
+      id: String(e.id||`w${i + 1}`),
       title: String(e.title ?? ""),
       notes: buildNotes(e),
       media: (e as any)?.media ?? null,

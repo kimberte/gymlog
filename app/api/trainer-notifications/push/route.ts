@@ -1,8 +1,8 @@
 import {createClient} from "@supabase/supabase-js";
-import {allowedPushEndpoint,sendPush} from "../../../lib/coachingPush";
+import {allowedPushEndpoint,sendPush,vapidPublicKey} from "../../../lib/coachingPush";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
-export async function GET(){return Response.json({publicKey:process.env.VAPID_PUBLIC_KEY||null});}
+export async function GET(){try{return Response.json({publicKey:vapidPublicKey()},{headers:{"Cache-Control":"no-store"}});}catch{return Response.json({error:"Push credentials are not configured correctly."},{status:503});}}
 export async function POST(request:Request){
  const bearer=request.headers.get("authorization");if(!bearer?.startsWith("Bearer "))return Response.json({error:"Sign in first."},{status:401});
  const url=process.env.NEXT_PUBLIC_SUPABASE_URL,key=process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -14,6 +14,7 @@ export async function POST(request:Request){
  const endpoint=body?.subscription?.endpoint;
  if(typeof endpoint!=="string"||endpoint.length>2048||!allowedPushEndpoint(endpoint))return Response.json({error:"Unsupported push service."},{status:400});
  if(body.action==="remove"){const {error}=await db.from("coaching_push_devices").delete().eq("endpoint",endpoint).eq("user_id",user.id);return Response.json(error?{error:"Could not remove device."}:{message:"Device removed."},{status:error?500:200});}
+ if(body.action==="status"){const {data,error}=await db.from("coaching_push_devices").select("endpoint").eq("endpoint",endpoint).eq("user_id",user.id).maybeSingle();return Response.json(error?{error:"Could not check device."}:{registered:Boolean(data)},{status:error?500:200});}
  if(body.action==="register"){
  const p256dh=body.subscription?.keys?.p256dh,auth=body.subscription?.keys?.auth;
  if(typeof p256dh!=="string"||typeof auth!=="string"||p256dh.length>120||auth.length>30||Buffer.from(p256dh,"base64url").length!==65||Buffer.from(auth,"base64url").length!==16)return Response.json({error:"Invalid subscription keys."},{status:400});

@@ -55,7 +55,7 @@ export default function HomePage() {
     if(!sessionUserId)return;
     let active=true;
     const refresh=async()=>{
-      const {data,error}=await supabase.from("trainer_planned_workouts").select("id,date_key,title,exercises,completed_at,client_approved_at,created_at").eq("client_id",sessionUserId).not("client_approved_at","is",null).order("date_key");
+      const {data,error}=await supabase.from("trainer_planned_workouts").select("id,date_key,title,exercises,completed_at,client_approved_at,client_removed_at,created_at").eq("client_id",sessionUserId).order("date_key");
       if(!active||error||!data)return;
       setWorkouts(prev=>{
         const next={...prev};let changed=false;
@@ -63,6 +63,7 @@ export default function HomePage() {
           const id="trainer_"+p.id;
           const entries=getDayEntries(next,p.date_key);
           const existing=entries.find(e=>e.id===id);
+          if(p.client_removed_at||!p.client_approved_at){if(existing){next[p.date_key]={...next[p.date_key],entries:entries.filter(e=>e.id!==id)};changed=true;}continue;}
           const prescription=(Array.isArray(p.exercises)?p.exercises:[]).map((ex:unknown)=>typeof ex==="string"?ex:ex&&typeof ex==="object"&&"name" in ex?String(ex.name):JSON.stringify(ex)).join("\n");
           if(!existing&&entries.length>=3)continue;
           const old=existing as (WorkoutEntry & {trainerPrescription?:string})|undefined;
@@ -167,12 +168,14 @@ export default function HomePage() {
     setPasteChoice(null); setHoldDate(null);
     showToast(`${targets.length} dates pasted — Undo available`);
   }
-  function deleteSelectedDates() {
+  async function deleteSelectedDates() {
+    const removedIds=selectedDates.flatMap(key=>getDayEntries(workouts,key).filter(e=>e.id.startsWith("trainer_")).map(e=>e.id.slice(8)));
+    if(removedIds.length){const {error}=await supabase.rpc("remove_trainer_workouts",{p_workout_ids:removedIds});if(error){showToast("Could not remove trainer workouts: "+error.message);return;}}
     const next = structuredClone(workouts);
     selectedDates.forEach(key=>{ if (next[key]) { next[key] = {...next[key],entries:[],pb:false}; } });
-    setUndoSnapshot(workouts); setWorkouts(next); void requestBackup(next);
+    setUndoSnapshot(removedIds.length?null:workouts); setWorkouts(next); void requestBackup(next);
     setConfirmBulkDelete(false); setMultiSelect(false); setSelectedDates([]);
-    showToast("Workouts deleted — Undo available");
+    showToast(removedIds.length?"Workouts deleted. Trainer assignments require new approval.":"Workouts deleted — Undo available");
   }
   function undoBulkChange() {
     if (!undoSnapshot) return;

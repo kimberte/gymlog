@@ -4,7 +4,7 @@ import {sendPush} from "../../../lib/coachingPush";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 export const maxDuration=60;
-const links:Record<string,string>={connection_requested:"/trainers/connections",connection_approved:"/trainers/live",workout_assigned:"/trainers/client",workout_updated:"/",workout_approved:"/trainers/live",workout_completed:"/trainers/live"};
+const links:Record<string,string>={message_received:"/trainers/messages",connection_requested:"/trainers/connections",connection_approved:"/trainers/live",workout_assigned:"/trainers/client",workout_updated:"/",workout_approved:"/trainers/live",workout_completed:"/trainers/live"};
 export async function POST(request:Request){
  const secret=process.env.COACH_NOTIFICATION_WORKER_SECRET||"",provided=request.headers.get("authorization")||"",expected="Bearer "+secret;
  if(!secret||provided.length!==expected.length||!timingSafeEqual(Buffer.from(provided),Buffer.from(expected)))return Response.json({error:"Unauthorized"},{status:401});
@@ -22,6 +22,13 @@ export async function POST(request:Request){
   if(!claim)continue;
   let state="pending";
   try{
+   if(row.event_type==="message_received"){
+    const {data:message,error:messageError}=await db.from("coaching_messages").select("trainer_id,client_id,recipient_id,read_at").eq("id",row.id).eq("recipient_id",row.recipient_id).maybeSingle();
+    if(messageError)throw messageError;
+    let eligible=Boolean(message&&!message.read_at);
+    if(message&&eligible){const {data:connection,error:connectionError}=await db.from("trainer_clients").select("id").eq("trainer_id",message.trainer_id).eq("client_id",message.client_id).eq("status","accepted").limit(1);if(connectionError)throw connectionError;eligible=Boolean(connection?.length);}
+    if(!eligible){await db.from("coaching_delivery_queue").update({push_state:"skipped",push_lease:null}).eq("id",row.id).eq("push_lease",now);skipped++;continue;}
+   }
    const {data:prefs,error:prefError}=await db.from("trainer_notification_preferences").select("*").eq("user_id",row.recipient_id).maybeSingle();
    if(prefError)throw prefError;
    if(prefs?.push_enabled===false||prefs?.[row.event_type]===false){state="skipped";skipped++;}

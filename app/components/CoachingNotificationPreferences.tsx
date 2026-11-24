@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
-type Prefs={user_id:string;connection_requested:boolean;connection_approved:boolean;workout_approved:boolean;workout_assigned:boolean;workout_updated:boolean;workout_completed:boolean;email_enabled:boolean;push_enabled:boolean};
-const defaults={connection_requested:true,connection_approved:true,workout_approved:true,workout_assigned:true,workout_updated:true,workout_completed:true,email_enabled:true,push_enabled:true};
+type Prefs={message_received:boolean;message_email_enabled:boolean;user_id:string;connection_requested:boolean;connection_approved:boolean;workout_approved:boolean;workout_assigned:boolean;workout_updated:boolean;workout_completed:boolean;email_enabled:boolean;push_enabled:boolean};
+const defaults={message_received:true,message_email_enabled:true,connection_requested:true,connection_approved:true,workout_approved:true,workout_assigned:true,workout_updated:true,workout_completed:true,email_enabled:true,push_enabled:true};
 const fields:[keyof typeof defaults,string,string][]=[
  ["connection_requested","Trainer access request","Notify me when a trainer requests access"],
  ["connection_approved","Client connection approved","Notify me when a client approves access"],
@@ -10,6 +10,8 @@ const fields:[keyof typeof defaults,string,string][]=[
  ["workout_assigned","New workout assigned","Notify me when my trainer assigns a workout"],
  ["workout_updated","Workout updated","Notify me when my trainer changes a workout"],
  ["workout_completed","Workout completed","Notify me when a connected client completes a workout"],
+ ["message_received","New coaching messages","Allow notifications for new private trainer–client messages"],
+ ["message_email_enabled","Coaching message emails","Send email alerts for unread messages when email delivery is enabled"],
  ["email_enabled","Email delivery","Allow trainer-related email notifications when available"],
  ["push_enabled","Push delivery","Allow trainer-related push notifications when available"]
 ];

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
+import CoachingNotificationPreferences from "./CoachingNotificationPreferences";
 import { exportCSV, importCSV } from "../lib/csv";
 import { supabase } from "../lib/supabaseClient";
 import { fetchLatestBackup, formatBackupDate } from "../lib/backup";
@@ -1442,6 +1443,7 @@ async function updatePassword() {
           <p style={{ fontSize: 13, opacity: .8, margin: "0 0 10px" }}>Review trainer access requests and manage connected trainers.</p>
           <a href="/trainers/connections" className="app-link" style={{ display: "inline-block", padding: "9px 12px", borderRadius: 8, background: "#ff6b22", color: "#161616", fontWeight: 700 }}>View trainer requests</a>
         </div>
+        {sessionUserId&&<CoachingNotificationPreferences key={sessionUserId} role="client"/>}
         {/* Footer links + version */}
         <div
           style={{

@@ -763,7 +763,7 @@ function exerciseGroupVolume(indices: number[]) {
       toast("Max 3 workouts per day");
       return;
     }
-    const next: EntryWithMedia = { id: `w${entries.length + 1}`, title: "", notes: "", media: null };
+    const next: EntryWithMedia = { id: `w_${crypto.randomUUID()}`, title: "", notes: "", media: null };
     setEntries((prev) => [...prev, next]);
     setActiveIdx(entries.length);
     setTimeout(() => notesRef.current?.focus(), 50);
@@ -839,6 +839,7 @@ function exerciseGroupVolume(indices: number[]) {
 
     // Persist up to 3
     const merged = nextEntries.slice(0, 3).map((e, i) => ({
+      ...getDayEntries(workouts,date).find(original=>original.id===e.id),
       id: String(e.id||`w${i + 1}`),
       title: String(e.title ?? ""),
       notes: buildNotes(e),
@@ -889,7 +890,8 @@ function exerciseGroupVolume(indices: number[]) {
     const merged = entries
       .slice(0, 3)
       .map((e, i) => ({
-        id: `w${i + 1}`,
+        ...getDayEntries(workouts,date).find(original=>original.id===e.id),
+        id: String(e.id||`w${i + 1}`),
         title: String(e.title ?? ""),
         notes: buildNotes(e),
         media: (e as any)?.media ?? null,

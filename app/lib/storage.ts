@@ -22,6 +22,7 @@ export type WorkoutEntry = {
   title: string;
   notes: string;
   completedAt?: string | null;
+  trainerPrescription?: string;
 
   createdAt?: string;
   updatedAt?: string;
@@ -133,6 +134,7 @@ function normalizeEntry(raw: any, fallbackId?: string): WorkoutEntry {
     id,
     title,
     notes,
+    trainerPrescription: typeof raw?.trainerPrescription === "string" ? raw.trainerPrescription : undefined,
     completedAt: typeof raw?.completedAt === "string" ? raw.completedAt : null,
     createdAt: raw?.createdAt,
     updatedAt: raw?.updatedAt,

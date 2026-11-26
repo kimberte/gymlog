@@ -1863,6 +1863,8 @@ return (
           )}
 
 
+          {active?.id.startsWith("trainer_") && active.trainerPrescription && active.notes!==active.trainerPrescription && <details style={{marginTop:12,padding:12,border:"1px solid var(--border)",borderRadius:12}}><summary style={{fontWeight:700,cursor:"pointer"}}>Approved trainer workout</summary><p style={{whiteSpace:"pre-wrap",marginBottom:0}}>{active.trainerPrescription}</p></details>}
+
           {/* ✅ Media per workout (image OR video) — Pro only (trial counts) */}
           {proStatus.isPro ? (
             <div style={{ marginTop: 10 }}>

@@ -4,13 +4,13 @@ import {supabase} from "../../lib/supabaseClient";
 type Plan={pending_revision?:{token:string;title:string;exercises:string[]}|null;id:string;date_key:string;title:string;exercises:string[];completed_at:string|null;performance_log?:Record<string,string>};
 type Personal={date_key:string;title:string|null;entries:unknown};
 const key=(d:Date)=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-");
-export default function TrainerClientCalendar({clientId,plans,onEdit}:{clientId:string;plans:Plan[];onEdit:(p:Plan)=>void}){
+export default function TrainerClientCalendar({clientId,plans,onEdit,demoMode=false}:{clientId:string;plans:Plan[];onEdit:(p:Plan)=>void;demoMode?:boolean}){
  const [month,setMonth]=useState(()=>{const d=new Date();return new Date(d.getFullYear(),d.getMonth(),1)});
  const [personal,setPersonal]=useState<Personal[]>([]);
  const [error,setError]=useState("");
  const [selectedDay,setSelectedDay]=useState<string|null>(null);
  const first=key(month),last=key(new Date(month.getFullYear(),month.getMonth()+1,0));
- useEffect(()=>{let active=true;setPersonal([]);setError("");setSelectedDay(null);(async()=>{const {data,error}=await supabase.rpc("get_trainer_client_calendar",{p_client_id:clientId,p_from:first,p_to:last});if(!active)return;if(error)setError(error.message);else setPersonal((data||[]) as Personal[])})();return()=>{active=false}},[clientId,first,last]);
+ useEffect(()=>{let active=true;setPersonal([]);setError("");setSelectedDay(null);if(demoMode)return;(async()=>{const {data,error}=await supabase.rpc("get_trainer_client_calendar",{p_client_id:clientId,p_from:first,p_to:last});if(!active)return;if(error)setError(error.message);else setPersonal((data||[]) as Personal[])})();return()=>{active=false}},[clientId,first,last,demoMode]);
  const cells=useMemo(()=>{const start=new Date(month.getFullYear(),month.getMonth(),1);const count=new Date(month.getFullYear(),month.getMonth()+1,0).getDate();return [...Array(start.getDay()).fill(null),...Array.from({length:count},(_,i)=>key(new Date(month.getFullYear(),month.getMonth(),i+1))) ] as (string|null)[]},[month]);
  const personalOnly=personal.flatMap(p=>{if(!Array.isArray(p.entries))return [p];const entries=p.entries.filter((e:any)=>!String(e?.id||"").startsWith("trainer_"));return entries.length?[{...p,entries,title:String(entries[0]?.title||"Personal workout")}]:[];});
  const day=selectedDay||key(new Date());

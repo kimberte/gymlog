@@ -65,12 +65,12 @@ export default function LiveTrainerWorkspace(){
  const save=async()=>{if(!userId||!selected||!title.trim()||!date||busy)return;setBusy(true);setMessage("");try{
  const {data:existing,error:checkError}=await supabase.from("trainer_planned_workouts").select("id,title,client_approved_at,completed_at,client_removed_at").eq("trainer_id",userId).eq("client_id",selected).eq("date_key",date).maybeSingle();
  if(checkError){setMessage(checkError.message);return;}
- if(existing&&!window.confirm(existing.client_removed_at?"The client removed this workout. Reassign it for fresh client approval?":date+" already has a trainer workout: "+existing.title+". Update this existing workout?"))return;
+ if(existing&&!window.confirm(existing.client_removed_at?"The client removed this workout. Reassign it for fresh client approval?":existing.client_approved_at?"Send a replacement for client approval? The original stays in their calendar until approved.":date+" already has a trainer workout: "+existing.title+". Update this existing workout?"))return;
  const payload={title:title.trim(),exercises:exercises.split("\n").map(s=>s.trim()).filter(Boolean)};
  const result=existing?await supabase.from("trainer_planned_workouts").update(existing.client_removed_at?{...payload,client_removed_at:null}:payload).eq("id",existing.id).eq("trainer_id",userId).eq("client_id",selected).select("*").single():await supabase.from("trainer_planned_workouts").insert({...payload,trainer_id:userId,client_id:selected,date_key:date}).select("*").single();
  if(result.error){setMessage(result.error.message);return;}
  setPlans(prev=>[...prev.filter(p=>p.date_key!==date),result.data as Plan].sort((a,b)=>a.date_key.localeCompare(b.date_key)));
- if(existing&&!existing.client_removed_at){setAssignedNotice(null);setMessage("Existing workout updated. Client approval and completion are unchanged.");}else setAssignedNotice(1);
+ if(existing&&!existing.client_removed_at){setAssignedNotice(null);setMessage(result.data.pending_revision?"Revision sent for client approval. Original workout remains active until approval.":"Workout saved. No new approval is required unless the prescription changes.");}else setAssignedNotice(1);
  }finally{setBusy(false);}};
  const assignSeries=async()=>{
   if(!userId||!selected||!title.trim()||!date)return;

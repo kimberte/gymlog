@@ -229,6 +229,7 @@ export default function WorkoutEditor({
         id: String(e?.id || `w${i + 1}`),
         title: String(e?.title ?? ""),
         notes: String(e?.notes ?? ""),
+        trainerPrescription: e.trainerPrescription,
         media: (e as any)?.media ?? null,
       completedAt: e.completedAt ?? null,
       }));

@@ -41,6 +41,8 @@ export default function WelcomePage() {
         {!workoutCount && <div className="welcome-today-extra">Tap to log today's training</div>}
       </Link>
 
+      <Link href="/trainers/client" className="welcome-today-card" style={{marginTop:14}}><div className="welcome-today-top"><span className="welcome-section-kicker">MY COACHING</span><span className="welcome-open-link">Open coaching →</span></div><div className="welcome-today-workout">Training with a coach?</div><div className="welcome-today-extra">Review assigned workouts, messages and progress.</div></Link>
+
       {latestBlogs.length > 0 && <section aria-label="Latest from the Gym Log blog">
         {latestBlogs.map((post, index) => <Link key={post.slug} href={`/blog/${post.slug}`} className="welcome-blog-card">
           <div className="welcome-blog-image"><img src={post.image} alt={post.imageAlt} /></div>

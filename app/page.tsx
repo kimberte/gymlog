@@ -73,7 +73,7 @@ export default function HomePage() {
           const legacy=old?.notes&&old.notes!==old.trainerPrescription&&old.notes!==prescription?old.notes:"";
           const remote=p.performance_log?.structured_workout;
           const structured=same&&old?.structured?.rows?old.structured:remote&&Array.isArray(remote.rows)?remote:same&&legacy&&parseStructuredFromNotes(legacy)?parseStructuredFromNotes(legacy):prescriptionDraft(p.title,p.exercises||[]);
-          const notes=same&&old?.notes!==undefined?old.notes:legacy?removeStructuredBlock(legacy):typeof p.performance_log?.notes==="string"&&p.performance_log.notes!==prescription?p.performance_log.notes:"";
+          const notes=same&&old?.notes!==undefined?(old.notes===prescription?"":old.notes):legacy?removeStructuredBlock(legacy):typeof p.performance_log?.notes==="string"&&p.performance_log.notes!==prescription?p.performance_log.notes:"";
           const entry:WorkoutEntry={...old,id,title:p.title,notes,mode:"structured",structured,trainerPrescription:prescription,completedAt:p.completed_at??old?.completedAt??null,createdAt:old?.createdAt??p.created_at};
           if(existing&&JSON.stringify(existing)===JSON.stringify(entry))continue;
           next[p.date_key]={...next[p.date_key],entries:[...entries.filter(e=>e.id!==id),entry]};changed=true;

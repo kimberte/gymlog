@@ -653,7 +653,7 @@ function renameExerciseInGroup(groupKey: string, nextName: string) {
   const rows = activeStructured.rows || [];
   const nextRows = rows.map((r) => {
     const key = normalizeExerciseKey(String((r as any)?.name ?? ""));
-    if (key !== groupKey) return r as any;
+    if (key !== groupKey || r.block) return r as any;
     return { ...(r as any), name: nextName } as any;
   });
   updateActiveStructured({ rows: nextRows });
@@ -681,7 +681,7 @@ function addSetToExercise(groupKey: string) {
   let lastIdx = -1;
   rows.forEach((r, idx) => {
     const key = normalizeExerciseKey(String((r as any)?.name ?? ""));
-    if (key === groupKey) lastIdx = idx;
+    if (key === groupKey && !r.block) lastIdx = idx;
   });
 
   const last = lastIdx >= 0 ? (rows[lastIdx] as any) : null;

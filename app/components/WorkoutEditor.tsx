@@ -429,6 +429,11 @@ export default function WorkoutEditor({
   const futureCompletionBlocked=date>localToday()&&!active?.completedAt;
 
   const activeId = String(active?.id ?? "w1");
+  const [restUntil,setRestUntil]=useState<number|null>(null),[restNow,setRestNow]=useState(0);
+  useEffect(()=>{if(restUntil===null)return;const tick=()=>setRestNow(Date.now());tick();const id=window.setInterval(tick,250);return()=>window.clearInterval(id);},[restUntil]);
+  useEffect(()=>{setRestUntil(null)},[date,activeId]);
+  const restLeft=restUntil===null?0:Math.max(0,Math.ceil((restUntil-restNow)/1000));
+  function beginRest(value:string|undefined){const m=String(value||"").trim().match(/^(\d+(?:\.\d+)?)\s*(s|sec|seconds?|m|min|minutes?)?$/i);if(!m)return;const sec=Math.min(3600,Math.round(Number(m[1])*(m[2]?.toLowerCase().startsWith("m")?60:1)));if(sec>0){const now=Date.now();setRestNow(now);setRestUntil(now+sec*1000);}}
   const coached=activeId.startsWith("trainer_");
   const activeMode: "notebook" | "structured" = coached?"structured":modeByEntryId[activeId] ?? "notebook";
 
@@ -596,6 +601,7 @@ function toggleRowCompleted(idx: number) {
   const filled=coached?suggestedActual(row):defaultActualUnit(row);
   if(!row.completed&&!validActual(filled)){toast("Enter actual reps or seconds and select a unit for any weight.");return;}
   updateActiveStructuredRow(idx,row.completed?{completed:false}:{...filled,completed:true,skipped:false});
+  if(!row.completed){if(row.block){const same=activeStructured.rows.filter((r,i)=>i!==idx&&r.block?.id===row.block?.id&&r.blockRound===row.blockRound);if(same.every(r=>r.completed||r.skipped))beginRest(String(row.block.restSeconds)+" sec");}else beginRest(row.targetRest);}
 }
 
 function parseNumeric(val: any): number {
@@ -1447,6 +1453,7 @@ return (
             {completionBusy?"Saving…":futureCompletionBlocked?"Scheduled · Not available yet":active?.completedAt ? "✓ Completed · Undo" : "✓ Mark Complete"}
           </button>
           {futureCompletionBlocked&&<p className="future-completion-hint">You can log and edit this workout now. Mark it complete on or after {formatDisplayDate(date)}.</p>}
+          {restUntil!==null&&<div className="structured-rest-timer" role="status"><div><strong>{restLeft>0?"Rest timer":"Rest complete"}</strong><span>{Math.floor(restLeft/60)}:{String(restLeft%60).padStart(2,"0")}</span></div><button type="button" onClick={()=>setRestUntil(v=>v===null?null:Math.max(Date.now(),v-15000))}>−15s</button><button type="button" onClick={()=>setRestUntil(v=>Math.max(Date.now(),v||0)+15000)}>+15s</button><button type="button" onClick={()=>setRestUntil(null)}>{restLeft?"Skip":"Dismiss"}</button></div>}
           {/* Editor mode toggle */}
           {coached?<p style={{fontSize:12,color:"var(--muted)",margin:"8px 0"}}>Trainer-assigned · Structured workout</p>:<div
             style={{

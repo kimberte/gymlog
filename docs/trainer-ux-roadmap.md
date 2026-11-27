@@ -31,3 +31,8 @@
 - First-time trainer overview directs trainers to build a program before connecting clients. Trial status, full guided onboarding, and structured exercise groups remain follow-up work.
 
 - Initial structured supersets, giant sets and circuits: group adjacent exercises with shared rounds and post-round rest; group metadata is retained in existing prescription lines and structured result payloads. Client logs each movement by round. Ungroup before reordering individually; grouped movement removal requires ungrouping. Verify save/import/approval and mobile logging before marketing as a live feature.
+
+## Builder expansion — approved Nov 27
+- Initial individual set targets (normal/warm-up/drop/failure), per-set RPE/RIR/tempo targets, coach-approved alternatives, catalog filters and device-local favorites/recent exercises.
+- Device-local Program Studio draft recovery, four-week editable progression grid (ordinary uniform prescriptions only), deterministic TXT / CSV / TSV / Gym Log JSON import with review and rejection of unknown targets, automatic prescribed rest timer (including grouped rounds).
+- Do not claim completed QA: test persistence and server acceptance, actual results, mobile behavior and demo parity. Remaining: inline editor redesign, group block reordering/direct round editing, durable client draft recovery, Excel/PDF/image interpretation, percentage/automatic progression, trainer custom exercise profiles and video, timer background alerts, warmup/cooldown sections, exercise-level comments. No unreviewed automatic assignment.

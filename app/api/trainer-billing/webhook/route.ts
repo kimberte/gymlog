@@ -44,7 +44,7 @@ export async function POST(request:Request){
  }else if(lifecycle.has(event.type)){
  const sub=event.data.object as Stripe.Subscription;await syncSubscription(stripe,sub.id,idOf(sub.customer));
  }else if(invoices.has(event.type)){
- const invoice=event.data.object as Stripe.Invoice;const sub=invoiceSub(invoice);if(sub)await syncSubscription(stripe,sub,idOf(invoice.customer));
+ const invoice=event.data.object as Stripe.Invoice;const sub=invoiceSub(invoice);const customer=idOf(invoice.customer);if(sub){await syncSubscription(stripe,sub,customer);if(event.type==="invoice.paid"&&invoice.amount_paid>0&&customer){const {error}=await adminClient().rpc("queue_gym_log_stripe_payment",{p_customer:customer,p_subscription:sub,p_invoice:invoice.id,p_amount:invoice.amount_paid,p_currency:invoice.currency});if(error)throw error;}}
  }else if(riskEvents.has(event.type)){await recordRisk(stripe,event);}
  return new Response("ok",{status:200});
  }catch{console.error("Trainer Stripe webhook processing failed",event.id,event.type);return new Response("Processing failed",{status:500});}

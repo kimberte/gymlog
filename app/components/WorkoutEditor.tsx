@@ -560,7 +560,7 @@ function duplicateLastStructuredRow() {
     return;
   }
   const last = rows[rows.length - 1] || ({} as any);
-  const nextRows = [...rows, { ...last }];
+  const nextRows = [...rows, { ...last, completed:false, skipped:false, planned:false, reps:coached?"":last.reps,weight:coached?"":last.weight }];
   updateActiveStructured({ rows: nextRows });
 }
 
@@ -576,8 +576,9 @@ function addNextSetFromLastRow() {
   const next: StructuredExerciseRow = {
     name: String((last as any)?.name ?? ""),
     sets: "",
-    reps: String((last as any)?.reps ?? ""),
-    weight: String((last as any)?.weight ?? ""),
+    reps: coached?"":String((last as any)?.reps ?? ""),
+    weight: coached?"":String((last as any)?.weight ?? ""),
+    unit:last?.unit,targetReps:last?.targetReps,targetLoad:last?.targetLoad,targetRest:last?.targetRest,prescribedName:last?.prescribedName,
     completed: false,
   } as any;
 
@@ -588,7 +589,7 @@ function toggleRowCompleted(idx: number) {
   const row = (activeStructured.rows || [])[idx] as any;
   if (!row) return;
   if(!row.completed&&(!/^\d+$/.test(row.reps||"")||Number(row.reps)<1||(row.weight&&(!/^\d+(?:\.\d+)?$/.test(row.weight)||!row.unit)))){toast("Enter actual reps (or seconds) and select a unit for any weight before marking the set complete.");return;}
-  updateActiveStructuredRow(idx, { completed: !row.completed } as any);
+  updateActiveStructuredRow(idx, { completed: !row.completed,skipped:false } as any);
 }
 
 function parseNumeric(val: any): number {
@@ -598,7 +599,7 @@ function parseNumeric(val: any): number {
 }
 
 function computeRowVolume(r: StructuredExerciseRow): number {
-  if(!r.completed||/\b(sec|min)$/i.test(r.targetReps||"")||!r.unit)return 0;
+  if(!r.completed||r.skipped||/\b(sec|min)$/i.test(r.targetReps||"")||!r.unit)return 0;
   const reps = parseNumeric((r as any)?.reps);
   const weight = parseNumeric((r as any)?.weight);
   const setsRaw = parseNumeric((r as any)?.sets);
@@ -681,8 +682,9 @@ function addSetToExercise(groupKey: string) {
   const nextRow: StructuredExerciseRow = {
     name: last?.name ? String(last.name) : "Exercise",
     sets: "",
-    reps: last?.reps != null ? String(last.reps) : "",
-    weight: last?.weight != null ? String(last.weight) : "",
+    reps: coached?"":last?.reps != null ? String(last.reps) : "",
+    weight: coached?"":last?.weight != null ? String(last.weight) : "",
+    unit:last?.unit,targetReps:last?.targetReps,targetLoad:last?.targetLoad,targetRest:last?.targetRest,prescribedName:last?.prescribedName,
     completed: false,
   } as any;
 
@@ -702,6 +704,7 @@ function exerciseGroupVolume(indices: number[]) {
 }
 
   function removeActiveStructuredRow(idx: number) {
+    const row=activeStructured.rows[idx];if(coached&&row?.planned){updateActiveStructuredRow(idx,{skipped:!row.skipped,completed:false});return;}
     const nextRows = (activeStructured.rows || []).filter((_, i) => i !== idx);
     updateActiveStructured({ rows: nextRows });
   }
@@ -721,12 +724,12 @@ function exerciseGroupVolume(indices: number[]) {
   function handleConvertStructuredToNotebook() {
     if(coached)return;
     const parsed = parseStructuredFromNotes(String(active?.notes ?? ""));
-    const data = parsed || activeStructured;
+    const data = activeStructured;
     const extra = String(extraNotesByEntryId?.[activeId] ?? "");
     const notebook = structuredToNotebookText(data, extra);
 
     // Remove structured block, then replace with plain notebook text (one-way)
-    updateActive({ notes: notebook });
+    updateActive({ notes: notebook,mode:"plain",structured:undefined });
     lastNotesSeenRef.current[activeId] = notebook;
 
     setModeByEntryId((prev) => ({ ...prev, [activeId]: "notebook" }));
@@ -884,6 +887,7 @@ function exerciseGroupVolume(indices: number[]) {
       toast("Add a workout before marking it complete");
       return;
     }
+    if(coached&&!active.completedAt&&activeStructured.rows.some(r=>r.planned&&!r.completed&&!r.skipped)){toast("Complete or explicitly skip each prescribed set before marking the workout complete.");return;}
     const nextCompletedAt = active.completedAt ? null : new Date().toISOString();
     const nextEntries = entries.map((e, i) =>
       i === activeIdx ? { ...e, completedAt: nextCompletedAt } : e
@@ -921,7 +925,7 @@ function exerciseGroupVolume(indices: number[]) {
       }));
 
     const cleaned = merged.filter((e) => hasContent(e) || (e as any)?.media?.path);
-    for (const e of merged) { if (e.id.startsWith("trainer_")) { void syncStructuredTrainer(e); } }
+    for (const e of merged) { const old=getDayEntries(workouts,date).find(x=>x.id===e.id);if(e.id.startsWith("trainer_")&&(e.id===activeId||JSON.stringify(old?.structured)!==JSON.stringify(e.structured))){void syncStructuredTrainer(e);} }
 
     const next = { ...(workouts as any) };
     const existingImage = (next as any)?.[date]?.image; // legacy day image meta
@@ -1663,7 +1667,7 @@ return (
                 </button>
               </div>
 
-              {coached&&(()=>{const r=activeStructured.rows[g.indices[0]];return <small style={{color:"var(--muted)",marginTop:5}}>Target: {[r?.targetReps,r?.targetLoad,r?.targetRest&&"Rest "+r.targetRest].filter(Boolean).join(" · ")||"Review exercise with coach"}{r?.note?" · "+r.note:""}</small>})()}
+              {coached&&(()=>{const r=activeStructured.rows[g.indices[0]];return <small style={{color:"var(--muted)",marginTop:5}}>{r?.prescribedName&&r.prescribedName!==r.name?"Substituted for "+r.prescribedName+" · ":""}Target: {[r?.targetReps,r?.targetLoad,r?.targetRest&&"Rest "+r.targetRest].filter(Boolean).join(" · ")||"Review exercise with coach"}{r?.note?" · "+r.note:""}</small>})()}
               {(() => {
                 const prev = prevStatsByExerciseKey[g.key];
                 const curMax = computeMaxWeightForIndices(activeStructured.rows || [], g.indices).bestNum;
@@ -1760,7 +1764,7 @@ return (
                         {done ? "✓" : ""}
                       </button>
 
-                      <div style={{ fontSize: 12, opacity: 0.8 }}>#{pos + 1}</div>
+                      <div style={{ fontSize: 12, opacity: 0.8 }}>#{pos + 1}{r?.skipped?<small style={{display:"block",fontSize:9}}>Skipped</small>:null}</div>
 
                       <input
                         value={r?.reps ?? ""}
@@ -1842,9 +1846,10 @@ return (
                           color: "inherit",
                           cursor: "pointer",
                         }}
-                        title="Remove set"
+                        title={coached&&r?.planned?(r.skipped?"Restore skipped set":"Skip prescribed set"):"Remove set"}
+                        aria-label={coached&&r?.planned?(r.skipped?"Restore skipped set":"Skip prescribed set"):"Remove set"}
                       >
-                        ✕
+                        {coached&&r?.planned?(r.skipped?"↶":"–"):"✕"}
                       </button>
                     </div>
                   );

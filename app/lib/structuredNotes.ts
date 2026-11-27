@@ -64,7 +64,7 @@ export function compileStructuredBlock(data: StructuredWorkout): string {
       time: String(r?.time ?? "").trim(),
       note: String((r?.note ?? (r as any)?.notes) ?? "").trim(),
       completed: Boolean((r as any)?.completed),
-      unit: r.unit==="kg"||r.unit==="lb"?r.unit:"",
+      unit: (r.unit==="kg"||r.unit==="lb"?r.unit:"") as StructuredExerciseRow["unit"],
       targetReps: r.targetReps, targetLoad: r.targetLoad, targetRest: r.targetRest,
     }))
     .filter((r) => r.name || r.sets || r.reps || r.weight || r.time || r.note || r.completed);

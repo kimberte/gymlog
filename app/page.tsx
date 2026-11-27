@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import WorkoutCalendar from "./components/WorkoutCalendar";
 import AppDrawer from "./components/AppDrawer";
 import TrainerWorkoutStrip from "./components/TrainerWorkoutStrip";
+import {prescriptionDraft} from "./lib/structuredCoaching";
+import {parseStructuredFromNotes,removeStructuredBlock} from "./lib/structuredNotes";
 import Link from "next/link";
 import WorkoutEditor from "./components/WorkoutEditor";
 import SettingsModal from "./components/SettingsModal";
@@ -55,7 +57,7 @@ export default function HomePage() {
     if(!sessionUserId)return;
     let active=true;
     const refresh=async()=>{
-      const {data,error}=await supabase.from("trainer_planned_workouts").select("id,date_key,title,exercises,completed_at,client_approved_at,client_removed_at,created_at").eq("client_id",sessionUserId).order("date_key");
+      const {data,error}=await supabase.from("trainer_planned_workouts").select("id,date_key,title,exercises,completed_at,client_approved_at,client_removed_at,created_at,performance_log").eq("client_id",sessionUserId).order("date_key");
       if(!active||error||!data)return;
       setWorkouts(prev=>{
         const next={...prev};let changed=false;
@@ -67,8 +69,12 @@ export default function HomePage() {
           const prescription=(Array.isArray(p.exercises)?p.exercises:[]).map((ex:unknown)=>typeof ex==="string"?ex:ex&&typeof ex==="object"&&"name" in ex?String(ex.name):JSON.stringify(ex)).join("\n");
           if(!existing&&entries.length>=3)continue;
           const old=existing as (WorkoutEntry & {trainerPrescription?:string})|undefined;
-          const notes=old?.completedAt||p.completed_at?old?.notes??prescription:old?.trainerPrescription!==undefined&&old.notes!==old.trainerPrescription?old.notes:old?.trainerPrescription===undefined&&old?.notes&&old.notes!==prescription?old.notes:prescription;
-          const entry={...old,id,title:p.title,notes,trainerPrescription:prescription,completedAt:p.completed_at??old?.completedAt??null,createdAt:old?.createdAt??p.created_at};
+          const same=old?.trainerPrescription===prescription;
+          const legacy=old?.notes&&old.notes!==old.trainerPrescription&&old.notes!==prescription?old.notes:"";
+          const remote=p.performance_log?.structured_workout;
+          const structured=same&&old?.structured?.rows?old.structured:remote&&Array.isArray(remote.rows)?remote:same&&legacy&&parseStructuredFromNotes(legacy)?parseStructuredFromNotes(legacy):prescriptionDraft(p.title,p.exercises||[]);
+          const notes=same&&old?.notes!==undefined?old.notes:legacy?removeStructuredBlock(legacy):typeof p.performance_log?.notes==="string"&&p.performance_log.notes!==prescription?p.performance_log.notes:"";
+          const entry:WorkoutEntry={...old,id,title:p.title,notes,mode:"structured",structured,trainerPrescription:prescription,completedAt:p.completed_at??old?.completedAt??null,createdAt:old?.createdAt??p.created_at};
           if(existing&&JSON.stringify(existing)===JSON.stringify(entry))continue;
           next[p.date_key]={...next[p.date_key],entries:[...entries.filter(e=>e.id!==id),entry]};changed=true;
         }

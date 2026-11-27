@@ -15,9 +15,9 @@ export function readPrescription(line:string):PrescribedExercise{
 export function importPrescription(line:string,guidance=""){const e=readPrescription(line);if(!validPrescription(e))return line;return writePrescription({...e,notes:[e.notes,guidance].filter(Boolean).join(" / ")});}
 export function suggestedActual(r:StructuredExerciseRow):StructuredExerciseRow{
  const target=(r.targetReps||"").match(/^(\d+)(?:\s*[-–]\s*\d+)?(?:\s*(sec|min))?$/i);
- const load=(r.targetLoad||"").match(/^(\d+(?:\.\d+)?)\s*(kg|lbs?)$/i);
+ const load=(r.targetLoad||"").match(/^(\d+(?:\.\d+)?)\s*(kg|lbs?)?$/i);
  if(r.completed||r.skipped)return r;
- return {...r,reps:r.repsEdited?r.reps:r.reps|| (target?String(Number(target[1])*(target[2]?.toLowerCase()==="min"?60:1)):""),weight:r.weightEdited?r.weight:r.weight||load?.[1]||"",unit:r.unitEdited?r.unit:r.unit||(load?(load[2].toLowerCase()==="kg"?"kg":"lb"):"")};
+ return {...r,reps:r.repsEdited?r.reps:r.reps|| (target?String(Number(target[1])*(target[2]?.toLowerCase()==="min"?60:1)):""),weight:r.weightEdited?r.weight:r.weight||load?.[1]||"",unit:r.unitEdited?r.unit:r.unit||(load?.[2]?(load[2].toLowerCase()==="kg"?"kg":"lb"):"")};
 }
 export function validActual(r:StructuredExerciseRow){return Boolean(r.name.trim()&&/^\d+$/.test(r.reps||"")&&Number(r.reps)>0&&Number(r.reps)<=3600&&(!r.weight||(/^\d+(?:\.\d+)?$/.test(r.weight)&&Number(r.weight)<=2000&&r.unit)));}
 export function validPrescription(e:PrescribedExercise){

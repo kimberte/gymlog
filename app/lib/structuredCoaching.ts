@@ -5,7 +5,7 @@ export const emptyPrescription=():PrescribedExercise=>({name:"",sets:"",reps:"",
 export function readPrescription(line:string):PrescribedExercise{
  const text=String(line||"").trim(),parts=text.split(" · "),head=parts[0]||"";
  const m=text.match(/^(.*?)\s*(?:·\s*|[—–:]\s*|\s+)(\d+)\s*(?:sets?\s*)?[×x]\s*(\d+(?:\s*[-–]\s*\d+)?)(?:\s*(reps?|sec(?:onds?)?|min(?:utes?)?))?/i);
- const result=emptyPrescription();result.name=(m?m[1]:head).trim();result.sets=m?.[2]||"";result.reps=m?m[3]+(m[4]&&!/^rep/i.test(m[4])?" "+m[4]:""):"";
+ const result=emptyPrescription();result.name=(m?m[1]:head).trim();result.sets=m?.[2]||"";result.reps=m?m[3]+(m[4]&&!/^rep/i.test(m[4])?" "+(/^sec/i.test(m[4])?"sec":"min"):""):"";
  for(const p of parts.slice(m?2:1)){if(/^load:/i.test(p))result.load=p.slice(5).trim();else if(/^rest:/i.test(p))result.rest=p.slice(5).trim();else result.notes=[result.notes,p].filter(Boolean).join(" · ");}
  if(!m&&parts.length===1)result.name=text;
  return result;
@@ -26,6 +26,6 @@ export function prescriptionDraft(title:string,lines:unknown[]):StructuredWorkou
  return {workoutName:title,rows};
 }
 export function actualSetRows(draft:StructuredWorkout){
- return (draft.rows||[]).filter(r=>r.completed&&r.name.trim()&&/^\d+$/.test(r.reps||"")&&Number(r.reps)>0&&Number(r.reps)<=3600&&(r.weight===""||r.weight==null||/^\d+(?:\.\d+)?$/.test(r.weight)&&Number(r.weight)<=2000)).map(r=>({name:r.name.trim(),reps:Number(r.reps),weight:r.weight===""||r.weight==null?null:Number(r.weight),unit:r.unit==="kg"?"kg":r.unit==="lb"?"lb":null,completed:true}));
+ return (draft.rows||[]).filter(r=>r.completed&&r.name.trim()&&/^\d+$/.test(r.reps||"")&&Number(r.reps)>0&&Number(r.reps)<=3600&&(r.weight===""||r.weight==null||/^\d+(?:\.\d+)?$/.test(r.weight)&&Number(r.weight)<=2000)).map(r=>({name:r.name.trim(),reps:/\b(sec|min)$/i.test(r.targetReps||"")?null:Number(r.reps),duration_seconds:/\b(sec|min)$/i.test(r.targetReps||"")?Number(r.reps):null,weight:r.weight===""||r.weight==null?null:Number(r.weight),unit:r.unit==="kg"?"kg":r.unit==="lb"?"lb":null,completed:true}));
 }
-export function actualLiftText(draft:StructuredWorkout){return actualSetRows(draft).filter(r=>r.weight!==null&&r.weight>0&&r.unit!==null).map(r=>r.name+": "+r.weight+" "+r.unit+" x "+r.reps).join("\n");}
+export function actualLiftText(draft:StructuredWorkout){return actualSetRows(draft).filter(r=>r.weight!==null&&r.weight>0&&r.unit!==null&&r.reps!==null).map(r=>r.name+": "+r.weight+" "+r.unit+" x "+r.reps).join("\n");}

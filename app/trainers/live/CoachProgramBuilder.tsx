@@ -56,7 +56,7 @@ export default function CoachProgramBuilder({userId,clients,templates,onTemplate
       const log=(p.performance_log||{}) as Record<string,unknown>;
       const draft=log.structured_workout as {rows?:{completed?:boolean;reps?:string;weight?:string;skipped?:boolean}[]}|undefined;
       const logged=(Array.isArray(log.actual_sets)&&log.actual_sets.length>0)||Boolean(draft?.rows?.some(r=>r.completed||r.reps||r.weight))||Object.entries(log).some(([k,v])=>k!=="structured_workout"&&k!=="actual_sets"&&typeof v==="string"&&v.trim()&&(k!=="notes"||v.trim()!==(p.exercises||[]).join("\n").trim()));
-      if(!p.client_removed_at&&(p.completed_at||logged)){protectedDates.push(label);excluded.add(clientId+":"+p.date_key);}
+      if(p.completed_at||logged){protectedDates.push(label);excluded.add(clientId+":"+p.date_key);}
       else conflicts.push(label);
     };
     if(demoAdapter){for(const row of rows){const existing=demoAdapter.workouts.find(p=>p.client_id===row.client_id&&p.date_key===row.date_key);if(existing)inspect(row.client_id,existing);}}

@@ -4,6 +4,8 @@ import Link from "next/link";
 import { supabase } from "../../lib/supabaseClient";
 import "../trainer-dashboard.css";
 import {loadWorkouts,saveWorkouts} from "../../lib/storage";
+import {prescriptionDraft} from "../../lib/structuredCoaching";
+import {removeStructuredBlock} from "../../lib/structuredNotes";
 type Revision={token:string;title:string;exercises:unknown[]};
 type Plan={pending_revision:Revision|null;id:string;trainer_id:string;client_id:string;date_key:string;title:string;exercises:unknown[];performance_log:Record<string,string>|null;completed_at:string|null;client_approved_at:string|null};
 export default function MyTrainerWorkouts(){
@@ -29,9 +31,10 @@ export default function MyTrainerWorkouts(){
   for(const p of items){
    const entries=latest[p.date_key]?.entries||[],id="trainer_"+p.id,old=entries.find(e=>e.id===id);
    const title=p.pending_revision?.title??p.title,prescription=(p.pending_revision?.exercises??p.exercises).map(exerciseText).join("\n");
-   const notes=old&&old.notes!==old.trainerPrescription&&old.notes!==p.exercises.map(exerciseText).join("\n")?old.notes:prescription;
-   if(old){latest[p.date_key]={...latest[p.date_key],entries:entries.map(e=>e.id===id?{...e,title,notes,trainerPrescription:prescription}:e)};}
-   else if(entries.length<3){latest[p.date_key]={...(latest[p.date_key]||{}),entries:[...entries,{id,title,notes:prescription,trainerPrescription:prescription,createdAt:new Date().toISOString()}]};}
+   const notes=old&&old.notes!==old.trainerPrescription&&old.notes!==p.exercises.map(exerciseText).join("\n")?removeStructuredBlock(old.notes):"";
+   const structured=prescriptionDraft(title,p.pending_revision?.exercises??p.exercises);
+   if(old){latest[p.date_key]={...latest[p.date_key],entries:entries.map(e=>e.id===id?{...e,title,notes,mode:"structured" as const,structured,trainerPrescription:prescription}:e)};}
+   else if(entries.length<3){latest[p.date_key]={...(latest[p.date_key]||{}),entries:[...entries,{id,title,notes,mode:"structured",structured,trainerPrescription:prescription,createdAt:new Date().toISOString()}]};}
   }
   saveWorkouts(latest);await refresh(uid);setBusy("");setStatus(items.length===1?"Workout approved and calendar updated.":items.length+" workouts approved and calendar updated.");
  };

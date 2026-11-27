@@ -1,1 +1,20 @@
 .editor-actions.editor-actions-compact{display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;align-items:center!important;justify-content:flex-start!important;gap:6px!important;overflow-x:auto!important;overflow-y:hidden!important;scrollbar-width:thin;-webkit-overflow-scrolling:touch;min-height:52px;max-width:100%;padding:6px 8px!important}.editor-actions.editor-actions-compact>button{flex:0 0 auto!important;white-space:nowrap!important;min-width:0!important;width:auto;min-height:36px!important;padding:7px 11px!important;font-size:12px!important;line-height:1.1!important;border-radius:9px!important}.editor-actions.editor-actions-compact>button:first-child{width:42px!important;padding:7px!important}.editor-actions.editor-actions-compact>button:last-child{position:sticky;right:0;z-index:1;box-shadow:-8px 0 12px rgba(0,0,0,.2)}@media(max-width:420px){.editor-actions.editor-actions-compact{gap:5px!important;padding:5px 6px!important}.editor-actions.editor-actions-compact>button{font-size:11px!important;padding:7px 9px!important}}
+/* Shared structured workout editor: readable controls in both themes. */
+.editor .structured-workout-panel{min-width:0;border:1px solid var(--border)!important;background:var(--surface)!important;padding:8px!important}
+.editor .structured-exercise-card{border:1px solid var(--border)!important;background:var(--surface)!important}
+.editor .structured-exercise-header{background:color-mix(in srgb,var(--text) 5%,var(--surface))!important;border-bottom:1px solid var(--border);gap:8px!important}
+.editor .structured-workout-panel button:not(.structured-set-check){border-color:var(--border)!important;background:color-mix(in srgb,var(--text) 4%,var(--surface))!important;color:var(--text)!important}
+.editor .structured-workout-panel input,.editor .structured-workout-panel select{box-sizing:border-box;min-width:0;border:1px solid var(--border)!important;background:var(--surface)!important;color:var(--text)!important;opacity:1!important}
+.editor .structured-weight-field{display:grid;grid-template-columns:minmax(0,1fr) 46px;align-items:center;gap:3px;min-width:0}
+.editor .structured-weight-field select{grid-column:2;grid-row:1;height:40px;width:100%;padding:0 2px;border-radius:9px;appearance:auto}
+.editor .structured-weight-field input{grid-column:1;grid-row:1;min-width:0}
+.editor .structured-set-check{width:36px!important;height:36px!important;display:grid;place-items:center;background:var(--surface)!important;border:2px solid #8b95a5!important;color:var(--text)!important;font-size:19px;line-height:1}
+.editor .structured-set-check[aria-pressed="true"]{background:#137a43!important;border-color:#137a43!important;color:#fff!important}
+.editor .structured-set-check:focus-visible,.editor .structured-workout-panel :is(button,input,select):focus-visible{outline:2px solid #ff6a00!important;outline-offset:2px}
+html[data-theme="light"] .editor .structured-workout-panel{background:#f8fafc!important;border-color:#d0d5dd!important}
+html[data-theme="light"] .editor .structured-exercise-card{background:#fff!important;border-color:#d0d5dd!important}
+html[data-theme="light"] .editor .structured-exercise-header{background:#f1f5f9!important}
+html[data-theme="light"] .editor .structured-workout-panel :is(input,select,button:not(.structured-set-check)){border-color:#b8c2ce!important}
+html[data-theme="light"] .editor .structured-set-check[aria-pressed="true"]{color:white!important}
+html[data-theme="light"] .editor .workout-completion-button[aria-pressed="true"]{color:#146c3b!important;border-color:#16834b!important;background:#e5f7eb!important}
+@media(max-width:420px){.editor .structured-weight-field{grid-template-columns:minmax(0,1fr) 42px}.editor .structured-workout-panel{padding:6px!important}.editor .structured-exercise-card>div{padding:8px!important}}

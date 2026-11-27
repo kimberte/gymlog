@@ -7,7 +7,7 @@ import {
 } from "react";
 import { WorkoutEntry, WorkoutMap, getDayEntries } from "../lib/storage";
 import "./WorkoutEditorCompact.css";
-import {prescriptionDraft,actualSetRows,actualLiftText,suggestedActual,validActual,canonicalExercise} from "../lib/structuredCoaching";
+import {prescriptionDraft,actualSetRows,actualLiftText,suggestedActual,defaultActualUnit,validActual,canonicalExercise} from "../lib/structuredCoaching";
 import { getSessionUser } from "../lib/backup";
 import { supabase } from "../lib/supabaseClient";
 import { compressImageToWebp } from "../lib/imageCompress";
@@ -240,6 +240,8 @@ export default function WorkoutEditor({
 
   const [entries, setEntries] = useState<EntryWithMedia[]>(initialEntries);
   const [activeIdx, setActiveIdx] = useState(0);
+  const [completionBusy,setCompletionBusy]=useState(false);
+  const completionLock=useRef(false);
 
   // Structured editor (stored inside notes string via structuredNotes helpers)
   type EditorMode = "notebook" | "structured";
@@ -549,7 +551,7 @@ const activeTotalVolume = useMemo(
 
   function addActiveStructuredRow() {
   const nextRows = [...(activeStructured.rows || [])];
-  nextRows.push({ name: "", sets: "", reps: "", weight: "", completed: false } as any);
+  nextRows.push({ name: "", sets: "", reps: "", weight: "", unit:"lb", completed: false } as any);
   updateActiveStructured({ rows: nextRows });
 }
 
@@ -588,7 +590,7 @@ function addNextSetFromLastRow() {
 function toggleRowCompleted(idx: number) {
   const row = (activeStructured.rows || [])[idx] as any;
   if (!row) return;
-  const filled=coached?suggestedActual(row):row;
+  const filled=coached?suggestedActual(row):defaultActualUnit(row);
   if(!row.completed&&!validActual(filled)){toast("Enter actual reps or seconds and select a unit for any weight.");return;}
   updateActiveStructuredRow(idx,row.completed?{completed:false}:{...filled,completed:true,skipped:false});
 }
@@ -665,7 +667,7 @@ function addExercisePrompt() {
 
   const nextRows = [...(activeStructured.rows || [])];
   for (let i = 0; i < setsN; i++) {
-    nextRows.push({ name: clean, sets: "", reps: "", weight: "", completed: false } as any);
+    nextRows.push({ name: clean, sets: "", reps: "", weight: "", unit:"lb", completed: false } as any);
   }
   updateActiveStructured({ rows: nextRows });
 }
@@ -884,25 +886,29 @@ function exerciseGroupVolume(indices: number[]) {
   }
 
   async function toggleWorkoutComplete() {
+    if(completionLock.current)return;
     if (!active || !hasContent(active)) {
       toast("Add a workout before marking it complete");
       return;
     }
     let confirmedDraft=activeStructured;
     if(activeMode==="structured"&&!active.completedAt){
-      const candidates=activeStructured.rows.map(row=>coached?suggestedActual(row):row);
+      const candidates=activeStructured.rows.map(row=>coached?suggestedActual(row):defaultActualUnit(row));
       const ready=candidates.filter(row=>!row.completed&&!row.skipped&&validActual(row)).length;
       const incomplete=candidates.filter(row=>!row.completed&&!row.skipped&&!validActual(row)).length;
       if((ready||incomplete)&&!window.confirm("Confirm "+ready+" additional set(s) using the displayed reps and weights?"+(incomplete?" "+incomplete+" unfinished set(s) will be marked skipped.":"")+" Only confirm sets you actually performed."))return;
       confirmedDraft={...activeStructured,rows:candidates.map(row=>row.completed||row.skipped?row:validActual(row)?{...row,completed:true,skipped:false}:{...row,completed:false,skipped:true})};
     }
     const nextCompletedAt = active.completedAt ? null : new Date().toISOString();
+    completionLock.current=true;setCompletionBusy(true);
+    try {
     if(coached){const ok=await syncStructuredTrainer({...active,structured:confirmedDraft,notes:activeExtraNotes,completedAt:nextCompletedAt},Boolean(nextCompletedAt));if(!ok)return;}
     if(activeMode==="structured")setStructuredByEntryId(prev=>({...prev,[activeId]:confirmedDraft}));
     const nextEntries=entries.map((e,i)=>i===activeIdx?{...e,completedAt:nextCompletedAt}:e);
     setEntries(nextEntries);
     persistEntriesToWorkouts(nextEntries,confirmedDraft);
-    toast(nextCompletedAt?"Workout completed":"Workout marked incomplete");
+    toast(nextCompletedAt?"Workout completed":"Workout reopened — logged sets kept");
+    }catch(err){toast("Could not update workout. Please try again.");}finally{completionLock.current=false;setCompletionBusy(false);}
   }
 
   function handleSave() {
@@ -1421,6 +1427,8 @@ return (
           <button
             type="button"
             onClick={toggleWorkoutComplete}
+            disabled={completionBusy}
+            className="workout-completion-button"
             aria-pressed={Boolean(active?.completedAt)}
             style={{
               display: "inline-flex", alignItems: "center", gap: 8,
@@ -1431,7 +1439,7 @@ return (
               fontWeight: 600, cursor: "pointer"
             }}
           >
-            {active?.completedAt ? "✓ Completed · Undo" : "✓ Mark Complete"}
+            {completionBusy?"Saving…":active?.completedAt ? "✓ Completed · Undo" : "✓ Mark Complete"}
           </button>
           {/* Editor mode toggle */}
           {coached?<p style={{fontSize:12,color:"var(--muted)",margin:"8px 0"}}>Trainer-assigned · Structured workout</p>:<div
@@ -1527,7 +1535,7 @@ return (
           </div>}
 
           {activeMode === "structured" ? (
-<div
+<div className="structured-workout-panel"
   style={{
     border: "1px solid rgba(255,255,255,0.12)",
     borderRadius: 14,
@@ -1586,8 +1594,8 @@ return (
     </button>
 
     <div style={{ marginLeft: "auto", fontSize: 13, opacity: 0.9 }}>
-      <span style={{ opacity: 0.8, marginRight: 6 }}>Total volume (kg):</span>
-      <span style={{ fontWeight: 700 }}>{Math.round(activeTotalVolume).toLocaleString()}</span>
+      <span style={{ opacity: 0.8, marginRight: 6 }}>Total volume (lb):</span>
+      <span style={{ fontWeight: 700 }}>{Math.round(activeTotalVolume/0.45359237).toLocaleString()}</span>
     </div>
   </div>
 
@@ -1600,6 +1608,7 @@ return (
       return (
         <div
           key={g.key}
+          className="structured-exercise-card"
           style={{
             border: "1px solid rgba(255,255,255,0.12)",
             borderRadius: 14,
@@ -1607,7 +1616,7 @@ return (
             background: "rgba(255,255,255,0.04)",
           }}
         >
-          <div
+          <div className="structured-exercise-header"
             style={{
               display: "flex",
               alignItems: "center",
@@ -1702,7 +1711,7 @@ return (
                     }}
                   >
                     <span style={{ whiteSpace: "nowrap" }}>
-                      {setCount} set{setCount === 1 ? "" : "s"} • Vol {Math.round(vol).toLocaleString()} kg
+                      {setCount} set{setCount === 1 ? "" : "s"} • Vol {Math.round(vol/0.45359237).toLocaleString()} lb
                     </span>
                     {prev?.summary ? (
                       <span style={{ whiteSpace: "nowrap" }}>
@@ -1721,7 +1730,7 @@ return (
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "32px 40px 72px 1fr 32px",
+                  gridTemplateColumns: "36px 28px minmax(48px, .8fr) minmax(80px, 1.4fr) 32px",
                   gap: 4,
                   alignItems: "center",
                   fontSize: 12,
@@ -1739,16 +1748,15 @@ return (
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {g.indices.map((rowIdx, pos) => {
                   const raw = (activeStructured.rows || [])[rowIdx];
-                  const r = coached?suggestedActual(raw):raw;
+                  const r = coached?suggestedActual(raw):defaultActualUnit(raw);
                   const done = Boolean(r?.completed);
-                  const rowVol = computeRowVolume(r as any);
 
                   return (
                     <div
                       key={rowIdx}
                       style={{
                         display: "grid",
-                        gridTemplateColumns: "32px 40px 72px 1fr 32px",
+                        gridTemplateColumns: "36px 28px minmax(48px, .8fr) minmax(80px, 1.4fr) 32px",
                         gap: 4,
                         alignItems: "center",
                       }}
@@ -1756,6 +1764,8 @@ return (
                       <button
                         type="button"
                         onClick={() => toggleRowCompleted(rowIdx)}
+                        className="structured-set-check"
+                        aria-pressed={done}
                         style={{
                           width: 32,
                           height: 32,
@@ -1766,10 +1776,10 @@ return (
                           cursor: "pointer",
                           fontWeight: 800,
                         }}
-                        aria-label={done ? "Mark incomplete" : "Mark complete"}
+                        aria-label={(done ? "Mark incomplete: " : "Mark complete: ")+g.name+", set "+(pos+1)}
                         title={done ? "Completed" : "Not completed"}
                       >
-                        {done ? "✓" : ""}
+                        {done ? "✓" : r.skipped ? "–" : ""}
                       </button>
 
                       <div style={{ fontSize: 12, opacity: 0.8 }}>#{pos + 1}{r?.skipped?<small style={{display:"block",fontSize:9}}>Skipped</small>:null}</div>
@@ -1796,7 +1806,7 @@ return (
                         }}
                       />
 
-                      <div style={{ position: "relative", flex: "1 1 160px", minWidth: 0 }}><select aria-label="Weight unit" value={r?.unit||""} onChange={e=>updateActiveStructuredRow(rowIdx,{unitEdited:true,unit:e.target.value as StructuredExerciseRow["unit"]})} style={{width:"100%",fontSize:11,marginBottom:4}}><option value="">Unit</option><option value="lb">lb</option><option value="kg">kg</option></select>
+                      <div className="structured-weight-field"><select aria-label={"Weight unit, set "+(pos+1)} value={r?.unit||""} onChange={e=>updateActiveStructuredRow(rowIdx,{unitEdited:true,unit:e.target.value as StructuredExerciseRow["unit"]})} style={{fontSize:13}}>{!r.unit&&<option value="">Unit</option>}<option value="lb">lb</option><option value="kg">kg</option></select>
                         <input
                           value={r?.weight ?? ""}
                           onChange={(e) =>
@@ -1810,7 +1820,7 @@ return (
                             width: "100%",
                             height: 40,
                             borderRadius: 14,
-                            padding: rowVol > 0 ? "0 62px 0 12px" : "0 12px",
+                            padding: "0 8px",
                             border: "1px solid rgba(255,255,255,0.14)",
                             background: "rgba(0,0,0,0.18)",
                             color: "inherit",
@@ -1819,27 +1829,7 @@ return (
                             opacity: done ? 0.7 : 1,
                           }}
                         />
-                        {rowVol > 0 ? (
-                          <div
-                            style={{
-                              position: "absolute",
-                              right: 8,
-                              top: "50%",
-                              transform: "translateY(-50%)",
-                              fontSize: 10,
-                              opacity: 0.75,
-                              padding: "4px 6px",
-                              borderRadius: 999,
-                              border: "1px solid rgba(255,255,255,0.12)",
-                              background: "rgba(255,255,255,0.06)",
-                              whiteSpace: "nowrap",
-                              pointerEvents: "none",
-                            }}
-                            title="Set volume"
-                          >
-                            Vol {formatCompactNumber(rowVol)}
-                          </div>
-                        ) : null}
+
                       </div>
 
                       <button

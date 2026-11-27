@@ -774,12 +774,12 @@ async function updatePassword() {
             background: "rgba(0,0,0,0.12)",
           }}
         >
-          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.8)" }}>
+          <div style={{ fontSize: 13, color: "var(--muted)" }}>
             <strong>Pro access</strong>
           </div>
 
           {!supabaseConfigured && (
-            <div style={{ marginTop: 8, fontSize: 13, color: "#FFB199" }}>
+            <div style={{ marginTop: 8, fontSize: 13, color: "var(--settings-error, #d35d39)" }}>
               Supabase env vars are missing. Add:
               <div style={{ marginTop: 6, opacity: 0.9 }}>
                 <div>NEXT_PUBLIC_SUPABASE_URL</div>
@@ -800,7 +800,7 @@ async function updatePassword() {
                   borderRadius: 10,
                   border: "1px solid rgba(255,255,255,0.15)",
                   background: "transparent",
-                  color: "white",
+                  color: "var(--text)",
                   cursor: "pointer",
                 }}
               >
@@ -833,7 +833,7 @@ async function updatePassword() {
         borderRadius: 10,
         border: "1px solid rgba(255,255,255,0.15)",
         background: authMode === "signin" ? "rgba(255,87,33,0.14)" : "transparent",
-        color: "white",
+        color: "var(--text)",
         cursor: "pointer",
       }}
       type="button"
@@ -853,7 +853,7 @@ async function updatePassword() {
         borderRadius: 10,
         border: "1px solid rgba(255,255,255,0.15)",
         background: authMode === "signup" ? "rgba(255,87,33,0.14)" : "transparent",
-        color: "white",
+        color: "var(--text)",
         cursor: "pointer",
       }}
       type="button"
@@ -873,7 +873,7 @@ async function updatePassword() {
         borderRadius: 10,
         border: "1px solid rgba(255,255,255,0.15)",
         background: authMode === "reset" ? "rgba(255,87,33,0.14)" : "transparent",
-        color: "white",
+        color: "var(--text)",
         cursor: "pointer",
       }}
       type="button"
@@ -893,7 +893,7 @@ async function updatePassword() {
       marginTop: 12,
       background: "rgba(0,0,0,0.18)",
       border: "1px solid rgba(255,255,255,0.15)",
-      color: "white",
+      color: "var(--text)",
       borderRadius: 10,
       padding: 10,
       fontFamily: "inherit",
@@ -912,7 +912,7 @@ async function updatePassword() {
         marginTop: 10,
         background: "rgba(0,0,0,0.18)",
         border: "1px solid rgba(255,255,255,0.15)",
-        color: "white",
+        color: "var(--text)",
         borderRadius: 10,
         padding: 10,
         fontFamily: "inherit",
@@ -932,7 +932,7 @@ async function updatePassword() {
         marginTop: 10,
         background: "rgba(0,0,0,0.18)",
         border: "1px solid rgba(255,255,255,0.15)",
-        color: "white",
+        color: "var(--text)",
         borderRadius: 10,
         padding: 10,
         fontFamily: "inherit",
@@ -951,7 +951,7 @@ async function updatePassword() {
         borderRadius: 10,
         border: "none",
         background: "#FF5721",
-        color: "white",
+        color: "var(--text)",
         cursor: supabaseConfigured ? "pointer" : "not-allowed",
         opacity: !supabaseConfigured ? 0.6 : 1,
       }}
@@ -972,7 +972,7 @@ async function updatePassword() {
         borderRadius: 10,
         border: "none",
         background: "#FF5721",
-        color: "white",
+        color: "var(--text)",
         cursor: supabaseConfigured ? "pointer" : "not-allowed",
         opacity: !supabaseConfigured ? 0.6 : 1,
       }}
@@ -993,7 +993,7 @@ async function updatePassword() {
         borderRadius: 10,
         border: "none",
         background: "#FF5721",
-        color: "white",
+        color: "var(--text)",
         cursor: supabaseConfigured ? "pointer" : "not-allowed",
         opacity: !supabaseConfigured ? 0.6 : 1,
       }}
@@ -1014,7 +1014,7 @@ async function updatePassword() {
         borderRadius: 10,
         border: "none",
         background: "#FF5721",
-        color: "white",
+        color: "var(--text)",
         cursor: supabaseConfigured ? "pointer" : "not-allowed",
         opacity: !supabaseConfigured ? 0.6 : 1,
       }}
@@ -1029,7 +1029,7 @@ async function updatePassword() {
       style={{
         marginTop: 10,
         fontSize: 13,
-        color: authError ? "#FFB199" : "rgba(255,255,255,0.8)",
+        color: authError ? "var(--settings-error, #d35d39)" : "var(--muted)",
       }}
     >
       {authError || authMessage}
@@ -1071,7 +1071,7 @@ async function updatePassword() {
             background: "rgba(0,0,0,0.10)",
           }}
         >
-          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.8)" }}>
+          <div style={{ fontSize: 13, color: "var(--muted)" }}>
             <strong>General</strong>
           </div>
 
@@ -1089,7 +1089,7 @@ async function updatePassword() {
               marginTop: 8,
               background: "rgba(0,0,0,0.18)",
               border: "1px solid rgba(255,255,255,0.15)",
-              color: "white",
+              color: "var(--text)",
               borderRadius: 10,
               padding: 10,
               fontFamily: "inherit",
@@ -1104,7 +1104,7 @@ async function updatePassword() {
             style={{
               marginTop: 8,
               fontSize: 12,
-              color: "rgba(255,255,255,0.7)",
+              color: "var(--muted)",
             }}
           >
             Saved on this device.
@@ -1116,7 +1116,7 @@ async function updatePassword() {
           <div
             style={{
               fontSize: 13,
-              color: "rgba(255,255,255,0.75)",
+              color: "var(--muted)",
               marginBottom: 8,
             }}
           >
@@ -1153,7 +1153,7 @@ async function updatePassword() {
                 borderRadius: 10,
                 border: "1px solid rgba(255,255,255,0.15)",
                 background: "transparent",
-                color: "white",
+                color: "var(--text)",
                 cursor: "pointer",
                 opacity: backupIso ? 1 : 0.6,
               }}
@@ -1168,7 +1168,7 @@ async function updatePassword() {
                 style={{
                   marginTop: 8,
                   fontSize: 12,
-                  color: "rgba(255,255,255,0.7)",
+                  color: "var(--muted)",
                 }}
               >
                 Sign in below to enable auto-backup & restore.
@@ -1208,7 +1208,7 @@ async function updatePassword() {
                   width: "100%",
                   marginTop: 8,
                   background: "#FF5721",
-                  color: "#fff",
+                  color: "var(--text)",
                   border: "none",
                   padding: 10,
                   borderRadius: 10,
@@ -1226,7 +1226,7 @@ async function updatePassword() {
                   width: "100%",
                   marginTop: 8,
                   background: "transparent",
-                  color: "#fff",
+                  color: "var(--text)",
                   border: "1px solid rgba(255,255,255,0.15)",
                   padding: 10,
                   borderRadius: 10,
@@ -1244,7 +1244,7 @@ async function updatePassword() {
           <div
             style={{
               fontSize: 13,
-              color: "rgba(255,255,255,0.75)",
+              color: "var(--muted)",
               marginBottom: 8,
             }}
           >
@@ -1268,7 +1268,7 @@ async function updatePassword() {
           </div>
 
           {!isPro && (
-            <div style={{ marginTop: 10, fontSize: 13, color: "#B0B3C0" }}>
+            <div style={{ marginTop: 10, fontSize: 13, color: "var(--muted)" }}>
               Sign in above to unlock these.
             </div>
           )}
@@ -1297,7 +1297,7 @@ async function updatePassword() {
                 width: "100%",
                 marginTop: 8,
                 background: "#FF5721",
-                color: "#fff",
+                color: "var(--text)",
                 border: "none",
                 padding: 10,
                 borderRadius: 10,
@@ -1313,7 +1313,7 @@ async function updatePassword() {
                 width: "100%",
                 marginTop: 8,
                 background: "transparent",
-                color: "#fff",
+                color: "var(--text)",
                 border: "1px solid rgba(255,255,255,0.15)",
                 padding: 10,
                 borderRadius: 10,
@@ -1331,7 +1331,7 @@ async function updatePassword() {
           <div
             style={{
               fontSize: 13,
-              color: "rgba(255,255,255,0.75)",
+              color: "var(--muted)",
               marginBottom: 8,
             }}
           >
@@ -1349,7 +1349,7 @@ async function updatePassword() {
                   borderRadius: 10,
                   border: "1px solid rgba(255,87,33,0.35)",
                   background: "rgba(255,87,33,0.12)",
-                  color: "white",
+                  color: "var(--text)",
                   cursor: "pointer",
                 }}
               >
@@ -1383,7 +1383,7 @@ async function updatePassword() {
                     marginTop: 8,
                     background: "rgba(0,0,0,0.18)",
                     border: "1px solid rgba(255,255,255,0.15)",
-                    color: "white",
+                    color: "var(--text)",
                     borderRadius: 10,
                     padding: 10,
                     fontFamily: "inherit",
@@ -1397,7 +1397,7 @@ async function updatePassword() {
                     width: "100%",
                     marginTop: 10,
                     background: "#FF5721",
-                    color: "#fff",
+                    color: "var(--text)",
                     border: "none",
                     padding: 10,
                     borderRadius: 10,
@@ -1417,7 +1417,7 @@ async function updatePassword() {
                     width: "100%",
                     marginTop: 8,
                     background: "transparent",
-                    color: "#fff",
+                    color: "var(--text)",
                     border: "1px solid rgba(255,255,255,0.15)",
                     padding: 10,
                     borderRadius: 10,
@@ -1431,7 +1431,7 @@ async function updatePassword() {
           </div>
 
           {!isPro && (
-            <div style={{ marginTop: 10, fontSize: 13, color: "#B0B3C0" }}>
+            <div style={{ marginTop: 10, fontSize: 13, color: "var(--muted)" }}>
               Sign in above to manage your account.
             </div>
           )}
@@ -1444,6 +1444,7 @@ async function updatePassword() {
           <a href="/trainers/connections" className="app-link" style={{ display: "inline-block", padding: "9px 12px", borderRadius: 8, background: "#ff6b22", color: "#161616", fontWeight: 700 }}>View trainer requests</a>
         </div>
         {sessionUserId&&<CoachingNotificationPreferences key={sessionUserId} role="client"/>}
+        <div className="settings-appearance-slot" style={{width:"100%"}} />
         {/* Footer links + version */}
         <div
           style={{
@@ -1457,7 +1458,7 @@ async function updatePassword() {
             flexWrap: "wrap",
           }}
         >
-          <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+          <div className="settings-legal-links" style={{ display: "grid", gap: 10, width: "100%" }}>
             <a className="app-link" href="/terms">
               Terms
             </a>
@@ -1466,7 +1467,7 @@ async function updatePassword() {
             </a>
           </div>
 
-          <div style={{ fontSize: 12, opacity: 0.7, letterSpacing: 0.2 }}>V2.1</div>
+          <div style={{ width: "100%", fontSize: 12, opacity: 0.7, letterSpacing: 0.2 }}>Version {process.env.NEXT_PUBLIC_APP_VERSION || "2.2"}</div>
         </div>
       </div>
     </div>

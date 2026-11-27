@@ -21,11 +21,11 @@ export function prescriptionDraft(title:string,lines:unknown[]):StructuredWorkou
  for(const raw of lines){const line=typeof raw==="string"?raw:raw&&typeof raw==="object"&&"name" in raw?String(raw.name):"";if(!line.trim())continue;
  const e=readPrescription(line),n=validPrescription(e)?Number(e.sets):1;
  // Old free-form lines become editable, blank actual sets, never invented results.
- for(let i=0;i<n&&rows.length<250;i++)rows.push({name:e.name||line,sets:"1",reps:"",weight:"",unit:"",completed:false,targetReps:e.reps,targetLoad:e.load,targetRest:e.rest,note:e.notes});
+ for(let i=0;i<n&&rows.length<250;i++)rows.push({name:e.name||line,sets:"1",reps:"",weight:"",unit:"",completed:false,planned:true,prescribedName:e.name||line,targetReps:e.reps,targetLoad:e.load,targetRest:e.rest,note:e.notes});
  }
  return {workoutName:title,rows};
 }
 export function actualSetRows(draft:StructuredWorkout){
- return (draft.rows||[]).filter(r=>r.completed&&r.name.trim()&&/^\d+$/.test(r.reps||"")&&Number(r.reps)>0&&Number(r.reps)<=3600&&(r.weight===""||r.weight==null||/^\d+(?:\.\d+)?$/.test(r.weight)&&Number(r.weight)<=2000)).map(r=>({name:r.name.trim(),reps:/\b(sec|min)$/i.test(r.targetReps||"")?null:Number(r.reps),duration_seconds:/\b(sec|min)$/i.test(r.targetReps||"")?Number(r.reps):null,weight:r.weight===""||r.weight==null?null:Number(r.weight),unit:r.unit==="kg"?"kg":r.unit==="lb"?"lb":null,completed:true}));
+ return (draft.rows||[]).filter(r=>r.completed&&!r.skipped&&r.name.trim()&&/^\d+$/.test(r.reps||"")&&Number(r.reps)>0&&Number(r.reps)<=3600&&(r.weight===""||r.weight==null||/^\d+(?:\.\d+)?$/.test(r.weight)&&Number(r.weight)<=2000)).map(r=>({name:r.name.trim(),reps:/\b(sec|min)$/i.test(r.targetReps||"")?null:Number(r.reps),duration_seconds:/\b(sec|min)$/i.test(r.targetReps||"")?Number(r.reps):null,weight:r.weight===""||r.weight==null?null:Number(r.weight),unit:r.unit==="kg"?"kg":r.unit==="lb"?"lb":null,completed:true}));
 }
 export function actualLiftText(draft:StructuredWorkout){return actualSetRows(draft).filter(r=>r.weight!==null&&r.weight>0&&r.unit!==null&&r.reps!==null).map(r=>r.name+": "+r.weight+" "+r.unit+" x "+r.reps).join("\n");}

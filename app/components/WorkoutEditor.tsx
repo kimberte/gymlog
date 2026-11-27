@@ -1857,13 +1857,13 @@ return (
                       </button>
                     </div>
                   );
-                });})()}
+                })}
               </div>
             </div>
           )}
         </div>
       );
-    })}
+    });})()}
   </div>
 
   <div style={{ marginTop: 12 }}>

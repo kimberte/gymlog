@@ -7,7 +7,7 @@ import {
 } from "react";
 import { WorkoutEntry, WorkoutMap, getDayEntries } from "../lib/storage";
 import "./WorkoutEditorCompact.css";
-import {prescriptionDraft,actualSetRows,actualLiftText} from "../lib/structuredCoaching";
+import {prescriptionDraft,actualSetRows,actualLiftText,suggestedActual,validActual,canonicalExercise} from "../lib/structuredCoaching";
 import { getSessionUser } from "../lib/backup";
 import { supabase } from "../lib/supabaseClient";
 import { compressImageToWebp } from "../lib/imageCompress";
@@ -588,8 +588,9 @@ function addNextSetFromLastRow() {
 function toggleRowCompleted(idx: number) {
   const row = (activeStructured.rows || [])[idx] as any;
   if (!row) return;
-  if(!row.completed&&(!/^\d+$/.test(row.reps||"")||Number(row.reps)<1||(row.weight&&(!/^\d+(?:\.\d+)?$/.test(row.weight)||!row.unit)))){toast("Enter actual reps (or seconds) and select a unit for any weight before marking the set complete.");return;}
-  updateActiveStructuredRow(idx, { completed: !row.completed,skipped:false } as any);
+  const filled=coached?suggestedActual(row):row;
+  if(!row.completed&&!validActual(filled)){toast("Enter actual reps or seconds and select a unit for any weight.");return;}
+  updateActiveStructuredRow(idx,row.completed?{completed:false}:{...filled,completed:true,skipped:false});
 }
 
 function parseNumeric(val: any): number {
@@ -656,7 +657,7 @@ function renameExerciseInGroup(groupKey: string, nextName: string) {
 function addExercisePrompt() {
   const name = window.prompt("Exercise name?", "");
   if (name == null) return;
-  const clean = String(name).trim();
+  const clean = canonicalExercise(String(name).trim());
   if (!clean) return;
 
   const setsStr = window.prompt("How many sets?", "3");
@@ -828,7 +829,7 @@ function exerciseGroupVolume(indices: number[]) {
     toast("Workout removed");
   }
 
-  function persistEntriesToWorkouts(nextEntries: EntryWithMedia[]) {
+  function persistEntriesToWorkouts(nextEntries: EntryWithMedia[], confirmedDraft?:StructuredWorkout) {
     const next = { ...(workouts as any) };
     const day =
       (next as any)[date] && typeof (next as any)[date] === "object"
@@ -845,7 +846,7 @@ function exerciseGroupVolume(indices: number[]) {
 
       // Only exercises are shown in the UI, but we still store a structured payload
       // inside notes to preserve round-trip without changing storage schema.
-      const draft = structuredByEntryId[id] ?? (id.startsWith("trainer_")?prescriptionDraft(e.title,String(e.trainerPrescription||e.notes||"").split("\n")):{workoutName:e.title,rows:[]});
+      const draft = (id===activeId?confirmedDraft:undefined) ?? structuredByEntryId[id] ?? (id.startsWith("trainer_")?prescriptionDraft(e.title,String(e.trainerPrescription||e.notes||"").split("\n")):{workoutName:e.title,rows:[]});
 
       const extra = extraNotesByEntryId[id] ?? (id.startsWith("trainer_")&&e.notes===e.trainerPrescription?"":removeStructuredBlock(String(e.notes ?? "")));
       const compiled = compileStructuredBlock(draft);
@@ -859,7 +860,7 @@ function exerciseGroupVolume(indices: number[]) {
       title: String(e.title ?? ""),
       notes: buildNotes(e),
       mode: (e.id.startsWith("trainer_")||modeByEntryId[e.id]==="structured"?"structured":"plain") as WorkoutEntry["mode"],
-      structured: e.id.startsWith("trainer_")||modeByEntryId[e.id]==="structured"?(structuredByEntryId[e.id]??e.structured??prescriptionDraft(e.title,String(e.trainerPrescription||"").split("\n"))):undefined,
+      structured: e.id.startsWith("trainer_")||modeByEntryId[e.id]==="structured"?((e.id===activeId?confirmedDraft:undefined)??structuredByEntryId[e.id]??e.structured??prescriptionDraft(e.title,String(e.trainerPrescription||"").split("\n"))):undefined,
       media: (e as any)?.media ?? null,
       completedAt: e.completedAt ?? null,
     }));
@@ -875,27 +876,33 @@ function exerciseGroupVolume(indices: number[]) {
 
   async function syncStructuredTrainer(e:WorkoutEntry,completed?:boolean){
     const draft=e.structured as StructuredWorkout|undefined;
-    if(!draft)return;
+    if(!draft)return false;
     const log={notes:removeStructuredBlock(e.notes),actual_sets:actualSetRows(draft),structured_actual_sets:actualLiftText(draft),structured_workout:draft};
     const {error}=await supabase.rpc("save_structured_trainer_workout",{p_workout_id:e.id.slice(8),p_prescription:e.trainerPrescription??"",p_log:log,p_completed:completed??null});
-    if(error){toast("Saved locally, but trainer results could not sync: "+error.message);return;}
-
+    if(error){toast("Trainer results could not sync: "+error.message);return false;}
+    return true;
   }
 
-  function toggleWorkoutComplete() {
+  async function toggleWorkoutComplete() {
     if (!active || !hasContent(active)) {
       toast("Add a workout before marking it complete");
       return;
     }
-    if(coached&&!active.completedAt&&activeStructured.rows.some(r=>r.planned&&!r.completed&&!r.skipped)){toast("Complete or explicitly skip each prescribed set before marking the workout complete.");return;}
+    let confirmedDraft=activeStructured;
+    if(activeMode==="structured"&&!active.completedAt){
+      const candidates=activeStructured.rows.map(row=>coached?suggestedActual(row):row);
+      const ready=candidates.filter(row=>!row.completed&&!row.skipped&&validActual(row)).length;
+      const incomplete=candidates.filter(row=>!row.completed&&!row.skipped&&!validActual(row)).length;
+      if((ready||incomplete)&&!window.confirm("Confirm "+ready+" additional set(s) using the displayed reps and weights?"+(incomplete?" "+incomplete+" unfinished set(s) will be marked skipped.":"")+" Only confirm sets you actually performed."))return;
+      confirmedDraft={...activeStructured,rows:candidates.map(row=>row.completed||row.skipped?row:validActual(row)?{...row,completed:true,skipped:false}:{...row,completed:false,skipped:true})};
+    }
     const nextCompletedAt = active.completedAt ? null : new Date().toISOString();
-    const nextEntries = entries.map((e, i) =>
-      i === activeIdx ? { ...e, completedAt: nextCompletedAt } : e
-    );
+    if(coached){const ok=await syncStructuredTrainer({...active,structured:confirmedDraft,notes:activeExtraNotes,completedAt:nextCompletedAt},Boolean(nextCompletedAt));if(!ok)return;}
+    if(activeMode==="structured")setStructuredByEntryId(prev=>({...prev,[activeId]:confirmedDraft}));
+    const nextEntries=entries.map((e,i)=>i===activeIdx?{...e,completedAt:nextCompletedAt}:e);
     setEntries(nextEntries);
-    persistEntriesToWorkouts(nextEntries);
-    if (coached) { void syncStructuredTrainer({...active,structured:activeStructured,notes:activeExtraNotes,completedAt:nextCompletedAt},Boolean(nextCompletedAt)); }
-    toast(nextCompletedAt ? "Workout completed" : "Workout marked incomplete");
+    persistEntriesToWorkouts(nextEntries,confirmedDraft);
+    toast(nextCompletedAt?"Workout completed":"Workout marked incomplete");
   }
 
   function handleSave() {
@@ -1731,7 +1738,8 @@ return (
 
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {g.indices.map((rowIdx, pos) => {
-                  const r = (activeStructured.rows || [])[rowIdx] as any;
+                  const raw = (activeStructured.rows || [])[rowIdx];
+                  const r = coached?suggestedActual(raw):raw;
                   const done = Boolean(r?.completed);
                   const rowVol = computeRowVolume(r as any);
 
@@ -1769,7 +1777,7 @@ return (
                       <input
                         value={r?.reps ?? ""}
                         onChange={(e) =>
-                          updateActiveStructuredRow(rowIdx, { reps: sanitizeIntInput(e.target.value) } as any)
+                          updateActiveStructuredRow(rowIdx, { reps: sanitizeIntInput(e.target.value),repsEdited:true } as any)
                         }
                         placeholder={/\b(sec|min)$/i.test(r?.targetReps||"")?"Seconds":r?.targetReps||"Reps"}
                         aria-label={r?.targetReps?.match(/sec|min/i)?"Actual duration in seconds":"Actual reps"}
@@ -1788,11 +1796,11 @@ return (
                         }}
                       />
 
-                      <div style={{ position: "relative", flex: "1 1 160px", minWidth: 0 }}><select aria-label="Weight unit" value={r?.unit||""} onChange={e=>updateActiveStructuredRow(rowIdx,{unit:e.target.value as StructuredExerciseRow["unit"]})} style={{width:"100%",fontSize:11,marginBottom:4}}><option value="">Unit</option><option value="lb">lb</option><option value="kg">kg</option></select>
+                      <div style={{ position: "relative", flex: "1 1 160px", minWidth: 0 }}><select aria-label="Weight unit" value={r?.unit||""} onChange={e=>updateActiveStructuredRow(rowIdx,{unitEdited:true,unit:e.target.value as StructuredExerciseRow["unit"]})} style={{width:"100%",fontSize:11,marginBottom:4}}><option value="">Unit</option><option value="lb">lb</option><option value="kg">kg</option></select>
                         <input
                           value={r?.weight ?? ""}
                           onChange={(e) =>
-                            updateActiveStructuredRow(rowIdx, { weight: sanitizeDecimalInput(e.target.value) } as any)
+                            updateActiveStructuredRow(rowIdx, { weight: sanitizeDecimalInput(e.target.value),weightEdited:true } as any)
                           }
                           placeholder={r?.targetLoad||"Weight"}
                           aria-label="Actual weight"

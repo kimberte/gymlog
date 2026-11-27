@@ -7,6 +7,9 @@ export type StructuredExerciseRow = {
   prescribedName?: string;
   planned?: boolean;
   skipped?: boolean;
+  repsEdited?: boolean;
+  weightEdited?: boolean;
+  unitEdited?: boolean;
   sets?: string;
   reps?: string;
   weight?: string;
@@ -69,7 +72,7 @@ export function compileStructuredBlock(data: StructuredWorkout): string {
       completed: Boolean((r as any)?.completed),
       unit: (r.unit==="kg"||r.unit==="lb"?r.unit:"") as StructuredExerciseRow["unit"],
       targetReps: r.targetReps, targetLoad: r.targetLoad, targetRest: r.targetRest,
-      prescribedName:r.prescribedName, planned:Boolean(r.planned), skipped:Boolean(r.skipped),
+      prescribedName:r.prescribedName, planned:Boolean(r.planned), skipped:Boolean(r.skipped), repsEdited:Boolean(r.repsEdited), weightEdited:Boolean(r.weightEdited), unitEdited:Boolean(r.unitEdited),
     }))
     .filter((r) => r.name || r.sets || r.reps || r.weight || r.time || r.note || r.completed);
 
@@ -192,7 +195,7 @@ export function parseStructuredFromNotes(notes: string): StructuredWorkout | nul
           completed: r?.completed != null ? Boolean(r.completed) : undefined,
           unit: r.unit==="kg"||r.unit==="lb"?r.unit:"",
           targetReps: r.targetReps, targetLoad: r.targetLoad, targetRest: r.targetRest,
-      prescribedName:r.prescribedName, planned:Boolean(r.planned), skipped:Boolean(r.skipped),
+      prescribedName:r.prescribedName, planned:Boolean(r.planned), skipped:Boolean(r.skipped), repsEdited:Boolean(r.repsEdited), weightEdited:Boolean(r.weightEdited), unitEdited:Boolean(r.unitEdited),
         })),
       };
     }

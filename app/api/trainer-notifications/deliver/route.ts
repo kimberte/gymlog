@@ -1,4 +1,5 @@
 import {createClient} from "@supabase/supabase-js";
+import {deliverOwnerAlerts} from "../../../lib/ownerAlerts";
 import {timingSafeEqual} from "node:crypto";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -45,5 +46,6 @@ export async function POST(request:Request){
   }catch{failed++;}
   await db.from("coaching_delivery_queue").update({email_state:state,email_lease:null}).eq("id",row.id).eq("email_lease",now);
  }
- return Response.json({sent,skipped,failed});
+ const owner=await deliverOwnerAlerts().catch(()=>({sent:0,failed:1}));
+ return Response.json({sent,skipped,failed,owner});
 }

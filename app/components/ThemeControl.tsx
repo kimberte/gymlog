@@ -44,7 +44,7 @@ export default function ThemeControl() {
         slot.className = "settings-appearance-slot";
 
         if (legalLink?.parentElement) {
-          legalLink.parentElement.insertBefore(slot, legalLink);
+          settings.insertBefore(slot, legalLink.closest(".settings-legal-links")?.parentElement || settings.lastElementChild);
         } else {
           settings.appendChild(slot);
         }

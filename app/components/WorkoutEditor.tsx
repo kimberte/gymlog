@@ -434,7 +434,7 @@ export default function WorkoutEditor({
       rows: [],
     });
 
-  const activeExtraNotes: string = extraNotesByEntryId[activeId] ?? String(active?.notes ?? "");
+  const activeExtraNotes: string = extraNotesByEntryId[activeId] ?? (coached&&active?.notes===active?.trainerPrescription?"":String(active?.notes ?? ""));
 const activeRowVolumes = useMemo(
   () => (activeStructured.rows || []).map((r) => computeRowVolume(r)),
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -456,12 +456,13 @@ const activeTotalVolume = useMemo(
     let bestNum: number | null = null;
     let bestRaw = "";
     indices.forEach((idx) => {
-      const wRaw = String((rows[idx] as any)?.weight ?? "").trim();
-      const n = parseFirstNumber(wRaw);
+      const row=rows[idx];if(!row?.completed||!row.unit||/\b(sec|min)$/i.test(row.targetReps||""))return;
+      const wRaw = String(row.weight??"").trim();
+      const rawNum = parseFirstNumber(wRaw);const n=rawNum==null?null:rawNum*(row.unit==="lb"?0.45359237:1);
       if (n == null) return;
       if (bestNum == null || n > bestNum) {
         bestNum = n;
-        bestRaw = wRaw;
+        bestRaw = Number(n.toFixed(1))+" kg";
       }
     });
     return { bestNum, bestRaw };
@@ -491,15 +492,15 @@ const activeTotalVolume = useMemo(
     for (const d of allDates) {
       const dayEntries = getDayEntries(workouts, d);
       for (const e of dayEntries) {
-        const parsed = parseStructuredFromNotes(String((e as any)?.notes ?? ""));
+        const parsed = e.mode==="structured"&&e.structured?.rows?e.structured as StructuredWorkout:parseStructuredFromNotes(String((e as any)?.notes ?? ""));
         if (!parsed?.rows?.length) continue;
-        const groups = groupRowsByExercise(parsed.rows);
+        const actualRows=parsed.rows.filter(r=>r.completed);const groups=groupRowsByExercise(actualRows);
         for (const g of groups) {
           if (!neededKeys.has(g.key)) continue;
           if (out[g.key]) continue;
 
-          const { bestNum, bestRaw } = computeMaxWeightForIndices(parsed.rows, g.indices);
-          const reps = computeCommonReps(parsed.rows, g.indices);
+          const { bestNum, bestRaw } = computeMaxWeightForIndices(actualRows, g.indices);
+          const reps = computeCommonReps(actualRows, g.indices);
           const setCount = g.indices.length;
           const unit = weightUnitFromString(bestRaw);
 
@@ -597,13 +598,13 @@ function parseNumeric(val: any): number {
 }
 
 function computeRowVolume(r: StructuredExerciseRow): number {
-  if(!r.completed)return 0;
+  if(!r.completed||/\b(sec|min)$/i.test(r.targetReps||"")||!r.unit)return 0;
   const reps = parseNumeric((r as any)?.reps);
   const weight = parseNumeric((r as any)?.weight);
   const setsRaw = parseNumeric((r as any)?.sets);
   const sets = setsRaw > 0 ? setsRaw : 1;
   if (!reps || !weight) return 0;
-  return sets * reps * weight;
+  return sets * reps * weight * (r.unit==="kg"?1:0.45359237);
 }
 
 function normalizeExerciseKey(name: string) {
@@ -873,9 +874,9 @@ function exerciseGroupVolume(indices: number[]) {
     const draft=e.structured as StructuredWorkout|undefined;
     if(!draft)return;
     const log={notes:removeStructuredBlock(e.notes),actual_sets:actualSetRows(draft),structured_actual_sets:actualLiftText(draft),structured_workout:draft};
-    const {error}=await supabase.rpc("save_trainer_workout_log",{p_workout_id:e.id.slice(8),p_log:log});
+    const {error}=await supabase.rpc("save_structured_trainer_workout",{p_workout_id:e.id.slice(8),p_prescription:e.trainerPrescription??"",p_log:log,p_completed:completed??null});
     if(error){toast("Saved locally, but trainer results could not sync: "+error.message);return;}
-    if(completed!==undefined){const {error:completionError}=await supabase.rpc("set_trainer_workout_completion",{p_workout_id:e.id.slice(8),p_completed:completed});if(completionError)toast("Workout status could not sync: "+completionError.message);}
+
   }
 
   function toggleWorkoutComplete() {
@@ -1211,6 +1212,7 @@ function exerciseGroupVolume(indices: number[]) {
   }
 
   async function pasteFromClipboard() {
+    if(entries.some(e=>e.id.startsWith("trainer_"))){toast("Trainer workouts are structured. Add exercises or sets directly instead of pasting notebook text.");return;}
     try {
       const text = await navigator.clipboard.readText();
       if (!text) return;
@@ -1573,7 +1575,7 @@ return (
     </button>
 
     <div style={{ marginLeft: "auto", fontSize: 13, opacity: 0.9 }}>
-      <span style={{ opacity: 0.8, marginRight: 6 }}>Total volume:</span>
+      <span style={{ opacity: 0.8, marginRight: 6 }}>Total volume (kg):</span>
       <span style={{ fontWeight: 700 }}>{Math.round(activeTotalVolume).toLocaleString()}</span>
     </div>
   </div>
@@ -1689,7 +1691,7 @@ return (
                     }}
                   >
                     <span style={{ whiteSpace: "nowrap" }}>
-                      {setCount} set{setCount === 1 ? "" : "s"} • Vol {Math.round(vol).toLocaleString()}
+                      {setCount} set{setCount === 1 ? "" : "s"} • Vol {Math.round(vol).toLocaleString()} kg
                     </span>
                     {prev?.summary ? (
                       <span style={{ whiteSpace: "nowrap" }}>
@@ -1718,7 +1720,7 @@ return (
               >
                 <div />
                 <div>Set</div>
-                <div>Reps</div>
+                <div>{/\b(sec|min)$/i.test(activeStructured.rows[g.indices[0]]?.targetReps||"")?"Seconds":"Reps"}</div>
                 <div>Weight</div>
                 <div />
               </div>
@@ -1765,7 +1767,7 @@ return (
                         onChange={(e) =>
                           updateActiveStructuredRow(rowIdx, { reps: sanitizeIntInput(e.target.value) } as any)
                         }
-                        placeholder={r?.targetReps||"Reps"}
+                        placeholder={/\b(sec|min)$/i.test(r?.targetReps||"")?"Seconds":r?.targetReps||"Reps"}
                         aria-label={r?.targetReps?.match(/sec|min/i)?"Actual duration in seconds":"Actual reps"}
                         inputMode="numeric"
                         pattern="[0-9]*"

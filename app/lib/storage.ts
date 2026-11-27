@@ -30,7 +30,7 @@ export type WorkoutEntry = {
   // ✅ NEW: per-workout media (image OR video)
   media?: WorkoutMedia | null;
 
-  // legacy fields (ignored but preserved if present)
+  // Structured sessions use an explicit payload; older note blocks remain readable.
   mode?: "plain" | "structured";
   structured?: any;
 };
@@ -125,7 +125,7 @@ function normalizeEntry(raw: any, fallbackId?: string): WorkoutEntry {
 
   // If legacy structured rows exist, append readable text so users don't lose data.
   const structuredText = structuredToText(raw?.structured);
-  if (structuredText) {
+  if (structuredText && raw?.mode !== "structured" && !notes.includes("--- Structured ---") && !notes.includes("✎ Structured workout")) {
     const baseNotes = notes.trimEnd();
     notes = (baseNotes ? baseNotes + "\n" : "") + structuredText;
   }

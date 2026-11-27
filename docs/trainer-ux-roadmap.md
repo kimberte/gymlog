@@ -24,3 +24,8 @@
 - TrueCoach: https://truecoach.co/pricing/ ; https://help.truecoach.co/en/articles/3047972-the-workout-builder-basics
 - My PT Hub: https://www.mypthub.net/ ; https://www.mypthub.net/pricing/
 - Position Gym Log as affordable training-first software rather than feature-for-feature all-in-one parity. Everfit has a free five-client tier; avoid blanket cheapest claims. Retain $9 USD/20 and $25 USD/50 unless owner changes pricing. Prioritize core programming, client logging and real progress over nutrition, wearables and white label expansion.
+
+## Approved follow-up
+- Use $0.45 USD/client/month at 20 clients prominently on trainer landing, trial entry and future marketing; never imply per-client billing or that the effective rate applies to smaller rosters.
+- Move/swap a whole workout in a draft by desktop drag or destination picker; duplicate to another day/week; require confirmation when a duplicate would replace a draft. Same Program Studio for demo/live.
+- First-time trainer overview directs trainers to build a program before connecting clients. Trial status, full guided onboarding, and structured exercise groups remain follow-up work.

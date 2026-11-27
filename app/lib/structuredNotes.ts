@@ -1,4 +1,7 @@
+import type {ExerciseBlock} from "./structuredCoaching";
 export type StructuredExerciseRow = {
+  block?:ExerciseBlock;
+  blockRound?:number;
   name: string;
   unit?: "lb" | "kg" | "";
   targetReps?: string;
@@ -71,7 +74,7 @@ export function compileStructuredBlock(data: StructuredWorkout): string {
       note: String((r?.note ?? (r as any)?.notes) ?? "").trim(),
       completed: Boolean((r as any)?.completed),
       unit: (r.unit==="kg"||r.unit==="lb"?r.unit:"") as StructuredExerciseRow["unit"],
-      targetReps: r.targetReps, targetLoad: r.targetLoad, targetRest: r.targetRest,
+      targetReps: r.targetReps, targetLoad: r.targetLoad, targetRest: r.targetRest, block:r.block, blockRound:r.blockRound,
       prescribedName:r.prescribedName, planned:Boolean(r.planned), skipped:Boolean(r.skipped), repsEdited:Boolean(r.repsEdited), weightEdited:Boolean(r.weightEdited), unitEdited:Boolean(r.unitEdited),
     }))
     .filter((r) => r.name || r.sets || r.reps || r.weight || r.time || r.note || r.completed);
@@ -194,7 +197,7 @@ export function parseStructuredFromNotes(notes: string): StructuredWorkout | nul
           note: (r?.note ?? r?.notes) != null ? String(r?.note ?? r?.notes) : undefined,
           completed: r?.completed != null ? Boolean(r.completed) : undefined,
           unit: r.unit==="kg"||r.unit==="lb"?r.unit:"",
-          targetReps: r.targetReps, targetLoad: r.targetLoad, targetRest: r.targetRest,
+          targetReps: r.targetReps, targetLoad: r.targetLoad, targetRest: r.targetRest, block:r.block, blockRound:r.blockRound,
       prescribedName:r.prescribedName, planned:Boolean(r.planned), skipped:Boolean(r.skipped), repsEdited:Boolean(r.repsEdited), weightEdited:Boolean(r.weightEdited), unitEdited:Boolean(r.unitEdited),
         })),
       };

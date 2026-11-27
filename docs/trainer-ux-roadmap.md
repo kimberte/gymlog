@@ -29,3 +29,5 @@
 - Use $0.45 USD/client/month at 20 clients prominently on trainer landing, trial entry and future marketing; never imply per-client billing or that the effective rate applies to smaller rosters.
 - Move/swap a whole workout in a draft by desktop drag or destination picker; duplicate to another day/week; require confirmation when a duplicate would replace a draft. Same Program Studio for demo/live.
 - First-time trainer overview directs trainers to build a program before connecting clients. Trial status, full guided onboarding, and structured exercise groups remain follow-up work.
+
+- Initial structured supersets, giant sets and circuits: group adjacent exercises with shared rounds and post-round rest; group metadata is retained in existing prescription lines and structured result payloads. Client logs each movement by round. Ungroup before reordering individually; grouped movement removal requires ungrouping. Verify save/import/approval and mobile logging before marketing as a live feature.

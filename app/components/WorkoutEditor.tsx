@@ -7,7 +7,7 @@ import {
 } from "react";
 import { WorkoutEntry, WorkoutMap, getDayEntries } from "../lib/storage";
 import "./WorkoutEditorCompact.css";
-import {prescriptionDraft,actualSetRows,actualLiftText,suggestedActual,defaultActualUnit,validActual,canonicalExercise} from "../lib/structuredCoaching";
+import {prescriptionDraft,actualSetRows,actualLiftText,suggestedActual,defaultActualUnit,validActual,canonicalExercise,blockLabel} from "../lib/structuredCoaching";
 import { getSessionUser } from "../lib/backup";
 import { supabase } from "../lib/supabaseClient";
 import { compressImageToWebp } from "../lib/imageCompress";
@@ -565,7 +565,7 @@ function duplicateLastStructuredRow() {
   }
   const raw=rows[rows.length-1];
   const last=coached?suggestedActual(raw):defaultActualUnit(raw);
-  const nextRows = [...rows, { ...last, completed:false, skipped:false, planned:false, repsEdited:Boolean(last.reps),weightEdited:Boolean(last.weight),unitEdited:Boolean(last.unit) }];
+  const nextRows = [...rows, { ...last, block:undefined,blockRound:undefined, completed:false, skipped:false, planned:false, repsEdited:Boolean(last.reps),weightEdited:Boolean(last.weight),unitEdited:Boolean(last.unit) }];
   updateActiveStructured({ rows: nextRows });
 }
 
@@ -1606,7 +1606,7 @@ return (
   </div>
 
   <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10 }}>
-    {groupRowsByExercise(activeStructured.rows || []).map((g) => {
+    {(()=>{const rows=activeStructured.rows||[];const normal=groupRowsByExercise(rows).map(g=>({...g,indices:g.indices.filter(i=>!rows[i].block)})).filter(g=>g.indices.length);const blocks=new Map<string,number[]>();rows.forEach((r,i)=>{if(r.block)blocks.set(r.block.id,[...(blocks.get(r.block.id)||[]),i]);});const display=[...normal.map(g=>({first:g.indices[0],g,blockIndices:null as number[]|null})),...Array.from(blocks.values()).map(indices=>({first:indices[0],g:null,blockIndices:indices}))].sort((a,b)=>a.first-b.first);return display.map(({g,blockIndices,first})=>{if(blockIndices){const block=rows[first].block!;const rounds=Array.from(new Set(blockIndices.map(i=>rows[i].blockRound||1))).sort((a,b)=>a-b);return <section key={"block-"+block.id} className="structured-exercise-card structured-training-block"><header><strong>{blockLabel(block)}</strong><small>{rounds.length} rounds · {block.restSeconds}s rest after each round</small></header>{rounds.map(round=>{const indices=blockIndices.filter(i=>(rows[i].blockRound||1)===round);return <div key={round} className="structured-block-round"><strong>Round {round} · {indices.filter(i=>rows[i].completed&&!rows[i].skipped).length}/{indices.length} complete</strong>{indices.map(i=>{const r=coached?suggestedActual(rows[i]):defaultActualUnit(rows[i]);return <div key={i} className="structured-block-movement"><div><b>{r.name}</b><small>Target: {[r.targetReps,r.targetLoad,r.note].filter(Boolean).join(" · ")}</small></div><div className="structured-block-inputs"><button type="button" className="structured-set-check" aria-pressed={!!r.completed} aria-label={(r.completed?"Mark incomplete: ":"Mark complete: ")+r.name+", round "+round} onClick={()=>toggleRowCompleted(i)}>{r.completed?"✓":r.skipped?"–":""}</button><label>{/\b(sec|min)$/i.test(r.targetReps||"")?"Seconds":"Reps"}<input inputMode="numeric" value={r.reps||""} onChange={ev=>updateActiveStructuredRow(i,{reps:sanitizeIntInput(ev.target.value),repsEdited:true})}/></label><label>Weight<input inputMode="decimal" value={r.weight||""} onChange={ev=>updateActiveStructuredRow(i,{weight:sanitizeDecimalInput(ev.target.value),weightEdited:true,unit:r.unit||"lb"})}/></label><label>Unit<select value={r.unit||""} onChange={ev=>updateActiveStructuredRow(i,{unit:ev.target.value as StructuredExerciseRow["unit"],unitEdited:true})}>{!r.unit&&<option value="">Unit</option>}<option value="lb">lb</option><option value="kg">kg</option></select></label><button type="button" aria-label={r.skipped?"Restore set":"Skip set"} onClick={()=>removeActiveStructuredRow(i)}>{r.skipped?"↶":"–"}</button></div></div>})}</div>})}</section>;}if(!g)return null;
       const isCollapsed = Boolean(activeCollapsed[g.key]);
       const vol = exerciseGroupVolume(g.indices);
       const setCount = g.indices.length;
@@ -1857,7 +1857,7 @@ return (
                       </button>
                     </div>
                   );
-                })}
+                });})()}
               </div>
             </div>
           )}

@@ -1689,7 +1689,7 @@ return (
                 </button>
               </div>
 
-              {coached&&(()=>{const r=activeStructured.rows[g.indices[0]];return <small style={{color:"var(--muted)",marginTop:5}}>{r?.prescribedName&&r.prescribedName!==r.name?"Substituted for "+r.prescribedName+" · ":""}Target: {[r?.targetReps,r?.targetLoad,r?.targetRest&&"Rest "+r.targetRest].filter(Boolean).join(" · ")||"Review exercise with coach"}{r?.note?" · "+r.note:""}</small>})()}
+              {coached&&!!activeStructured.rows[g.indices[0]]?.alternatives?.length&&<label style={{fontSize:12}}>Coach-approved alternative<select value="" onChange={ev=>{if(ev.target.value)renameExerciseInGroup(g.key,ev.target.value)}}><option value="">Choose substitution</option>{[activeStructured.rows[g.indices[0]].prescribedName,...(activeStructured.rows[g.indices[0]].alternatives||[])].filter(Boolean).map(x=><option key={x}>{x}</option>)}</select></label>}{coached&&(()=>{const r=activeStructured.rows[g.indices[0]];return <small style={{color:"var(--muted)",marginTop:5}}>{r?.prescribedName&&r.prescribedName!==r.name?"Substituted for "+r.prescribedName+" · ":""}Target: {[r?.targetReps,r?.targetLoad,r?.targetRest&&"Rest "+r.targetRest].filter(Boolean).join(" · ")||"Review exercise with coach"}{r?.note?" · "+r.note:""}</small>})()}
               {(() => {
                 const prev = prevStatsByExerciseKey[g.key];
                 const curMax = computeMaxWeightForIndices(activeStructured.rows || [], g.indices).bestNum;
@@ -1788,7 +1788,7 @@ return (
                         {done ? "✓" : r.skipped ? "–" : ""}
                       </button>
 
-                      <div style={{ fontSize: 12, opacity: 0.8 }}>#{pos + 1}{r?.skipped?<small style={{display:"block",fontSize:9}}>Skipped</small>:null}</div>
+                      <div style={{ fontSize: 12, opacity: 0.8 }}>#{pos + 1}{r?.setType&&r.setType!=="normal"&&<small style={{display:"block",fontSize:9}}>{r.setType}</small>}{r?.skipped?<small style={{display:"block",fontSize:9}}>Skipped</small>:null}</div>
 
                       <input
                         value={r?.reps ?? ""}
@@ -1855,6 +1855,7 @@ return (
                       >
                         {coached&&r?.planned?(r.skipped?"↶":"–"):"✕"}
                       </button>
+                      {coached&&r.setType&&<div className="structured-set-target-detail" style={{gridColumn:"2/-1"}}>Target: {[r.targetReps,r.targetLoad,r.targetRest&&"Rest "+r.targetRest,r.targetRpe&&"RPE "+r.targetRpe,r.targetRir&&"RIR "+r.targetRir,r.targetTempo&&"Tempo "+r.targetTempo].filter(Boolean).join(" · ")}{(r.targetRpe||r.targetRir)&&<div style={{display:"flex",gap:8}}>{r.targetRpe&&<label>Actual RPE<input inputMode="decimal" value={r.actualRpe||""} onChange={ev=>updateActiveStructuredRow(rowIdx,{actualRpe:ev.target.value})}/></label>}{r.targetRir&&<label>Actual RIR<input inputMode="numeric" value={r.actualRir||""} onChange={ev=>updateActiveStructuredRow(rowIdx,{actualRir:ev.target.value})}/></label>}</div>}</div>}
                     </div>
                   );
                 })}

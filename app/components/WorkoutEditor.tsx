@@ -51,6 +51,7 @@ type WorkoutMediaMeta =
 type EntryWithMedia = WorkoutEntry & { media?: WorkoutMediaMeta };
 
 type Props = {
+  demoMode?: boolean;
   date: string; // YYYY-MM-DD
   workouts: WorkoutMap;
   setWorkouts: (w: WorkoutMap) => void;
@@ -214,6 +215,7 @@ async function readVideoMeta(file: File): Promise<{
 }
 
 export default function WorkoutEditor({
+  demoMode=false,
   date,
   workouts,
   setWorkouts,
@@ -381,6 +383,7 @@ export default function WorkoutEditor({
 
   // Load signed-in user (Pro gating)
   useEffect(() => {
+    if(demoMode)return;
     let cancelled = false;
     (async () => {
       const user = await getSessionUser();
@@ -803,7 +806,7 @@ function exerciseGroupVolume(indices: number[]) {
     const ok = window.confirm("Delete this workout?");
     if (!ok) return;
     const removedId=String(entries[activeIdx]?.id||"");
-    if(removedId.startsWith("trainer_")){
+    if(!demoMode&&removedId.startsWith("trainer_")){
       const {error}=await supabase.rpc("remove_trainer_workouts",{p_workout_ids:[removedId.slice(8)]});
       if(error){toast("Could not remove trainer workout: "+error.message);return;}
     }
@@ -827,7 +830,7 @@ function exerciseGroupVolume(indices: number[]) {
       setWorkouts(next as any);
       onSaved?.(next as any);
       // Best-effort: remove from community snapshot if enabled
-      void deleteWorkoutDay({ dateKey: date });
+      if(!demoMode)void deleteWorkoutDay({ dateKey: date });
       toast("Workout deleted");
       onClose();
       return;
@@ -886,6 +889,7 @@ function exerciseGroupVolume(indices: number[]) {
   }
 
   async function syncStructuredTrainer(e:WorkoutEntry,completed?:boolean){
+    if(demoMode)return true;
     const draft=e.structured as StructuredWorkout|undefined;
     if(!draft)return false;
     const log={notes:removeStructuredBlock(e.notes),actual_sets:actualSetRows(draft),structured_actual_sets:actualLiftText(draft),structured_workout:draft};
@@ -975,7 +979,7 @@ function exerciseGroupVolume(indices: number[]) {
     setWorkouts(next as any);
     onSaved?.(next as any);
     // Best-effort: publish/remove community snapshot if enabled
-    void publishWorkoutDay({ dateKey: date, workouts: next as any });
+    if(!demoMode)void publishWorkoutDay({ dateKey: date, workouts: next as any });
     toast("Saved");
   }
 
@@ -1010,11 +1014,12 @@ function exerciseGroupVolume(indices: number[]) {
     setWorkouts(next as any);
     onSaved?.(next as any);
     // Best-effort: update community snapshot if enabled
-    void publishWorkoutDay({ dateKey: date, workouts: next as any });
+    if(!demoMode)void publishWorkoutDay({ dateKey: date, workouts: next as any });
     toast(nextPb ? "Marked PB" : "PB cleared");
   }
 
   async function handlePickFile(file: File) {
+    if(demoMode)return;
     if (!sessionUserId) {
       toast("Sign in to upload");
       return;
@@ -1173,6 +1178,7 @@ function exerciseGroupVolume(indices: number[]) {
   }
 
   async function handleRemoveMedia() {
+    if(demoMode)return;
     if (!sessionUserId) {
       toast("Sign in to manage media");
       return;
@@ -1317,6 +1323,7 @@ function exerciseGroupVolume(indices: number[]) {
 
   
   async function handleShare() {
+    if(demoMode){toast("Sharing is disabled in this fictional demo.");return;}
     try {
       const t = String(active?.title ?? "").trim() || "Workout";
       const n = String(active?.notes ?? "").trim();
@@ -1365,7 +1372,7 @@ return (
         </button>
 
         <div className="editor-header">
-          <div className="editor-date">{formatDisplayDate(date)}</div>
+          <div className="editor-date">{formatDisplayDate(date)}{demoMode&&" · DEMO CLIENT"}</div>
 
           <input
             className="editor-title"
@@ -2131,7 +2138,7 @@ return (
           <button onClick={copyToClipboard} className="secondary">
             Copy
           </button>
-          <button onClick={pasteFromClipboard} className="secondary">
+          <button disabled={demoMode} onClick={pasteFromClipboard} className="secondary">
             Paste
           </button>
 
@@ -2139,7 +2146,7 @@ return (
             Delete
           </button>
 
-          <button onClick={handleShare} className="secondary">
+          <button disabled={demoMode} onClick={handleShare} className="secondary">
             Share
           </button>
 

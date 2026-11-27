@@ -1,5 +1,9 @@
 export type StructuredExerciseRow = {
   name: string;
+  unit?: "lb" | "kg" | "";
+  targetReps?: string;
+  targetLoad?: string;
+  targetRest?: string;
   sets?: string;
   reps?: string;
   weight?: string;
@@ -60,6 +64,8 @@ export function compileStructuredBlock(data: StructuredWorkout): string {
       time: String(r?.time ?? "").trim(),
       note: String((r?.note ?? (r as any)?.notes) ?? "").trim(),
       completed: Boolean((r as any)?.completed),
+      unit: r.unit==="kg"||r.unit==="lb"?r.unit:"",
+      targetReps: r.targetReps, targetLoad: r.targetLoad, targetRest: r.targetRest,
     }))
     .filter((r) => r.name || r.sets || r.reps || r.weight || r.time || r.note || r.completed);
 
@@ -180,6 +186,8 @@ export function parseStructuredFromNotes(notes: string): StructuredWorkout | nul
           time: r?.time != null ? String(r.time) : undefined,
           note: (r?.note ?? r?.notes) != null ? String(r?.note ?? r?.notes) : undefined,
           completed: r?.completed != null ? Boolean(r.completed) : undefined,
+          unit: r.unit==="kg"||r.unit==="lb"?r.unit:"",
+          targetReps: r.targetReps, targetLoad: r.targetLoad, targetRest: r.targetRest,
         })),
       };
     }

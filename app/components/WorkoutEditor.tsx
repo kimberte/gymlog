@@ -561,8 +561,9 @@ function duplicateLastStructuredRow() {
     addActiveStructuredRow();
     return;
   }
-  const last = rows[rows.length - 1] || ({} as any);
-  const nextRows = [...rows, { ...last, completed:false, skipped:false, planned:false, reps:coached?"":last.reps,weight:coached?"":last.weight }];
+  const raw=rows[rows.length-1];
+  const last=coached?suggestedActual(raw):defaultActualUnit(raw);
+  const nextRows = [...rows, { ...last, completed:false, skipped:false, planned:false, repsEdited:Boolean(last.reps),weightEdited:Boolean(last.weight),unitEdited:Boolean(last.unit) }];
   updateActiveStructured({ rows: nextRows });
 }
 
@@ -1711,7 +1712,7 @@ return (
                     }}
                   >
                     <span style={{ whiteSpace: "nowrap" }}>
-                      {setCount} set{setCount === 1 ? "" : "s"} • Vol {Math.round(vol/0.45359237).toLocaleString()} lb
+                      {g.indices.filter(i=>activeStructured.rows[i]?.completed&&!activeStructured.rows[i]?.skipped).length}/{setCount} sets complete • Vol {Math.round(vol/0.45359237).toLocaleString()} lb
                     </span>
                     {prev?.summary ? (
                       <span style={{ whiteSpace: "nowrap" }}>
@@ -1810,7 +1811,7 @@ return (
                         <input
                           value={r?.weight ?? ""}
                           onChange={(e) =>
-                            updateActiveStructuredRow(rowIdx, { weight: sanitizeDecimalInput(e.target.value),weightEdited:true } as any)
+                            updateActiveStructuredRow(rowIdx, { weight: sanitizeDecimalInput(e.target.value),weightEdited:true,unit:r.unit||"lb" } as any)
                           }
                           placeholder={r?.targetLoad||"Weight"}
                           aria-label="Actual weight"

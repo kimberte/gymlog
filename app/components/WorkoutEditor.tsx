@@ -396,7 +396,7 @@ export default function WorkoutEditor({
   }, []);
 
   useEffect(() => {
-    if (!sessionUserId) {
+    if (demoMode||!sessionUserId) {
       setProStatus({ isPro: false, reason: "signed_out" });
       return;
     }
@@ -767,7 +767,7 @@ function exerciseGroupVolume(indices: number[]) {
       setMediaOpen(false);
 
       const media = (active as any)?.media as WorkoutMediaMeta;
-      if (!sessionUserId || !media?.path) return;
+      if (demoMode||!sessionUserId || !media?.path) return;
 
       try {
         const url = await getWorkoutMediaSignedUrl(String(media.path), 3600);

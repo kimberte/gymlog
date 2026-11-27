@@ -425,6 +425,8 @@ export default function WorkoutEditor({
   }, [date]);
 
   const active = entries[activeIdx] ?? entries[0];
+  const localToday=()=>{const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-");};
+  const futureCompletionBlocked=date>localToday()&&!active?.completedAt;
 
   const activeId = String(active?.id ?? "w1");
   const coached=activeId.startsWith("trainer_");
@@ -888,6 +890,7 @@ function exerciseGroupVolume(indices: number[]) {
 
   async function toggleWorkoutComplete() {
     if(completionLock.current)return;
+    if(date>localToday()&&!active?.completedAt){toast("You can mark this workout complete on its scheduled date.");return;}
     if (!active || !hasContent(active)) {
       toast("Add a workout before marking it complete");
       return;
@@ -1428,7 +1431,8 @@ return (
           <button
             type="button"
             onClick={toggleWorkoutComplete}
-            disabled={completionBusy}
+            disabled={completionBusy||futureCompletionBlocked}
+            title={futureCompletionBlocked?"Available on the scheduled date":undefined}
             className="workout-completion-button"
             aria-pressed={Boolean(active?.completedAt)}
             style={{
@@ -1440,8 +1444,9 @@ return (
               fontWeight: 600, cursor: "pointer"
             }}
           >
-            {completionBusy?"Saving…":active?.completedAt ? "✓ Completed · Undo" : "✓ Mark Complete"}
+            {completionBusy?"Saving…":futureCompletionBlocked?"Scheduled · Not available yet":active?.completedAt ? "✓ Completed · Undo" : "✓ Mark Complete"}
           </button>
+          {futureCompletionBlocked&&<p className="future-completion-hint">You can log and edit this workout now. Mark it complete on or after {formatDisplayDate(date)}.</p>}
           {/* Editor mode toggle */}
           {coached?<p style={{fontSize:12,color:"var(--muted)",margin:"8px 0"}}>Trainer-assigned · Structured workout</p>:<div
             style={{

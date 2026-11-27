@@ -18,3 +18,5 @@ html[data-theme="light"] .editor .structured-workout-panel :is(input,select,butt
 html[data-theme="light"] .editor .structured-set-check[aria-pressed="true"]{color:white!important}
 html[data-theme="light"] .editor .workout-completion-button[aria-pressed="true"]{color:#146c3b!important;border-color:#16834b!important;background:#e5f7eb!important}
 @media(max-width:420px){.editor .structured-weight-field{grid-template-columns:minmax(0,1fr) 42px}.editor .structured-workout-panel{padding:6px!important}.editor .structured-exercise-card>div{padding:8px!important}}
+
+.editor .workout-completion-button:disabled{cursor:not-allowed!important;background:color-mix(in srgb,var(--text) 7%,var(--surface))!important;color:var(--muted)!important;border-color:var(--border)!important;opacity:1!important}.editor .future-completion-hint{font-size:12px;color:var(--muted);margin:5px 0 8px}

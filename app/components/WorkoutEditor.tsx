@@ -696,9 +696,11 @@ function addExercisePrompt() {
   if (!clean) return;
 
   const setsStr = window.prompt("How many sets?", "3");
+  if(setsStr===null)return;
   const setsN = Math.max(1, Math.min(20, parseInt(String(setsStr || "1"), 10) || 1));
 
   const nextRows = [...(activeStructured.rows || [])];
+  if(nextRows.length+setsN>250){toast("Maximum 250 sets per workout.");return;}
   for (let i = 0; i < setsN; i++) {
     nextRows.push({ name: clean, sets: "", reps: "", weight: "", unit:"lb", completed: false } as any);
   }
@@ -980,7 +982,7 @@ function exerciseGroupVolume(indices: number[]) {
       completedAt: e.completedAt ?? null,
       }));
 
-    const cleaned = merged.filter((e) => hasContent(e) || (e as any)?.media?.path);
+    const cleaned = merged.filter(e=>e.mode!=="structured"?hasContent(e)||!!e.media?.path:!!(e.title.trim()||removeStructuredBlock(e.notes).trim()||e.media?.path||e.completedAt||e.structured?.rows?.some((r:StructuredExerciseRow)=>r.name?.trim()||r.reps||r.weight||r.note)));
     for (const e of merged) { const old=getDayEntries(workouts,date).find(x=>x.id===e.id);if(e.id.startsWith("trainer_")&&(e.id===activeId||JSON.stringify(old?.structured)!==JSON.stringify(e.structured))){void syncStructuredTrainer(e);} }
 
     const next = { ...(workouts as any) };
@@ -1245,15 +1247,19 @@ function exerciseGroupVolume(indices: number[]) {
     }
   }
 
-  // ✅ Copy ALL workouts (up to 3) for this day: title + notes (media NOT copied)
+  // Copy the current draft, including structured targets and notes, not only the last saved snapshot.
   async function copyToClipboard() {
+    if(personalPlanning){toast("Apply or cancel your workout plan first.");return;}
     try {
       const cleaned = entries
         .slice(0, 3)
-        .map((e) => ({
-          title: String(e?.title ?? ""),
-          notes: String(e?.notes ?? ""),
-        }))
+        .map((e) => {
+          const structured=e.id.startsWith("trainer_")||(modeByEntryId[e.id]??(e.mode==="structured"?"structured":"notebook"))==="structured";
+          const draft=structuredByEntryId[e.id]??e.structured??(e.id.startsWith("trainer_")?prescriptionDraft(e.title,String(e.trainerPrescription||"").split("\n")):undefined);
+          const extra=extraNotesByEntryId[e.id]??(e.notes===e.trainerPrescription?"":removeStructuredBlock(e.notes||""));
+          const meaningful=!!draft?.rows?.some((r:StructuredExerciseRow)=>r.name||r.reps||r.weight||r.note);
+          return {title:String(e.title??""),notes:structured?(meaningful?upsertStructuredBlock(extra,compileStructuredBlock({...draft,workoutName:e.title})):extra):String(e.notes??"")};
+        })
         .filter(hasContent);
 
       if (cleaned.length === 0) {
@@ -1274,6 +1280,7 @@ function exerciseGroupVolume(indices: number[]) {
   }
 
   async function pasteFromClipboard() {
+    if(personalPlanning){toast("Apply or cancel your workout plan first.");return;}
     if(entries.some(e=>e.id.startsWith("trainer_"))){toast("Trainer workouts are structured. Add exercises or sets directly instead of pasting notebook text.");return;}
     try {
       const text = await navigator.clipboard.readText();
@@ -1282,13 +1289,14 @@ function exerciseGroupVolume(indices: number[]) {
       // Day payload
       const dayParsed = safeJsonParse<ClipboardDay>(text);
       if (dayParsed && dayParsed.kind === CLIPBOARD_DAY_KIND) {
-        const incoming = (dayParsed.entries ?? [])
+        const incoming = (Array.isArray(dayParsed.entries)?dayParsed.entries:[])
           .slice(0, 3)
           .map((e, i) => ({
-            id: `w${i + 1}`,
+            id: `w_${crypto.randomUUID()}_${i}`,
             title: String(e?.title ?? ""),
             notes: String(e?.notes ?? ""),
             media: null,
+            mode:parseStructuredFromNotes(String(e?.notes??""))?"structured" as const:"plain" as const,
           }))
           .filter(hasContent);
 
@@ -1297,7 +1305,8 @@ function exerciseGroupVolume(indices: number[]) {
           return;
         }
 
-        setEntries(incoming.length ? (incoming as any) : [{ id: "w1", title: "", notes: "", media: null }]);
+        if(entries.some(e=>hasContent(e)||e.media?.path||structuredByEntryId[e.id]?.rows?.length)&&!window.confirm("Replace the workouts currently open for this date with the copied workouts? Save any changes you want to keep first."))return;
+        setEntries(incoming);
         setActiveIdx(0);
 
         toast(`Pasted ${incoming.length} workout${incoming.length === 1 ? "" : "s"}`);
@@ -1310,6 +1319,11 @@ function exerciseGroupVolume(indices: number[]) {
         const incomingTitle = String(oneParsed.title ?? "").trim();
         const incomingNotes = String(oneParsed.notes ?? "");
 
+        if(activeMode==="structured"){
+          const incomingStructured=parseStructuredFromNotes(incomingNotes);
+          if(incomingStructured?.rows.length){toast("Copy and paste the full workout day to preserve structured exercises.");return;}
+          updateActive({title:active?.title?.trim()||incomingTitle});updateActiveExtraNotes([activeExtraNotes.trimEnd(),incomingNotes].filter(Boolean).join("\n"));toast("Pasted into workout notes");return;
+        }
         const currentTitle = String(active?.title ?? "").trim();
         const currentNotes = String(active?.notes ?? "").trimEnd();
 
@@ -1325,7 +1339,8 @@ function exerciseGroupVolume(indices: number[]) {
         return;
       }
 
-      // Plain text fallback
+      // Plain text belongs in the extra notes field when logging a structured workout.
+      if(activeMode==="structured"){updateActiveExtraNotes([activeExtraNotes.trimEnd(),text].filter(Boolean).join("\n"));toast("Pasted into workout notes");return;}
       const merged = String(active?.notes ?? "").trimEnd();
       const next = merged ? merged + "\n" + text : text;
       updateActive({ notes: next });

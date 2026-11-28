@@ -1449,7 +1449,12 @@ function exerciseGroupVolume(indices: number[]) {
     if(demoMode){toast("Sharing is disabled in this fictional demo.");return;}
     try {
       const t = String(active?.title ?? "").trim() || "Workout";
-      const n = String(active?.notes ?? "").trim();
+      const n = activeMode==="structured"
+        ? [...(activeStructured.rows||[]).filter(r=>r.completed===true&&!r.skipped&&r.name.trim()&&String(r.reps||"").trim()).map(r=>{
+            const timed=/\b(sec|min)$/i.test(r.targetReps||"");
+            return r.name+" — "+(timed?r.reps+" sec":r.reps+" reps")+(!timed&&r.weight&&r.unit?" × "+r.weight+" "+r.unit:"");
+          }),activeExtraNotes.trim()].filter(Boolean).join("\n")
+        : removeStructuredBlock(String(active?.notes??"")).trim();
       const dateLabel = formatDisplayDate(date);
 
       let media: { kind: "image" | "video"; url: string } | null = null;
@@ -1476,6 +1481,7 @@ function exerciseGroupVolume(indices: number[]) {
         title: t,
         notes: n,
         media,
+        status:active?.completedAt?"Completed":date>localToday()?"Scheduled":"Workout log",
       });
 
       if (res.kind === "shared") toast("Shared");

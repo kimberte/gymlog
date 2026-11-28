@@ -1,4 +1,4 @@
-import {readPrescription,validPrescription,prescriptionDraft,canonicalExercise} from "./structuredCoaching";
+import {readPrescription,validPrescription,prescriptionDraft,canonicalExercise,formatProgramPrescription} from "./structuredCoaching";
 import {compileStructuredBlock,upsertStructuredBlock,type StructuredExerciseRow,type StructuredWorkout} from "./structuredNotes";
 
 /** Convert explicit prescriptions only. Retain the original text for anything that cannot be faithfully mapped. */
@@ -7,14 +7,14 @@ export function structuredProgramImport(title:string,lines:string[],originalNote
  for(const line of lines){
    if(!line.trim())continue;
    const parsed=readPrescription(line);
-   if(validPrescription(parsed)){
+   if(validPrescription(parsed)&&!/\d\s*(?:m|meters?|metres?|km|mi|miles?|yards?|yd|ft)\b/i.test(line.split(" · ")[0])){
      const draft=prescriptionDraft(title,[line]);
      // Non-numeric prescriptions (e.g. RPE, %1RM or bodyweight) are instructions, not actual weights.
      for(const r of draft.rows){
        if(r.targetLoad&&!/^\d+(?:\.\d+)?\s*(?:kg|lbs?)?$/i.test(r.targetLoad.trim())){
          r.targetLoad="";review++;
        }
-       r.note=line;
+       r.note=formatProgramPrescription(line);
      }
      rows.push(...draft.rows);
    }else{

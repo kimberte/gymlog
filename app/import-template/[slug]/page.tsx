@@ -8,6 +8,7 @@ import { getProgram } from "../../lib/programs";
 import { loadWorkouts, loadDefaultWorkoutMode, type DefaultWorkoutMode } from "../../lib/storage";
 import { getProgramWorkouts } from "../../workout-programs/programWorkouts";
 import { structuredProgramImport } from "../../lib/structuredProgramImport";
+import {formatProgramPrescription} from "../../lib/structuredCoaching";
 import styles from "./import-template.module.css";
 import { FOUNDER_SPECIAL_V2_WORKOUTS } from "../../workout-programs/founderSpecialV2";
 import { FOUNDER_SPECIAL_WORKOUTS } from "../../workout-programs/founderSpecial";
@@ -38,7 +39,7 @@ export default function ImportTemplatePage() {
   const [format,setFormat]=useState<DefaultWorkoutMode>("structured");
   const [busy,setBusy]=useState(false);
   useEffect(()=>{setFormat(loadDefaultWorkoutMode());const start=new URLSearchParams(window.location.search).get("start");if(start&&/^\d{4}-\d{2}-\d{2}$/.test(start))setStartDate(start);},[]);
-  const prepared=useMemo(()=>days.map(day=>{const original=[day.focus,day.exercises.join("\n"),day.guidance||"",`Imported from Gym Log workout program: ${name}`].filter(Boolean).join("\n\n");return {day,original,converted:format==="structured"?structuredProgramImport(day.day,day.exercises,original):null};}),[days,format,name]);
+  const prepared=useMemo(()=>days.map(day=>{const original=[day.focus,day.exercises.map(formatProgramPrescription).join("\n"),day.guidance||"",`Imported from Gym Log workout program: ${name}`].filter(Boolean).join("\n\n");return {day,original,converted:format==="structured"?structuredProgramImport(day.day,day.exercises,original):null};}),[days,format,name]);
   const needsReview=prepared.filter(x=>x.converted?.review).length;
 
   function handleImport() {

@@ -1,4 +1,5 @@
 import type { Program } from "../lib/programs";
+import {ORIGINAL_PROGRAM_BLOCKS} from "./originalProgramBlocks";
 import { SPECIFIC_PROGRAMS } from "./specificPrograms";
 import { SPECIFIC_PROGRAMS_2 } from "./specificPrograms2";
 import { SPECIFIC_PROGRAMS_3 } from "./specificPrograms3";
@@ -12,8 +13,8 @@ import { SPECIFIC_PROGRAMS_10 } from "./specificPrograms10";
 import { FOUNDER_SPECIAL_V2_WORKOUTS, FOUNDER_SPECIAL_V2_PROGRESSION, FOUNDER_SPECIAL_V2_DURATION, FOUNDER_SPECIAL_V2_ACCURACY_NOTE } from "./founderSpecialV2";
 import { FOUNDER_SPECIAL_WORKOUTS, FOUNDER_SPECIAL_PROGRESSION, FOUNDER_SPECIAL_DURATION, FOUNDER_SPECIAL_ACCURACY_NOTE } from "./founderSpecial";
 
-export type ProgramWorkout = { day: string; focus: string; exercises: string[]; guidance: string };
-const ALL_SPECIFIC_PROGRAMS = { ...SPECIFIC_PROGRAMS, ...SPECIFIC_PROGRAMS_2, ...SPECIFIC_PROGRAMS_3, ...SPECIFIC_PROGRAMS_4, ...SPECIFIC_PROGRAMS_5, ...SPECIFIC_PROGRAMS_6, ...SPECIFIC_PROGRAMS_7, ...SPECIFIC_PROGRAMS_8, ...SPECIFIC_PROGRAMS_9, ...SPECIFIC_PROGRAMS_10 };
+export type ProgramWorkout = { day: string; focus: string; exercises: string[]; guidance: string; offsetDays?:number };
+const ALL_SPECIFIC_PROGRAMS = { ...SPECIFIC_PROGRAMS, ...SPECIFIC_PROGRAMS_2, ...SPECIFIC_PROGRAMS_3, ...SPECIFIC_PROGRAMS_4, ...SPECIFIC_PROGRAMS_5, ...SPECIFIC_PROGRAMS_6, ...SPECIFIC_PROGRAMS_7, ...SPECIFIC_PROGRAMS_8, ...SPECIFIC_PROGRAMS_9, ...SPECIFIC_PROGRAMS_10, ...ORIGINAL_PROGRAM_BLOCKS };
 const strength = [["Squat", "Bench Press", "Barbell Row", "Romanian Deadlift", "Plank"],["Deadlift", "Overhead Press", "Pull-Up or Lat Pulldown", "Bulgarian Split Squat", "Curl"],["Front Squat", "Incline Bench Press", "Seated Cable Row", "Leg Curl", "Triceps Pressdown"],["Squat", "Bench Press", "Barbell Row", "Hip Thrust", "Lateral Raise"],["Deadlift", "Overhead Press", "Chin-Up", "Leg Press", "Calf Raise"],["Bench Press", "Squat", "Chest-Supported Row", "Leg Curl", "Ab Wheel"]];
 const hypertrophy = [["Bench Press", "Incline Dumbbell Press", "Cable Fly", "Lateral Raise", "Triceps Pressdown"],["Lat Pulldown", "Chest-Supported Row", "Seated Cable Row", "Dumbbell Curl", "Hammer Curl"],["Back Squat", "Romanian Deadlift", "Leg Press", "Leg Curl", "Calf Raise"],["Overhead Press", "Machine Chest Press", "Dumbbell Lateral Raise", "Rear Delt Fly", "Overhead Triceps Extension"],["Pull-Up", "One-Arm Dumbbell Row", "Lat Pulldown", "Preacher Curl", "Face Pull"],["Hack Squat", "Hip Thrust", "Leg Extension", "Seated Leg Curl", "Calf Raise"]];
 const home = [["Goblet Squat", "Dumbbell Bench Press", "One-Arm Dumbbell Row", "Romanian Deadlift", "Plank"],["Dumbbell Split Squat", "Dumbbell Overhead Press", "Dumbbell Row", "Dumbbell Curl", "Push-Up"],["Reverse Lunge", "Dumbbell Floor Press", "Band Row", "Dumbbell RDL", "Dead Bug"],["Goblet Squat", "Push-Up", "Dumbbell Row", "Hip Thrust", "Lateral Raise"],["Step-Up", "Dumbbell Shoulder Press", "Band Pulldown", "Single-Leg RDL", "Curl"],["Split Squat", "Dumbbell Press", "Dumbbell Row", "Glute Bridge", "Side Plank"]];

@@ -61,7 +61,8 @@ export default async function ExerciseDetailPage({ params }: Props) {
         </div>
       </section>
       <ExercisePickerActions name={exercise.name} slug={exercise.slug} />
-      <section className="exercise-cta"><div><h2>Want to log it manually?</h2><p>Gym Log is a notebook first. You can simply open your workout and type the exercise, sets, reps, weight and notes yourself.</p></div><Link href="/">Open Workout Log →</Link></section>
+      <section className="exercise-cta"><div><h2>Want to log it manually?</h2><p>Open a structured workout to log individual sets, reps and weight, or switch to Notes to write freely.</p></div><Link href="/">Open Workout Log →</Link></section>
+      <section className="exercise-card-section"><h2>Programming exercises for clients?</h2><p>Use the shared exercise library to prescribe sets, rest, effort and individual targets in the trainer workout builder.</p><Link href="/trainers/workout-builder" className="app-link">Explore the trainer workout builder →</Link></section>
       {related.length ? <section className="exercise-related"><h2>Related exercises</h2><div className="exercise-related-grid">{related.map(x => x ? <Link href={`/exercises/${x.slug}`} key={x.slug}><strong>{x.name}</strong><span>{x.category} · {x.movementPattern}</span></Link> : null)}</div></section> : null}
     </article>
   </main>;

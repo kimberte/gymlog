@@ -1,0 +1,2 @@
+# Touch reordering
+Shared pointer-based DragHandle supports touch/mouse, floating label, dimmed source, orange insertion indicator, edge scrolling, Escape/cancel/lost capture. Existing movement arrows remain; keyboard arrows on grips. Trainer/demo and personal advanced editor move grouped movements as intact blocks. Individual advanced targets and personal ungrouped set rows can be moved; trainer-prescribed actual set order and completed workouts are unchanged. No native haptics or animated neighboring-card displacement. Device and build QA pending.

@@ -7,6 +7,7 @@ import {
 } from "react";
 import { WorkoutEntry, WorkoutMap, getDayEntries,loadDefaultWorkoutMode } from "../lib/storage";
 import PrescriptionEditor from "./PrescriptionEditor";
+import DragHandle from "./DragHandle";
 import PersonalExercisePicker from "./PersonalExercisePicker";
 import {canEditPrescription,rowsToPersonalPlan,reusePersonalRows} from "../lib/personalWorkoutPlan";
 import "../trainers/trainer-dashboard.css";
@@ -1878,7 +1879,7 @@ return (
                 <div />
               </div>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <div data-gl-sort-list style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {g.indices.map((rowIdx, pos) => {
                   const raw = (activeStructured.rows || [])[rowIdx];
                   const r = (coached||raw.planned)?suggestedActual(raw):defaultActualUnit(raw);
@@ -1887,6 +1888,7 @@ return (
                   return (
                     <div
                       key={rowIdx}
+                      data-gl-sort-item={rowIdx}
                       className={personal?"personal-set-row":undefined}
                       style={{
                         display: "grid",
@@ -1916,7 +1918,7 @@ return (
                         {done ? "✓" : r.skipped ? "–" : ""}
                       </button>
 
-                      <div style={{ fontSize: 12, opacity: 0.8 }}>#{pos + 1}{r?.setType&&r.setType!=="normal"&&<small style={{display:"block",fontSize:9}}>{r.setType}</small>}{r?.skipped?<small style={{display:"block",fontSize:9}}>Skipped</small>:null}</div>
+                      <div className="gl-sort-set-label">{personal&&!active?.completedAt&&g.indices.length>1?<DragHandle className="gl-sort-set-handle" index={rowIdx} label={g.name+" · set "+(pos+1)} onMove={(from,to)=>{if(!g.indices.includes(from)||!g.indices.includes(to)||active?.completedAt)return;const next=[...activeStructured.rows];const group=g.indices.map(i=>next[i]);const [moved]=group.splice(g.indices.indexOf(from),1);group.splice(g.indices.indexOf(to),0,moved);g.indices.forEach((i,j)=>{next[i]=group[j]});updateActiveStructured({rows:next});}}/>:null}#{pos + 1}{r?.setType&&r.setType!=="normal"&&<small style={{display:"block",fontSize:9}}>{r.setType}</small>}{r?.skipped?<small style={{display:"block",fontSize:9}}>Skipped</small>:null}</div>
 
                       <input
                         value={r?.reps ?? ""}

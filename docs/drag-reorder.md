@@ -1,2 +1,5 @@
 # Touch reordering
 Shared pointer-based DragHandle supports touch/mouse, floating label, dimmed source, orange insertion indicator, edge scrolling, Escape/cancel/lost capture. Existing movement arrows remain; keyboard arrows on grips. Trainer/demo and personal advanced editor move grouped movements as intact blocks. Individual advanced targets and personal ungrouped set rows can be moved; trainer-prescribed actual set order and completed workouts are unchanged. No native haptics or animated neighboring-card displacement. Device and build QA pending.
+
+## Main personal editor follow-up
+Whole exercise cards and grouped blocks now share a top-level sortable list; handles appear when at least two cards exist and the session is an open personal workout. Existing set handles remain nested. Hit testing climbs to the item owned by the active list, so dragging an exercise across an expanded card can target the whole card even over its set rows. Reordering uses the exact rendered group/block order and moves original row objects intact; menu arrows use the same operation. Completed and coach-prescribed exercise order remain protected. Device QA pending.

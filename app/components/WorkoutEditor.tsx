@@ -631,13 +631,27 @@ const activeTotalVolume = useMemo(
     if(!window.confirm("Remove this exercise and its sets?"))return;
     const ids=new Set(indices);updateActiveStructured({rows:plannedRows.filter((_,i)=>!ids.has(i))});setExerciseMenu(null);
   };
-  const moveExercise=(indices:number[],direction:number)=>{
-    const start=Math.min(...indices),end=Math.max(...indices);if(indices.length!==end-start+1){toast("This exercise has non-consecutive sets. Reorder in advanced programming.");return;}
-    const other=direction<0?start-1:end+1;if(other<0||other>=plannedRows.length)return;
-    const neighbor=plannedRows[other];const same=(r:StructuredExerciseRow)=>neighbor.block?r.block?.id===neighbor.block.id:!r.block&&normalizeExerciseKey(r.name)===normalizeExerciseKey(neighbor.name);
-    let first=other,last=other;while(first>0&&same(plannedRows[first-1]))first--;while(last+1<plannedRows.length&&same(plannedRows[last+1]))last++;
-    const next=direction<0?[...plannedRows.slice(0,first),...plannedRows.slice(start,end+1),...plannedRows.slice(first,start),...plannedRows.slice(end+1)]:[...plannedRows.slice(0,start),...plannedRows.slice(end+1,last+1),...plannedRows.slice(start,end+1),...plannedRows.slice(last+1)];
+  // One ordering model for visible exercise cards and complete training blocks.
+  function exerciseCards(rows:StructuredExerciseRow[]){
+    const normal=groupRowsByExercise(rows).map(g=>({...g,indices:g.indices.filter(i=>!rows[i].block)})).filter(g=>g.indices.length);const blocks=new Map<string,number[]>();rows.forEach((r,i)=>{if(r.block)blocks.set(r.block.id,[...(blocks.get(r.block.id)||[]),i]);});const display=[...normal.map(g=>({first:g.indices[0],g,blockIndices:null as number[]|null})),...Array.from(blocks.values()).map(indices=>({first:indices[0],g:null,blockIndices:indices}))].sort((a,b)=>a.first-b.first);
+    return display;
+  }
+  const moveExerciseCard=(from:number,to:number)=>{
+    if(!personal||active?.completedAt||from===to)return;
+    const rows=activeStructured.rows||[],cards=exerciseCards(rows);
+    const a=cards.findIndex(c=>c.first===from),b=cards.findIndex(c=>c.first===to);
+    if(a<0||b<0||a===b)return;
+    const chunks=cards.map(c=>(c.blockIndices||c.g?.indices||[]).map(i=>rows[i]));
+    const [moved]=chunks.splice(a,1);chunks.splice(b,0,moved);
+    const next=chunks.flat();
+    if(next.length!==rows.length)return;
     updateActiveStructured({rows:next});setExerciseMenu(null);
+  };
+  const moveExercise=(indices:number[],direction:number)=>{
+    if(!personal||active?.completedAt||!indices.length)return;
+    const cards=exerciseCards(activeStructured.rows||[]);
+    const at=cards.findIndex(c=>c.first===indices[0]),next=cards[at+direction];
+    if(at>=0&&next)moveExerciseCard(cards[at].first,next.first);
   };
   function setActiveMode(nextMode: "notebook" | "structured") {
     if(coached&&nextMode==="notebook")return;
@@ -1729,9 +1743,9 @@ return (
     </div>
   </div>}
 
-  <div className="personal-exercise-list" style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+  <div className="personal-exercise-list" data-gl-sort-list style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10 }}>
     {coached&&!activeStructured.rows.length&&<div className="workout-empty-state"><strong>No exercises yet</strong><span>{coached?"Add a set or exercise to this workout.":"Build a plan above, or use Quick log exercise to start tracking a set."}</span></div>}
-    {(()=>{const rows=activeStructured.rows||[];const normal=groupRowsByExercise(rows).map(g=>({...g,indices:g.indices.filter(i=>!rows[i].block)})).filter(g=>g.indices.length);const blocks=new Map<string,number[]>();rows.forEach((r,i)=>{if(r.block)blocks.set(r.block.id,[...(blocks.get(r.block.id)||[]),i]);});const display=[...normal.map(g=>({first:g.indices[0],g,blockIndices:null as number[]|null})),...Array.from(blocks.values()).map(indices=>({first:indices[0],g:null,blockIndices:indices}))].sort((a,b)=>a.first-b.first);return display.map(({g,blockIndices,first})=>{if(blockIndices){const block=rows[first].block!;const rounds=Array.from(new Set(blockIndices.map(i=>rows[i].blockRound||1))).sort((a,b)=>a-b);return <section key={"block-"+block.id} className="structured-exercise-card structured-training-block"><header><strong>{blockLabel(block)}</strong><small>{rounds.length} rounds · {block.restSeconds}s rest after each round</small>{personal&&<button type="button" className="personal-secondary" disabled={!!active?.completedAt} onClick={()=>openPersonalPlan(blockIndices)}>Edit group targets</button>}</header>{rounds.map(round=>{const indices=blockIndices.filter(i=>(rows[i].blockRound||1)===round);return <div key={round} className="structured-block-round"><strong>Round {round} · {indices.filter(i=>rows[i].completed&&!rows[i].skipped).length}/{indices.length} complete</strong>{indices.map(i=>{const r=(coached||rows[i].planned)?suggestedActual(rows[i]):defaultActualUnit(rows[i]);return <div key={i} className="structured-block-movement"><div><b>{r.name}</b><small>Target: {[r.targetReps,r.targetLoad,r.note].filter(Boolean).join(" · ")}</small></div><div className="structured-block-inputs"><button type="button" className="structured-set-check" aria-pressed={!!r.completed} aria-label={(r.completed?"Mark incomplete: ":"Mark complete: ")+r.name+", round "+round} onClick={()=>toggleRowCompleted(i)}>{r.completed?"✓":r.skipped?"–":""}</button><label>{/\b(sec|min)$/i.test(r.targetReps||"")?"Seconds":"Reps"}<input inputMode="numeric" value={r.reps||""} onChange={ev=>updateActiveStructuredRow(i,{reps:sanitizeIntInput(ev.target.value),repsEdited:true})}/></label><label>Weight<input inputMode="decimal" value={r.weight||""} onChange={ev=>updateActiveStructuredRow(i,{weight:sanitizeDecimalInput(ev.target.value),weightEdited:true,unit:r.unit||"lb"})}/></label><label>Unit<select value={r.unit||""} onChange={ev=>updateActiveStructuredRow(i,{unit:ev.target.value as StructuredExerciseRow["unit"],unitEdited:true})}>{!r.unit&&<option value="">Unit</option>}<option value="lb">lb</option><option value="kg">kg</option></select></label><button type="button" aria-label={r.skipped?"Restore set":"Skip set"} onClick={()=>removeActiveStructuredRow(i)}>{r.skipped?"↶":"–"}</button></div></div>})}</div>})}</section>;}if(!g)return null;
+    {(()=>{const rows=activeStructured.rows||[];const display=exerciseCards(rows);return display.map(({g,blockIndices,first})=>{if(blockIndices){const block=rows[first].block!;const rounds=Array.from(new Set(blockIndices.map(i=>rows[i].blockRound||1))).sort((a,b)=>a-b);return <section key={"block-"+block.id} data-gl-sort-item={first} className="structured-exercise-card structured-training-block"><header><div className="personal-block-title">{personal&&!active?.completedAt&&display.length>1&&<DragHandle className="gl-sort-exercise-handle" index={first} label={blockLabel(block)} onMove={moveExerciseCard}/>}<strong>{blockLabel(block)}</strong></div><small>{rounds.length} rounds · {block.restSeconds}s rest after each round</small>{personal&&<button type="button" className="personal-secondary" disabled={!!active?.completedAt} onClick={()=>openPersonalPlan(blockIndices)}>Edit group targets</button>}</header>{rounds.map(round=>{const indices=blockIndices.filter(i=>(rows[i].blockRound||1)===round);return <div key={round} className="structured-block-round"><strong>Round {round} · {indices.filter(i=>rows[i].completed&&!rows[i].skipped).length}/{indices.length} complete</strong>{indices.map(i=>{const r=(coached||rows[i].planned)?suggestedActual(rows[i]):defaultActualUnit(rows[i]);return <div key={i} className="structured-block-movement"><div><b>{r.name}</b><small>Target: {[r.targetReps,r.targetLoad,r.note].filter(Boolean).join(" · ")}</small></div><div className="structured-block-inputs"><button type="button" className="structured-set-check" aria-pressed={!!r.completed} aria-label={(r.completed?"Mark incomplete: ":"Mark complete: ")+r.name+", round "+round} onClick={()=>toggleRowCompleted(i)}>{r.completed?"✓":r.skipped?"–":""}</button><label>{/\b(sec|min)$/i.test(r.targetReps||"")?"Seconds":"Reps"}<input inputMode="numeric" value={r.reps||""} onChange={ev=>updateActiveStructuredRow(i,{reps:sanitizeIntInput(ev.target.value),repsEdited:true})}/></label><label>Weight<input inputMode="decimal" value={r.weight||""} onChange={ev=>updateActiveStructuredRow(i,{weight:sanitizeDecimalInput(ev.target.value),weightEdited:true,unit:r.unit||"lb"})}/></label><label>Unit<select value={r.unit||""} onChange={ev=>updateActiveStructuredRow(i,{unit:ev.target.value as StructuredExerciseRow["unit"],unitEdited:true})}>{!r.unit&&<option value="">Unit</option>}<option value="lb">lb</option><option value="kg">kg</option></select></label><button type="button" aria-label={r.skipped?"Restore set":"Skip set"} onClick={()=>removeActiveStructuredRow(i)}>{r.skipped?"↶":"–"}</button></div></div>})}</div>})}</section>;}if(!g)return null;
       const isCollapsed = Boolean(activeCollapsed[g.key]);
       const vol = exerciseGroupVolume(g.indices);
       const setCount = g.indices.length;
@@ -1739,6 +1753,7 @@ return (
       return (
         <div
           key={g.key}
+          data-gl-sort-item={first}
           className="structured-exercise-card"
           style={{
             border: "1px solid rgba(255,255,255,0.12)",
@@ -1777,6 +1792,7 @@ return (
 
             <div style={{ flex: "1 1 auto", minWidth: 0, display: "flex", flexDirection: "column" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                {personal&&!active?.completedAt&&display.length>1&&<DragHandle className="gl-sort-exercise-handle" index={first} label={g.name} onMove={moveExerciseCard}/>}
                 {personal?<strong className="personal-exercise-name">{g.name}</strong>:<input
                   value={g.name}
                   onChange={(e) => renameExerciseInGroup(g.key, e.target.value)}
@@ -1813,7 +1829,7 @@ return (
                   + Set
                 </button>}
               </div>
-              {personal&&exerciseMenu===g.key&&<div className="personal-exercise-menu"><button type="button" onClick={()=>openPersonalPlan(g.indices)}>Edit exercise targets &amp; details</button>{!demoMode&&<button type="button" onClick={()=>{window.open("/progress?exercise="+encodeURIComponent(g.name)+"#exercise","_blank","noopener,noreferrer");setExerciseMenu(null)}}>View exercise history</button>}<button type="button" onClick={()=>openPersonalPlan()}>Group exercises / advanced plan</button><button type="button" onClick={()=>moveExercise(g.indices,-1)}>Move up</button><button type="button" onClick={()=>moveExercise(g.indices,1)}>Move down</button><button type="button" onClick={()=>removeExercise(g.indices)}>Remove exercise</button></div>}
+              {personal&&exerciseMenu===g.key&&<div className="personal-exercise-menu"><button type="button" onClick={()=>openPersonalPlan(g.indices)}>Edit exercise targets &amp; details</button>{!demoMode&&<button type="button" onClick={()=>{window.open("/progress?exercise="+encodeURIComponent(g.name)+"#exercise","_blank","noopener,noreferrer");setExerciseMenu(null)}}>View exercise history</button>}<button type="button" onClick={()=>openPersonalPlan()}>Group exercises / advanced plan</button><button type="button" disabled={!!active?.completedAt||first===display[0]?.first} onClick={()=>moveExercise(g.indices,-1)}>Move up</button><button type="button" disabled={!!active?.completedAt||first===display[display.length-1]?.first} onClick={()=>moveExercise(g.indices,1)}>Move down</button><button type="button" onClick={()=>removeExercise(g.indices)}>Remove exercise</button></div>}
 
               {!!activeStructured.rows[g.indices[0]]?.alternatives?.length&&<label style={{fontSize:12}}>{coached?"Coach-approved alternative":"Exercise alternative"}<select value="" onChange={ev=>{if(ev.target.value)renameExerciseInGroup(g.key,ev.target.value)}}><option value="">Choose substitution</option>{[activeStructured.rows[g.indices[0]].prescribedName,...(activeStructured.rows[g.indices[0]].alternatives||[])].filter(Boolean).map(x=><option key={x}>{x}</option>)}</select></label>}{(coached||activeStructured.rows[g.indices[0]]?.planned)&&(()=>{const r=activeStructured.rows[g.indices[0]];return <small style={{color:"var(--muted)",marginTop:5}}>{r?.prescribedName&&r.prescribedName!==r.name?"Substituted for "+r.prescribedName+" · ":""}Target: {[r?.targetReps,r?.targetLoad,r?.targetRest&&"Rest "+r.targetRest].filter(Boolean).join(" · ")||(coached?"Review exercise with coach":"No target")}{r?.note?" · "+r.note:""}</small>})()}
               {(() => {

@@ -1,4 +1,5 @@
 "use client";
+import {localDateKey,validDay,streaksFromDays} from "../lib/personalProgress";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {loadDefaultWorkoutMode,saveDefaultWorkoutMode,type DefaultWorkoutMode} from "../lib/storage";
 import CoachingNotificationPreferences from "./CoachingNotificationPreferences";
@@ -129,50 +130,12 @@ export default function SettingsModal({
     return total;
   }, [workouts]);
 
-  // ---- PROGRESS STATS (all-time) ----
-  const { bestStreak, totalWorkoutDays } = useMemo(() => {
-    // We count a "workout day" if any entry has title or notes.
-    const activeKeys = Object.keys(workouts ?? {}).filter((key) => {
-      const day: any = (workouts as any)[key];
-      const entries = Array.isArray(day?.entries) ? day.entries : day ? [day] : [];
-      return entries.some((e: any) =>
-        Boolean(String(e?.title ?? "").trim() || String(e?.notes ?? "").trim())
-      );
-    });
-
-
-    activeKeys.sort(); // YYYY-MM-DD lex sort works
-
-    let best = 0;
-    let run = 0;
-    let prev: Date | null = null;
-
-    for (const k of activeKeys) {
-      const dt = parseDateKey(k);
-      if (!dt) continue;
-
-      if (!prev) {
-        run = 1;
-      } else {
-        const diffDays = Math.round((dt.getTime() - prev.getTime()) / 86400000);
-        if (diffDays === 1) {
-          run += 1;
-        } else {
-          best = Math.max(best, run);
-          run = 1;
-        }
-      }
-
-      prev = dt;
-    }
-
-    best = Math.max(best, run);
-
-    return {
-      bestStreak: best,
-      totalWorkoutDays: activeKeys.length,
-    };
-  }, [workouts]);
+  // ---- PROGRESS STATS (all-time; completed workouts only) ----
+  const {bestStreak,totalWorkoutDays,completedWorkoutCount}=useMemo(()=>{
+    const dates=Object.keys(workouts||{}).filter(k=>validDay(k)&&k<=localDateKey()).sort();
+    let count=0;const active=dates.filter(k=>{const day:any=(workouts as any)[k];const entries=Array.isArray(day?.entries)?day.entries:[day];const done=entries.filter((e:any)=>!!e?.completedAt).length;count+=done;return done>0;});
+    const streak=streaksFromDays(active);return {bestStreak:streak.bestStreak,totalWorkoutDays:streak.totalDays,completedWorkoutCount:count};
+  },[workouts]);
 
   // ---- AUTH: load session + listen for changes ----
   useEffect(() => {
@@ -1058,8 +1021,8 @@ async function updatePassword() {
           >
             <strong>Progress</strong>
             <div style={{ marginTop: 6 }}>🏆 Best streak: {bestStreak} days</div>
-            <div>📌 Total workouts: {workoutCount}</div>
-            <div>📆 Total workout days: {totalWorkoutDays}</div>
+            <div>📌 Completed workouts: {completedWorkoutCount}</div>
+            <div>📆 Completed workout days: {totalWorkoutDays}</div><a href="/progress" style={{display:"inline-block",marginTop:8,color:"var(--text)",fontWeight:650}}>Open My Progress →</a>
           </div>
         )}
 

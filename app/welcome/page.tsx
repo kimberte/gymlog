@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { getDayEntries, loadWorkouts } from "../lib/storage";
+import {extractPersonalData,periodSummary,localDateKey,shiftDay} from "../lib/personalProgress";
 import { PROGRAMS } from "../lib/programs";
 import { ALL_BLOG_POSTS } from "../blog/blogPosts";
 import "./welcome-homepage.css";
@@ -27,6 +28,7 @@ export default function WelcomePage() {
   }, []);
 
   const today = useMemo(() => dateKey(), []);
+  const progress=useMemo(()=>periodSummary(extractPersonalData(workouts as any,today),shiftDay(today,-29),today),[workouts,today]);
   const todayWorkouts = getDayEntries(workouts as any, today);
   const workoutNames = todayWorkouts.map((w: any) => String(w?.title || "").trim()).filter(Boolean);
   const primaryWorkout = workoutNames[0] || "No workout logged yet";
@@ -44,6 +46,7 @@ export default function WelcomePage() {
 
       <Link href="/trainers/client" className="welcome-today-card" style={{marginTop:14}}><div className="welcome-today-top"><span className="welcome-section-kicker">MY COACHING</span><span className="welcome-open-link">Open coaching →</span></div><div className="welcome-today-workout">Training with a coach?</div><div className="welcome-today-extra">Review assigned workouts, messages and progress.</div></Link>
 
+      <Link href="/progress" className="welcome-today-card welcome-progress-card"><div className="welcome-today-top"><span className="welcome-section-kicker">MY PROGRESS · LAST 30 DAYS</span><span className="welcome-open-link">View progress →</span></div><div className="welcome-progress-metrics"><div><strong>{progress.sessions.length}</strong><small>Workouts completed</small></div><div><strong>{progress.sets.length}</strong><small>Structured sets logged</small></div><div><strong>{progress.days}</strong><small>Training days</small></div></div><p>Free strength charts, exercise history and personal records from your structured workouts.</p></Link>
       <Link href="/workout-programs" className="welcome-today-card welcome-program-library"><div className="welcome-today-top"><span className="welcome-section-kicker">WORKOUT PROGRAM LIBRARY</span><span className="welcome-open-link">Browse programs →</span></div><div className="welcome-library-count">{programCount} <span>workout programs</span></div><h2>Choose a plan. Start training.</h2><p>Find a routine for your goals, schedule and equipment. Pick a start date and import directly into your calendar in Structured or Notes format.</p><div className="welcome-featured-meta"><span>Strength</span><span>Muscle building</span><span>Glutes</span><span>Home workouts</span><span>Beginner</span></div><strong>Explore the program library →</strong></Link>
 
       {latestBlogs.length > 0 && <section aria-label="Latest from the Gym Log blog">

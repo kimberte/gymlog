@@ -2028,7 +2028,7 @@ return (
 
 
 
-          {activeMode==="notebook"&&!writingNotes&&<button type="button" className="personal-secondary notebook-add-exercises" onClick={()=>setPickerOpen(true)}>＋ Insert exercises</button>}
+          {activeMode==="notebook"&&!writingNotes&&<div className="notebook-quick-actions"><button type="button" className="personal-secondary" onClick={()=>setPickerOpen(true)}>＋ Insert exercises</button><a href="/workout-programs" className="personal-secondary" onClick={ev=>{if(!window.confirm("Leave this workout to browse programs? Save any changes you want to keep first."))ev.preventDefault()}}>Choose workout program</a></div>}
           {/* ✅ Media per workout (image OR video) — Pro only (trial counts) */}
           {proStatus.isPro ? (
             <div style={{ marginTop: 10 }}>

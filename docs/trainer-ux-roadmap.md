@@ -55,3 +55,5 @@
 - Mobile Notes editing: size workout overlay to the visible keyboard-adjusted viewport, remove duplicate keyboard padding, maintain a useful minimum notebook textarea height when idle, and prioritize the full writing area with a compact header and Done typing/Save actions while the keyboard is visible. Restore the normal editor layout when keyboard closes; no workout format/data changes.
 
 - Reliability polish: clipboard copies serialize current structured draft and notes (legacy clipboard envelope retained), pasted plain text goes into structured workout notes, confirm replacing a populated day, avoid empty structured placeholder workouts on Save, and enforce builder count limits with feedback. Owner confirmed mobile keyboard writing layout works.
+
+- Progression/demo consistency: share the active training day and week between builder and progression, show actual individual/group targets with direct Edit workout links, and preserve the current demo draft across showcase navigation. Reloading the original demo sample is explicit and confirmed. Rules still require preview/apply; existing client assignments remain unchanged.

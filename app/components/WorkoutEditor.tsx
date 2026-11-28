@@ -484,6 +484,7 @@ const activeTotalVolume = useMemo(
     summary: string;
     maxWeightNum: number | null;
     unit: string;
+    sets: StructuredExerciseRow[];
   };
 
   function computeMaxWeightForIndices(rows: StructuredExerciseRow[], indices: number[]) {
@@ -528,12 +529,15 @@ const activeTotalVolume = useMemo(
       for (const e of dayEntries) {
         const parsed = e.mode==="structured"&&e.structured?.rows?e.structured as StructuredWorkout:parseStructuredFromNotes(String((e as any)?.notes ?? ""));
         if (!parsed?.rows?.length) continue;
-        const actualRows=parsed.rows.filter(r=>r.completed);const groups=groupRowsByExercise(actualRows);
+        const actualRows=parsed.rows.filter(r=>r.completed&&!r.skipped);const groups=groupRowsByExercise(actualRows);
         for (const g of groups) {
           if (!neededKeys.has(g.key)) continue;
           if (out[g.key]) continue;
 
-          const { bestNum, bestRaw } = computeMaxWeightForIndices(actualRows, g.indices);
+          const { bestNum } = computeMaxWeightForIndices(actualRows, g.indices);
+          const historyRows=g.indices.map(i=>actualRows[i]);
+          const unitChoice=historyRows.find(r=>r.unit)?.unit||"lb";
+          const bestRaw=bestNum===null?"":Number((bestNum/(unitChoice==="lb"?0.45359237:1)).toFixed(1))+" "+unitChoice;
           const reps = computeCommonReps(actualRows, g.indices);
           const setCount = g.indices.length;
           const unit = weightUnitFromString(bestRaw);
@@ -551,6 +555,7 @@ const activeTotalVolume = useMemo(
             summary: parts.join(" ").trim(),
             maxWeightNum: bestNum,
             unit,
+            sets:historyRows,
           };
 
           if (Object.keys(out).length === neededKeys.size) return out;
@@ -612,6 +617,12 @@ const activeTotalVolume = useMemo(
       }
     }
     toast("No previous completed personal structured workout found.");
+  };
+  const useLastExercise=(g:ExerciseGroup)=>{
+    if(active?.completedAt)return;
+    const prior=prevStatsByExerciseKey[g.key]?.sets;if(!prior?.length)return;
+    const next=plannedRows.map((r,i)=>{const pos=g.indices.indexOf(i);if(pos<0||!canEditPrescription(r)||r.targetReps||r.targetLoad)return r;const prev=prior[Math.min(pos,prior.length-1)];const timed=/\b(sec|min)$/i.test(prev.targetReps||"");return {...r,planned:true,targetReps:prev.reps?(timed?prev.reps+" sec":prev.reps):r.targetReps,targetLoad:prev.weight&&prev.unit?prev.weight+" "+prev.unit:r.targetLoad,unit:prev.unit||r.unit};});
+    updateActiveStructured({rows:next});toast("Previous results suggested. Sets are still unchecked.");
   };
   const removeExercise=(indices:number[])=>{
     if(active?.completedAt||coached)return;
@@ -809,7 +820,7 @@ function exerciseGroupVolume(indices: number[]) {
 }
 
   function removeActiveStructuredRow(idx: number) {
-    const row=activeStructured.rows[idx];if(row?.planned&&(coached||row.block)){updateActiveStructuredRow(idx,{skipped:!row.skipped,completed:false});return;}
+    const row=activeStructured.rows[idx];if(row&&(row.block||row.planned&&coached)){updateActiveStructuredRow(idx,{skipped:!row.skipped,completed:false});return;}
     if(row?.completed&&!window.confirm("Remove this logged set?"))return;
     const nextRows = (activeStructured.rows || []).filter((_, i) => i !== idx);
     updateActiveStructured({ rows: nextRows });
@@ -1479,7 +1490,7 @@ function exerciseGroupVolume(indices: number[]) {
 return (
     <div className={"overlay workout-editor-overlay"+(keyboardViewport?" keyboard-open":"")} style={keyboardViewport?{top:keyboardViewport.top,height:keyboardViewport.height,bottom:"auto"}:undefined}>
       <div className={"editor editor-full"+(writingNotes?" writing-notes":"")+(personal?" personal-workout-editor":"")+(pickerOpen?" picker-open":"")+(planOpen?" personal-advanced-open":"")} onMouseDown={(e) => e.stopPropagation()}>
-        <button className="close" onClick={()=>{if(personalPlanning&&!window.confirm("Discard un-applied plan edits?"))return;onClose();}} aria-label="Close">
+        <button className="close" onClick={()=>{if(personalPlanning){if(window.confirm("Discard unapplied target changes?"))setPersonalPlanning(null);return;}onClose();}} aria-label="Close">
           ✕
         </button>
 
@@ -1810,7 +1821,7 @@ return (
                 const diffLabel =
                   diff == null || Math.abs(diff) < 0.0001
                     ? ""
-                    : `${diff > 0 ? "↑" : "↓"} ${diff > 0 ? "+" : ""}${Math.round(diff)}${unit ? ` ${unit}` : ""}`;
+                    : `${diff > 0 ? "↑" : "↓"} ${diff > 0 ? "+" : ""}${Number((diff/(unit==="lb"?0.45359237:1)).toFixed(1))}${unit ? ` ${unit}` : ""}`;
 
                 return (
                   <div
@@ -1836,12 +1847,14 @@ return (
                   </div>
                 );
               })()}
+              {personal&&!!prevStatsByExerciseKey[g.key]?.sets.length&&g.indices.some(i=>canEditPrescription(plannedRows[i])&&!plannedRows[i].targetReps&&!plannedRows[i].targetLoad)&&<button type="button" className="personal-use-last" onClick={()=>useLastExercise(g)}>Use last results</button>}
             </div>
           </div>
 
           {!isCollapsed && (
             <div style={{ padding: 10 }}>
               <div
+                className={personal?"personal-set-head":undefined}
                 style={{
                   display: "grid",
                   gridTemplateColumns: "36px 28px minmax(48px, .8fr) minmax(80px, 1.4fr) 32px",
@@ -1868,6 +1881,7 @@ return (
                   return (
                     <div
                       key={rowIdx}
+                      className={personal?"personal-set-row":undefined}
                       style={{
                         display: "grid",
                         gridTemplateColumns: "36px 28px minmax(48px, .8fr) minmax(80px, 1.4fr) 32px",
@@ -1963,6 +1977,7 @@ return (
                       >
                         {r?.planned?(r.skipped?"↶":"–"):"✕"}
                       </button>
+                      {personal&&prevStatsByExerciseKey[g.key]?.sets[pos]&&<small className="personal-set-history">Last: {prevStatsByExerciseKey[g.key].sets[pos].weight?prevStatsByExerciseKey[g.key].sets[pos].weight+" "+(prevStatsByExerciseKey[g.key].sets[pos].unit||"")+" × ":""}{prevStatsByExerciseKey[g.key].sets[pos].reps||"—"}</small>}
                       {r.setType&&<div className="structured-set-target-detail" style={{gridColumn:"2/-1"}}>Target: {[r.targetReps,r.targetLoad,r.targetRest&&"Rest "+r.targetRest,r.targetRpe&&"RPE "+r.targetRpe,r.targetRir&&"RIR "+r.targetRir,r.targetTempo&&"Tempo "+r.targetTempo].filter(Boolean).join(" · ")}{(r.targetRpe||r.targetRir)&&<div style={{display:"flex",gap:8}}>{r.targetRpe&&<label>Actual RPE<input inputMode="decimal" value={r.actualRpe||""} onChange={ev=>updateActiveStructuredRow(rowIdx,{actualRpe:ev.target.value})}/></label>}{r.targetRir&&<label>Actual RIR<input inputMode="numeric" value={r.actualRir||""} onChange={ev=>updateActiveStructuredRow(rowIdx,{actualRir:ev.target.value})}/></label>}</div>}</div>}
                     </div>
                   );
@@ -1976,9 +1991,10 @@ return (
     });})()}
   </div>{personal&&plannedRows.length>0&&<><button type="button" className="personal-primary personal-add-exercises" onClick={()=>setPickerOpen(true)} disabled={!!active?.completedAt}>＋ Add exercises</button><button type="button" className="personal-secondary" onClick={()=>openPersonalPlan()} disabled={!canReplacePlan}>Advanced programming / group exercises</button>{!canReplacePlan&&!active?.completedAt&&<small className="personal-protected-hint">Advanced grouping is available before logging. Logged sets remain protected.</small>}</>}</>}
 
-  {!planOpen&&<details className="personal-workout-notes" open={activeExtraNotes?true:undefined}>
+  {!planOpen&&<details className="personal-workout-notes" open={coached||activeExtraNotes?true:undefined}>
     <summary>Workout notes (optional)</summary>
     <textarea
+      aria-label="Extra workout notes"
       value={activeExtraNotes}
       onChange={(e) => updateActiveExtraNotes(e.target.value)}
       placeholder="Extra notes for this workout…"

@@ -1410,6 +1410,7 @@ return (
             {tabLabels.map((label, i) => (
               <button
                 key={i}
+                aria-pressed={i===activeIdx}
                 onClick={() => {if(personalPlanning&&i!==activeIdx){toast("Apply or cancel your workout plan first.");return;}setActiveIdx(i);}}
                 style={{
                   padding: "8px 10px",
@@ -1475,9 +1476,9 @@ return (
             {completionBusy?"Saving…":futureCompletionBlocked?"Scheduled · Not available yet":active?.completedAt ? "✓ Completed · Undo" : "✓ Mark Complete"}
           </button>
           {futureCompletionBlocked&&<p className="future-completion-hint">You can log and edit this workout now. Mark it complete on or after {formatDisplayDate(date)}.</p>}
-          {restUntil!==null&&<div className="structured-rest-timer" role="status"><div><strong>{restLeft>0?"Rest timer":"Rest complete"}</strong><span>{Math.floor(restLeft/60)}:{String(restLeft%60).padStart(2,"0")}</span></div><button type="button" onClick={()=>setRestUntil(v=>v===null?null:Math.max(Date.now(),v-15000))}>−15s</button><button type="button" onClick={()=>setRestUntil(v=>Math.max(Date.now(),v||0)+15000)}>+15s</button><button type="button" onClick={()=>setRestUntil(null)}>{restLeft?"Skip":"Dismiss"}</button></div>}
+          {restUntil!==null&&<div className="structured-rest-timer"><div><strong role="status">{restLeft>0?"Rest timer":"Rest complete"}</strong><span role="timer" aria-live="off">{Math.floor(restLeft/60)}:{String(restLeft%60).padStart(2,"0")}</span></div><button type="button" onClick={()=>setRestUntil(v=>v===null?null:Math.max(Date.now(),v-15000))}>−15s</button><button type="button" onClick={()=>setRestUntil(v=>Math.max(Date.now(),v||0)+15000)}>+15s</button><button type="button" onClick={()=>setRestUntil(null)}>{restLeft?"Skip":"Dismiss"}</button></div>}
           {/* Editor mode toggle */}
-          {coached?<p style={{fontSize:12,color:"var(--muted)",margin:"8px 0"}}>Trainer-assigned · Structured workout</p>:<div
+          {coached?<p className="workout-mode-label">Trainer-assigned · Structured workout</p>:<div
             style={{
               display: "flex",
               alignItems: "center",
@@ -1486,7 +1487,7 @@ return (
               marginBottom: 10,
             }}
           >
-            <div
+            <div role="group" aria-label="Workout format" className="workout-format-switch"
               style={{
                 display: "inline-flex",
                 border: "1px solid rgba(255,255,255,0.14)",
@@ -1497,7 +1498,7 @@ return (
             >
               <button
                 type="button"
-                onClick={() => {if(activeMode==="structured")handleConvertStructuredToNotebook();}}
+                aria-pressed={activeMode==="notebook"} onClick={() => {if(activeMode==="structured")handleConvertStructuredToNotebook();}}
                 style={{
                   padding: "8px 12px",
                   fontSize: 12,
@@ -1511,7 +1512,7 @@ return (
               </button>
               <button
                 type="button"
-                onClick={() => {
+                aria-pressed={activeMode==="structured"} onClick={() => {
                   if(activeMode==="structured")return;
                   // Preserve the existing free-form notes instead of forcing deletion.
                   // Initialize draft from current title if needed
@@ -1614,6 +1615,7 @@ return (
   </div>
 
   <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+    {!activeStructured.rows.length&&<div className="workout-empty-state"><strong>No exercises yet</strong><span>{coached?"Add a set or exercise to this workout.":"Build a plan above, or use Quick log exercise to start tracking a set."}</span></div>}
     {(()=>{const rows=activeStructured.rows||[];const normal=groupRowsByExercise(rows).map(g=>({...g,indices:g.indices.filter(i=>!rows[i].block)})).filter(g=>g.indices.length);const blocks=new Map<string,number[]>();rows.forEach((r,i)=>{if(r.block)blocks.set(r.block.id,[...(blocks.get(r.block.id)||[]),i]);});const display=[...normal.map(g=>({first:g.indices[0],g,blockIndices:null as number[]|null})),...Array.from(blocks.values()).map(indices=>({first:indices[0],g:null,blockIndices:indices}))].sort((a,b)=>a.first-b.first);return display.map(({g,blockIndices,first})=>{if(blockIndices){const block=rows[first].block!;const rounds=Array.from(new Set(blockIndices.map(i=>rows[i].blockRound||1))).sort((a,b)=>a-b);return <section key={"block-"+block.id} className="structured-exercise-card structured-training-block"><header><strong>{blockLabel(block)}</strong><small>{rounds.length} rounds · {block.restSeconds}s rest after each round</small></header>{rounds.map(round=>{const indices=blockIndices.filter(i=>(rows[i].blockRound||1)===round);return <div key={round} className="structured-block-round"><strong>Round {round} · {indices.filter(i=>rows[i].completed&&!rows[i].skipped).length}/{indices.length} complete</strong>{indices.map(i=>{const r=(coached||rows[i].planned)?suggestedActual(rows[i]):defaultActualUnit(rows[i]);return <div key={i} className="structured-block-movement"><div><b>{r.name}</b><small>Target: {[r.targetReps,r.targetLoad,r.note].filter(Boolean).join(" · ")}</small></div><div className="structured-block-inputs"><button type="button" className="structured-set-check" aria-pressed={!!r.completed} aria-label={(r.completed?"Mark incomplete: ":"Mark complete: ")+r.name+", round "+round} onClick={()=>toggleRowCompleted(i)}>{r.completed?"✓":r.skipped?"–":""}</button><label>{/\b(sec|min)$/i.test(r.targetReps||"")?"Seconds":"Reps"}<input inputMode="numeric" value={r.reps||""} onChange={ev=>updateActiveStructuredRow(i,{reps:sanitizeIntInput(ev.target.value),repsEdited:true})}/></label><label>Weight<input inputMode="decimal" value={r.weight||""} onChange={ev=>updateActiveStructuredRow(i,{weight:sanitizeDecimalInput(ev.target.value),weightEdited:true,unit:r.unit||"lb"})}/></label><label>Unit<select value={r.unit||""} onChange={ev=>updateActiveStructuredRow(i,{unit:ev.target.value as StructuredExerciseRow["unit"],unitEdited:true})}>{!r.unit&&<option value="">Unit</option>}<option value="lb">lb</option><option value="kg">kg</option></select></label><button type="button" aria-label={r.skipped?"Restore set":"Skip set"} onClick={()=>removeActiveStructuredRow(i)}>{r.skipped?"↶":"–"}</button></div></div>})}</div>})}</section>;}if(!g)return null;
       const isCollapsed = Boolean(activeCollapsed[g.key]);
       const vol = exerciseGroupVolume(g.indices);
@@ -2111,6 +2113,7 @@ return (
         </div>
 
         <div className="editor-actions editor-actions-compact" role="toolbar" aria-label="Workout actions">
+          <div className="workout-secondary-actions">
           <button
             onClick={togglePb}
             className="secondary"
@@ -2144,7 +2147,8 @@ return (
             Share
           </button>
 
-          <button onClick={handleSave} className="primary">
+          </div>
+          <button onClick={handleSave} className="primary workout-save-button">
             Save
           </button>
         </div>

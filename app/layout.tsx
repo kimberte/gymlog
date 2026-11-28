@@ -7,7 +7,6 @@ import { Suspense } from "react";
 import Script from "next/script";
 import type { Metadata, Viewport } from "next";
 import Analytics from "./components/Analytics";
-import ExerciseLibraryModal from "./components/ExerciseLibraryModal";
 import SiteBrandHeader from "./components/SiteBrandHeader";
 import ThemeControl, { ToolTimerProvider } from "./components/ThemeControl";
 
@@ -86,7 +85,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ToolTimerProvider>
           {children}
         </ToolTimerProvider>
-        <ExerciseLibraryModal />
         <ThemeControl />
         <Suspense fallback={null}><Analytics /></Suspense>
       </body>

@@ -11,6 +11,7 @@ export default function Analytics() {
   useEffect(() => {
     if (!pathname) return;
     pageview(window.location.origin + pathname);
+    if(pathname==="/trainers/demo")event("trainer_demo_view");
   }, [pathname]);
 
   useEffect(() => {
@@ -19,6 +20,7 @@ export default function Analytics() {
       const link = target?.closest("a") as HTMLAnchorElement | null;
       const button = target?.closest("button") as HTMLButtonElement | null;
 
+      if(link&&pathname.startsWith("/trainers")){const href=link.getAttribute("href");if(href==="/trainers/demo")event("trainer_demo_click",{source:pathname});if(href==="/trainers/start")event("trainer_trial_click",{source:pathname});}
       if (link?.matches(".program-cta-button")) {
         event("program_import_click", { program_slug: pathname.split("/").filter(Boolean).pop() || "unknown" });
         return;

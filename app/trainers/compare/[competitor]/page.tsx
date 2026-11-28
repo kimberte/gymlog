@@ -1,0 +1,5 @@
+import type {Metadata} from "next";import {notFound} from "next/navigation";import {TRAINER_COMPARISONS} from "../../seoContent";import {ComparisonPage} from "../../TrainerSeoPage";
+export const dynamicParams=false;
+export function generateStaticParams(){return TRAINER_COMPARISONS.map(t=>({competitor:t.slug}));}
+export async function generateMetadata({params}:{params:Promise<{competitor:string}>}):Promise<Metadata>{const {competitor}=await params;const c=TRAINER_COMPARISONS.find(x=>x.slug===competitor);if(!c)return {};const title=c.brand+" Alternative for Personal Trainers",description="Compare "+c.brand+" with Gym Log: workout programming, client management and transparent pricing from $9 USD/month. Try the interactive demo.";const url="/trainers/compare/"+c.slug;return {title,description,alternates:{canonical:url},openGraph:{title,description,url,type:"website"},twitter:{card:"summary",title,description}};}
+export default async function Page({params}:{params:Promise<{competitor:string}>}){const {competitor}=await params;const c=TRAINER_COMPARISONS.find(x=>x.slug===competitor);if(!c)notFound();return <ComparisonPage item={c}/>;}

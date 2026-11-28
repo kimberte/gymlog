@@ -11,7 +11,7 @@ import ExerciseLibraryModal from "./components/ExerciseLibraryModal";
 import SiteBrandHeader from "./components/SiteBrandHeader";
 import ThemeControl, { ToolTimerProvider } from "./components/ThemeControl";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://gymlogapp.com";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.gymlogapp.com";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

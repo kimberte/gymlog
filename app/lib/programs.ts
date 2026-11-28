@@ -25,6 +25,10 @@ const rows:[string,string,string,number,Program["level"],string,string][] = [
 ["gym-log-2-day-weekend-full-body","Gym Log 2-Day Weekend Full Body","Gym Log Originals",2,"Intermediate","Two adjacent days with complementary emphasis","Full gym"],
 ["gym-log-3-day-deadlift-technique","Gym Log 3-Day Deadlift Technique","Gym Log Originals",3,"Intermediate","Deadlift technique and posterior-chain strength","Barbell gym"],
 ["gym-log-4-day-dumbbell-home-muscle","Gym Log 4-Day Dumbbell Home Muscle","Gym Log Originals",4,"Intermediate","Home hypertrophy with a compact upper/lower split","Dumbbells, stable bench and floor space"],
+["gym-log-2-day-squat-strength","Gym Log 2-Day Squat Strength","Gym Log Originals",2,"Intermediate","Squat strength and technique with balanced upper training","Barbell rack, bench, plates"],
+["gym-log-3-day-pull-up-base","Gym Log 3-Day Pull-Up Base","Gym Log Originals",3,"Beginner","Build pulling strength and controlled bodyweight skill","Pull-up bar, assisted pull-up machine, full gym"],
+["gym-log-3-day-push-up-foundations","Gym Log 3-Day Push-Up Foundations","Gym Log Originals",3,"Beginner","Progressive push-up skill and balanced bodyweight strength","Floor space, sturdy counter, resistance band"],
+["gym-log-4-day-shoulder-arm-emphasis","Gym Log 4-Day Shoulder and Arm Emphasis","Gym Log Originals",4,"Intermediate","Shoulder and arm hypertrophy with balanced maintenance training","Full gym"],
 ['gym-log-founder-special-v2','Gym Log Founder Special V2','Powerbuilding',4,'Advanced','Muscle building and strength','Home gym with barbell, dumbbells and machines'],
 ['gym-log-founder-special','Gym Log Founder Special','Powerbuilding',4,'Advanced','Strength and muscle maintenance','Home gym'],
 ];

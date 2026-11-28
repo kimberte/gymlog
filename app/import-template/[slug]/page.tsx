@@ -31,9 +31,9 @@ export default function ImportTemplatePage() {
   const slug = String(params?.slug || "");
   const template = useMemo(() => getSeoTemplateBySlug(slug), [slug]);
   const program = useMemo(() => getProgram(slug), [slug]);
-  const days = useMemo(()=>{if(slug==="gym-log-founder-special-v2")return FOUNDER_SPECIAL_V2_WORKOUTS;if(slug==="gym-log-founder-special")return FOUNDER_SPECIAL_WORKOUTS;if(template)return template.days.map(d=>({...d,day:d.name,guidance:d.notes||""}));if(!program)return [];return getProgramWorkouts(program).map((d,i)=>({...d,offsetDays:"offsetDays" in d&&typeof d.offsetDays==="number"?d.offsetDays:Math.floor(i/Math.max(1,program.days))*7+Math.floor((i%Math.max(1,program.days))*7/Math.max(1,program.days))}));},[slug,program,template]);
-  const name = template?.name ?? program?.name ?? "Workout Program";
-  const description = template?.shortDescription ?? program?.description ?? "Import this workout program into Gym Log.";
+  const days = useMemo(()=>{if(slug==="gym-log-founder-special-v2")return FOUNDER_SPECIAL_V2_WORKOUTS;if(slug==="gym-log-founder-special")return FOUNDER_SPECIAL_WORKOUTS;if(!program)return template?template.days.map(d=>({...d,day:d.name,guidance:d.notes||""})):[];return getProgramWorkouts(program).map((d,i)=>({...d,offsetDays:"offsetDays" in d&&typeof d.offsetDays==="number"?d.offsetDays:Math.floor(i/Math.max(1,program.days))*7+Math.floor((i%Math.max(1,program.days))*7/Math.max(1,program.days))}));},[slug,program,template]);
+  const name = program?.name ?? template?.name ?? "Workout Program";
+  const description = program?.description ?? template?.shortDescription ?? "Import this workout program into Gym Log.";
   const [startDate, setStartDate] = useState(() => toDateInputValue(new Date()));
   const [status, setStatus] = useState<string>("");
   const [format,setFormat]=useState<DefaultWorkoutMode>("structured");

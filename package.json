@@ -4,9 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
-    "build": "next build --webpack",
+    "build": "npm run test:programs && next build --webpack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:programs": "node scripts/validate-program-library.cjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.89.0",

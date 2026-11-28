@@ -287,7 +287,7 @@ export default function WorkoutEditor({
             nextExtra[id] = removeStructuredBlock(notes);
           } else {
             // Keep existing mode unless it doesn't exist yet
-            nextModes[id] = e.mode==="structured"?"structured":"notebook";
+            if(!nextModes[id])nextModes[id] = e.mode==="structured"?"structured":"notebook";
             if (nextExtra[id] == null) nextExtra[id] = notes;
             if (!nextStructured[id]) {
               nextStructured[id] = {
@@ -544,8 +544,8 @@ const activeTotalVolume = useMemo(
 
   const plannedRows=activeStructured.rows||[];
   const canReplacePlan=!!activeStructured.personalPlan?.length&&!active?.completedAt&&plannedRows.every(r=>r.planned&&!r.completed&&!r.skipped&&!r.repsEdited&&!r.weightEdited&&!r.unitEdited&&!r.reps&&!r.weight);
-  const openPersonalPlan=()=>{if(coached)return;setPersonalPlanning({id:activeId,replace:canReplacePlan,value:canReplacePlan?activeStructured.personalPlan!.join("\n"):""});};
-  const applyPersonalPlan=()=>{if(!personalPlanning||personalPlanning.id!==activeId||coached)return;const lines=personalPlanning.value.split("\n").filter(Boolean);if(!validatePrescriptionLines(lines)){toast("Review the exercises, sets and targets before applying.");return;}if(personalPlanning.replace&&!canReplacePlan){toast("Logged results are protected. Add new exercises instead.");return;}const base=personalPlanning.replace?[]:plannedRows;const offset=Math.max(0,...base.map(r=>Number(r.block?.id.slice(1))||0));const adjusted=lines.map(line=>{const x=readPrescription(line);return x.block&&offset?writePrescription({...x,block:{...x.block,id:"G"+(Number(x.block.id.slice(1))+offset)}}):line;});const next=prescriptionDraft(active?.title||"",adjusted);if(base.length+next.rows.length>250){toast("Maximum 250 sets per workout.");return;}updateActiveStructured({rows:[...base,...next.rows],personalPlan:base.length?undefined:adjusted});setPersonalPlanning(null);toast("Workout plan updated. Log your actual results below.");};
+  const openPersonalPlan=()=>{if(coached)return;if(active?.completedAt){toast("Reopen the completed workout before changing its plan.");return;}setPersonalPlanning({id:activeId,replace:canReplacePlan,value:canReplacePlan?activeStructured.personalPlan!.join("\n"):""});};
+  const applyPersonalPlan=()=>{if(!personalPlanning||personalPlanning.id!==activeId||coached||active?.completedAt)return;const lines=personalPlanning.value.split("\n").filter(Boolean);if(!validatePrescriptionLines(lines)){toast("Review the exercises, sets and targets before applying.");return;}if(personalPlanning.replace&&!canReplacePlan){toast("Logged results are protected. Add new exercises instead.");return;}const base=personalPlanning.replace?[]:plannedRows;const offset=Math.max(0,...base.map(r=>Number(r.block?.id.slice(1))||0));const adjusted=lines.map(line=>{const x=readPrescription(line);return x.block&&offset?writePrescription({...x,block:{...x.block,id:"G"+(Number(x.block.id.slice(1))+offset)}}):line;});const next=prescriptionDraft(active?.title||"",adjusted);if(base.length+next.rows.length>250){toast("Maximum 250 sets per workout.");return;}updateActiveStructured({rows:[...base,...next.rows],personalPlan:base.length?undefined:adjusted});setPersonalPlanning(null);toast("Workout plan updated. Log your actual results below.");};
   function setActiveMode(nextMode: "notebook" | "structured") {
     if(coached&&nextMode==="notebook")return;
     setModeByEntryId((prev) => ({ ...prev, [activeId]: nextMode }));
@@ -744,6 +744,7 @@ function exerciseGroupVolume(indices: number[]) {
 
   function handleConvertStructuredToNotebook() {
     if(coached)return;
+    if(personalPlanning){toast("Apply or cancel your workout plan first.");return;}
     if(activeStructured.rows.length&&!window.confirm("Convert to notes? Structured targets, set checks and group details will be replaced with readable text."))return;
     setPersonalPlanning(null);
     const parsed = parseStructuredFromNotes(String(active?.notes ?? ""));
@@ -800,6 +801,7 @@ function exerciseGroupVolume(indices: number[]) {
   }
 
   function addWorkoutTab() {
+    if(personalPlanning){toast("Apply or cancel your workout plan first.");return;}
     if (entries.length >= 3) {
       toast("Max 3 workouts per day");
       return;
@@ -811,6 +813,7 @@ function exerciseGroupVolume(indices: number[]) {
   }
 
   async function deleteActiveWorkout() {
+    if(personalPlanning){toast("Apply or cancel your workout plan first.");return;}
     const ok = window.confirm("Delete this workout?");
     if (!ok) return;
     const removedId=String(entries[activeIdx]?.id||"");
@@ -910,7 +913,7 @@ function exerciseGroupVolume(indices: number[]) {
     if(personalPlanning?.id===activeId){toast("Apply or cancel your workout plan first.");return;}
     if(completionLock.current)return;
     if(date>localToday()&&!active?.completedAt){toast("You can mark this workout complete on its scheduled date.");return;}
-    if (!active || !hasContent(active)) {
+    if (!active || (!hasContent(active)&&!(activeMode==="structured"&&activeStructured.rows.some(r=>r.name.trim())))) {
       toast("Add a workout before marking it complete");
       return;
     }
@@ -1377,7 +1380,7 @@ function exerciseGroupVolume(indices: number[]) {
 return (
     <div className="overlay">
       <div className="editor editor-full" onMouseDown={(e) => e.stopPropagation()}>
-        <button className="close" onClick={onClose} aria-label="Close">
+        <button className="close" onClick={()=>{if(personalPlanning&&!window.confirm("Discard un-applied plan edits?"))return;onClose();}} aria-label="Close">
           ✕
         </button>
 
@@ -1405,7 +1408,7 @@ return (
             {tabLabels.map((label, i) => (
               <button
                 key={i}
-                onClick={() => setActiveIdx(i)}
+                onClick={() => {if(personalPlanning&&i!==activeIdx){toast("Apply or cancel your workout plan first.");return;}setActiveIdx(i);}}
                 style={{
                   padding: "8px 10px",
                   borderRadius: 999,
@@ -1497,8 +1500,8 @@ return (
                   padding: "8px 12px",
                   fontSize: 12,
                   border: "none",
-                  background: activeMode === "notebook" ? "rgba(255,255,255,0.14)" : "transparent",
-                  color: "inherit",
+                  background: activeMode === "notebook" ? "var(--accent)" : "transparent",
+                  color: activeMode==="notebook"?"#111":"var(--text)",
                   cursor: "pointer",
                 }}
               >
@@ -1527,8 +1530,8 @@ return (
                   padding: "8px 12px",
                   fontSize: 12,
                   border: "none",
-                  background: activeMode === "structured" ? "rgba(255,255,255,0.14)" : "transparent",
-                  color: "inherit",
+                  background: activeMode === "structured" ? "var(--accent)" : "transparent",
+                  color: activeMode==="structured"?"#111":"var(--text)",
                   cursor:"pointer",
                 }}
                 title="Structured workout editor — keeps existing notes"
@@ -1548,7 +1551,7 @@ return (
     background: "rgba(0,0,0,0.10)",
   }}
 >
-  {!coached&&<div className="personal-plan-banner"><div><strong>{canReplacePlan?"Your workout plan":"Build your workout"}</strong><small>Same exercise builder and logging tools used by trainers.</small></div><button type="button" className="personal-plan-button" onClick={openPersonalPlan} disabled={planOpen}>{canReplacePlan?"Edit plan":plannedRows.length?"＋ Plan exercises":"＋ Build workout"}</button></div>}
+  {!coached&&<div className="personal-plan-banner"><div><strong>{canReplacePlan?"Your workout plan":"Build your workout"}</strong><small>Same exercise builder and logging tools used by trainers.</small></div><button type="button" className="personal-plan-button" onClick={openPersonalPlan} disabled={planOpen||!!active?.completedAt}>{canReplacePlan?"Edit plan":plannedRows.length?"＋ Plan exercises":"＋ Build workout"}</button></div>}
   {planOpen&&personalPlanning&&<div className="coach-builder personal-plan-editor"><div className="personal-plan-heading"><strong>{personalPlanning.replace?"Edit your planned workout":"Add planned exercises"}</strong><small>{personalPlanning.replace?"Changes replace unlogged targets only.":"Existing sets and results stay unchanged."}</small></div><PrescriptionEditor value={personalPlanning.value} onChange={value=>setPersonalPlanning(old=>old?{...old,value}:null)}/><div className="coach-builder-actions"><button className="trainer-action" type="button" disabled={!validatePrescriptionLines(personalPlanning.value.split("\n").filter(Boolean))} onClick={applyPersonalPlan}>Apply workout plan</button><button className="trainer-outline-button" type="button" onClick={()=>{if(personalPlanning.value&&!window.confirm("Discard un-applied plan edits?"))return;setPersonalPlanning(null)}}>Cancel</button></div></div>}
   {!planOpen&&<><div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", marginTop: 6 }}>
     <button

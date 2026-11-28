@@ -335,8 +335,9 @@ export default function WorkoutEditor({
 
   const editorContentRef = useRef<HTMLDivElement | null>(null);
 
-  // Keyboard-safe bottom padding (mobile)
-  const [keyboardPad, setKeyboardPad] = useState(0);
+  // Size the sheet to the visible viewport, not the area behind the keyboard.
+  const [keyboardViewport,setKeyboardViewport]=useState<{height:number;top:number}|null>(null);
+  const [notesFocused,setNotesFocused]=useState(false);
 
   // Lock background scroll while editor is open
   useEffect(() => {
@@ -364,25 +365,37 @@ export default function WorkoutEditor({
     };
   }, []);
 
-  // Visual viewport / keyboard pad
+  // Android may resize the layout viewport; iOS usually only resizes visualViewport.
+  // Keep an unobscured height baseline for both behaviours.
   useEffect(() => {
-    const vv = window.visualViewport;
-    if (!vv) return;
-
-    const update = () => {
-      const covered = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-      setKeyboardPad(covered);
+    const vv=window.visualViewport;
+    let baseline=vv?.height??window.innerHeight;
+    let width=window.innerWidth;
+    const update=()=>{
+      const height=vv?.height??window.innerHeight;
+      const top=vv?.offsetTop??0;
+      const nextWidth=window.innerWidth;
+      if(Math.abs(nextWidth-width)>80){width=nextWidth;baseline=height;}
+      const zoomed=(vv?.scale??1)>1.05;
+      const keyboard=!zoomed&&Math.max(window.innerHeight-height,baseline-height)>120;
+      if(!keyboard&&!zoomed)baseline=Math.max(baseline,height);
+      setKeyboardViewport(old=>{
+        const next=keyboard?{height:Math.round(height),top:Math.round(top)}:null;
+        return old?.height===next?.height&&old?.top===next?.top?old:next;
+      });
     };
-
     update();
-    vv.addEventListener("resize", update);
-    vv.addEventListener("scroll", update);
-    return () => {
-      vv.removeEventListener("resize", update);
-      vv.removeEventListener("scroll", update);
+    vv?.addEventListener("resize",update);
+    vv?.addEventListener("scroll",update);
+    window.addEventListener("resize",update);
+    return ()=>{
+      vv?.removeEventListener("resize",update);
+      vv?.removeEventListener("scroll",update);
+      window.removeEventListener("resize",update);
     };
   }, []);
 
+  useEffect(()=>{if(!keyboardViewport&&document.activeElement!==notesRef.current)setNotesFocused(false);},[keyboardViewport]);
   // Load signed-in user (Pro gating)
   useEffect(() => {
     if(demoMode)return;
@@ -441,6 +454,7 @@ export default function WorkoutEditor({
   function beginRest(value:string|undefined){const m=String(value||"").trim().match(/^(\d+(?:\.\d+)?)\s*(s|sec|seconds?|m|min|minutes?)?$/i);if(!m)return;const sec=Math.min(3600,Math.round(Number(m[1])*(m[2]?.toLowerCase().startsWith("m")?60:1)));if(sec>0){const now=Date.now();setRestNow(now);setRestUntil(now+sec*1000);}}
   const coached=activeId.startsWith("trainer_");
   const activeMode: "notebook" | "structured" = coached?"structured":modeByEntryId[activeId] ?? (active?.mode==="structured"?"structured":"notebook");
+  const writingNotes=activeMode==="notebook"&&notesFocused&&!!keyboardViewport;
   const planOpen=!coached&&personalPlanning?.id===activeId&&activeMode==="structured";
 
   const activeStructured: StructuredWorkout =
@@ -1380,14 +1394,15 @@ function exerciseGroupVolume(indices: number[]) {
 
 
 return (
-    <div className="overlay">
-      <div className="editor editor-full" onMouseDown={(e) => e.stopPropagation()}>
+    <div className={"overlay workout-editor-overlay"+(keyboardViewport?" keyboard-open":"")} style={keyboardViewport?{top:keyboardViewport.top,height:keyboardViewport.height,bottom:"auto"}:undefined}>
+      <div className={"editor editor-full"+(writingNotes?" writing-notes":"")} onMouseDown={(e) => e.stopPropagation()}>
         <button className="close" onClick={()=>{if(personalPlanning&&!window.confirm("Discard un-applied plan edits?"))return;onClose();}} aria-label="Close">
           ✕
         </button>
 
         <div className="editor-header">
           <div className="editor-date">{formatDisplayDate(date)}{demoMode&&" · DEMO CLIENT"}</div>
+          {writingNotes&&<div className="workout-writing-title">{active?.title?.trim()||"Workout notes"}</div>}
 
           <input
             className="editor-title"
@@ -1396,7 +1411,7 @@ return (
             placeholder="Workout title"
           />
 
-          <div
+          <div className="workout-editor-tabs"
             style={{
               display: "flex",
               gap: 8,
@@ -1454,7 +1469,6 @@ return (
         <div
           className="editor-content"
           ref={editorContentRef}
-          style={{ paddingBottom: keyboardPad ? keyboardPad + 12 : 0 }}
         >
           
           <button
@@ -1902,6 +1916,9 @@ return (
             <textarea
               ref={notesRef}
               className="editor-notes"
+              aria-label="Workout notes"
+              onFocus={()=>setNotesFocused(true)}
+              onBlur={()=>{if(!keyboardViewport)setNotesFocused(false);}}
               value={active?.notes ?? ""}
               onChange={(e) => updateActive({ notes: e.target.value })}
               placeholder="Workout notes"
@@ -2113,6 +2130,7 @@ return (
         </div>
 
         <div className="editor-actions editor-actions-compact" role="toolbar" aria-label="Workout actions">
+          {writingNotes&&<button type="button" className="secondary workout-keyboard-done" onClick={()=>{notesRef.current?.blur();setNotesFocused(false);}}>Done typing</button>}
           <div className="workout-secondary-actions">
           <button
             onClick={togglePb}
@@ -2148,7 +2166,7 @@ return (
           </button>
 
           </div>
-          <button onClick={handleSave} className="primary workout-save-button">
+          <button onClick={()=>{handleSave();notesRef.current?.blur();setNotesFocused(false);}} className="primary workout-save-button">
             Save
           </button>
         </div>

@@ -49,3 +49,5 @@
 - Owner confirmed personal structured workouts work. Structured is now the fallback for new personal workouts without an explicit saved preference. Retain existing explicit Notes preferences and existing workout modes. Show a dismissible Settings reminder after switching formats, without changing the default automatically.
 
 - Launch polish pass: keep Save visible independently from secondary toolbar scrolling; improve touch targets and keyboard focus, format switch contrast, empty states, exercise-library filter reset, and light-mode accent contrast. No pricing, billing, schema or new feature changes. Production build and owner visual QA remain separate checks.
+
+- Calendar coaching notices: show only unseen incoming access invitations and pending workout approvals/revisions for the current client. Dismiss on opening or closing the notice, remember per account/device and per request/revision, refresh on focus/return and every 15 seconds, and render nothing when no unseen items remain. Existing requests remain accessible via My Coaching; no approval or rejection is implied by dismissal. Remove the persistent My Coaching fallback banner from calendar.

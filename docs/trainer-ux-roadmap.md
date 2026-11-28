@@ -45,3 +45,5 @@
 ## Launch focus — owner direction Nov 27
 - Defer progress photo gallery, form videos and additional coaching expansion. Prioritize UX/UI polish, production reliability and commercial launch checks.
 - Personal workouts use the shared PrescriptionEditor and WorkoutEditor, with a device-local Notes/Structured default for new personal workouts. Preserve existing modes and notes; trainer assignments remain structured. Personal plan can be edited while untouched and appended after logging without overwriting existing rows; grouping, targets, alternatives, individual sets and rest timers use the same implementation. Maintain demo/live parity and verify mobile/light/dark and persistence before claiming final QA.
+
+- Owner confirmed personal structured workouts work. Structured is now the fallback for new personal workouts without an explicit saved preference. Retain existing explicit Notes preferences and existing workout modes. Show a dismissible Settings reminder after switching formats, without changing the default automatically.

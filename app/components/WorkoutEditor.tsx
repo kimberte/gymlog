@@ -248,6 +248,7 @@ export default function WorkoutEditor({
   const [activeIdx, setActiveIdx] = useState(0);
   const [completionBusy,setCompletionBusy]=useState(false);
   const [personalPlanning,setPersonalPlanning]=useState<{id:string;replace:boolean;value:string}|null>(null);
+  const [formatHint,setFormatHint]=useState<string|null>(null);
   const completionLock=useRef(false);
 
   // Structured editor (stored inside notes string via structuredNotes helpers)
@@ -763,7 +764,8 @@ function exerciseGroupVolume(indices: number[]) {
       return next;
     });
     setExtraNotesByEntryId((prev) => ({ ...prev, [activeId]: notebook }));
-    toast("Converted to notebook style");
+    setFormatHint(activeId);
+    toast("Switched to Notes");
   }
 
 
@@ -1525,6 +1527,7 @@ return (
                     [activeId]: String(active?.notes??""),
                   }));
                   setActiveMode("structured");
+                  setFormatHint(activeId);
                 }}
                 style={{
                   padding: "8px 12px",
@@ -1541,6 +1544,7 @@ return (
             </div>
 
           </div>}
+          {!coached&&formatHint===activeId&&<div className="workout-format-hint" role="status"><span>Prefer {activeMode==="structured"?"Structured":"Notes"} for new workouts? Change your default in <strong>Settings → General → Default workout format.</strong> This switch only affects this workout.</span><button type="button" aria-label="Dismiss format tip" onClick={()=>setFormatHint(null)}>×</button></div>}
 
           {activeMode === "structured" ? (
 <div className="structured-workout-panel"

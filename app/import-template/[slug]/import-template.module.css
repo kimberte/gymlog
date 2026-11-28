@@ -95,3 +95,5 @@
   .date { max-width: none; }
   .footer { margin-bottom: 8px; }
 }
+
+.format{border:0;padding:0;margin:22px 0 0;min-width:0}.format legend{font-size:14px;font-weight:750;color:var(--text);padding:0}.formatOption{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--border);border-radius:12px;margin-top:9px;cursor:pointer;background:var(--surface);color:var(--text)}.formatOption:has(input:checked){border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,var(--surface))}.formatOption input{width:18px;height:18px;flex:none;accent-color:var(--accent)}.formatOption span{display:grid;gap:4px}.formatOption small{font-size:12px;color:var(--muted)}.primary:disabled{opacity:.55;cursor:not-allowed}

@@ -1495,7 +1495,7 @@ return (
         </button>
 
         <div className="editor-header">
-          <div className="editor-date">{formatDisplayDate(date)}{demoMode&&" · DEMO CLIENT"}{personal&&futureCompletionBlocked&&<span className="personal-scheduled">Scheduled</span>}</div>
+          <div className="editor-date">{formatDisplayDate(date)}{demoMode&&" · DEMO CLIENT"}{!coached&&futureCompletionBlocked&&<span className="personal-scheduled" title="You can edit now and mark complete on the scheduled date">Scheduled</span>}</div>
           {writingNotes&&<div className="workout-writing-title">{active?.title?.trim()||"Workout notes"}</div>}
 
           <input
@@ -1565,7 +1565,7 @@ return (
           ref={editorContentRef}
         >
           
-          {!(personal&&futureCompletionBlocked)&&<button
+          {!(!coached&&futureCompletionBlocked)&&<button
             type="button"
             onClick={toggleWorkoutComplete}
             disabled={completionBusy||futureCompletionBlocked}
@@ -1583,7 +1583,7 @@ return (
           >
             {completionBusy?"Saving…":futureCompletionBlocked?"Scheduled · Not available yet":active?.completedAt ? "✓ Completed · Undo" : "✓ Mark Complete"}
           </button>}
-          {futureCompletionBlocked&&!personal&&<p className="future-completion-hint">You can log and edit this workout now. Mark it complete on or after {formatDisplayDate(date)}.</p>}
+          {futureCompletionBlocked&&coached&&<p className="future-completion-hint">You can log and edit this workout now. Mark it complete on or after {formatDisplayDate(date)}.</p>}
           {restUntil!==null&&<div className="structured-rest-timer"><div><strong role="status">{restLeft>0?"Rest timer":"Rest complete"}</strong><span role="timer" aria-live="off">{Math.floor(restLeft/60)}:{String(restLeft%60).padStart(2,"0")}</span></div><button type="button" onClick={()=>setRestUntil(v=>v===null?null:Math.max(Date.now(),v-15000))}>−15s</button><button type="button" onClick={()=>setRestUntil(v=>Math.max(Date.now(),v||0)+15000)}>+15s</button><button type="button" onClick={()=>setRestUntil(null)}>{restLeft?"Skip":"Dismiss"}</button></div>}
           {/* Editor mode toggle */}
           {coached?<p className="workout-mode-label">Trainer-assigned · Structured workout</p>:<div

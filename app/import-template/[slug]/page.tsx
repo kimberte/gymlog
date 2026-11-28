@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { getSeoTemplateBySlug } from "../../lib/seoWorkoutTemplates";
 import { getProgram } from "../../lib/programs";
-import { loadWorkouts, saveWorkouts } from "../../lib/storage";
+import { loadWorkouts, loadDefaultWorkoutMode, type DefaultWorkoutMode } from "../../lib/storage";
+import { getProgramWorkouts } from "../../workout-programs/programWorkouts";
+import { structuredProgramImport } from "../../lib/structuredProgramImport";
 import styles from "./import-template.module.css";
 import { FOUNDER_SPECIAL_V2_WORKOUTS } from "../../workout-programs/founderSpecialV2";
 import { FOUNDER_SPECIAL_WORKOUTS } from "../../workout-programs/founderSpecial";
@@ -23,65 +25,48 @@ function addDays(dateString: string, days: number) {
   return toDateInputValue(d);
 }
 
-function fallbackDays(program: NonNullable<ReturnType<typeof getProgram>>) {
-  const days = program.days;
-  const offsets = Array.from({ length: days }, (_, i) => Math.round((i * 6) / Math.max(days - 1, 1)));
-  const category = program.category.toLowerCase();
-
-  if (category.includes("powerlifting")) {
-    return offsets.map((offset, i) => ({ day: `Day ${i + 1}`, focus: "Main lift strength and supporting work", offsetDays: offset, exercises: [i % 3 === 0 ? "Back Squat — 3-5 sets" : i % 3 === 1 ? "Bench Press — 3-5 sets" : "Deadlift — 3-5 sets", i % 3 === 0 ? "Bench Press — 3-5 sets" : i % 3 === 1 ? "Deadlift — 3-5 sets" : "Back Squat — 3-5 sets", "Secondary compound lift — 3 sets", "Accessory work — 2-4 sets"] }));
-  }
-
-  if (category.includes("hypertrophy") || category.includes("bodybuilding") || category.includes("powerbuilding")) {
-    const splits = [["Chest Press — 3-4 sets", "Row — 3-4 sets", "Lateral Raise — 3 sets", "Triceps Extension — 2-3 sets", "Biceps Curl — 2-3 sets"], ["Back Squat or Leg Press — 3-4 sets", "Romanian Deadlift — 3 sets", "Leg Curl — 3 sets", "Calf Raise — 3 sets", "Core — 2-3 sets"], ["Overhead Press — 3-4 sets", "Pull-Up or Lat Pulldown — 3-4 sets", "Incline Press — 3 sets", "Lateral Raise — 3 sets", "Curl — 2-3 sets"], ["Deadlift or Hip Hinge — 3 sets", "Leg Press — 3-4 sets", "Leg Curl — 3 sets", "Calf Raise — 3 sets", "Core — 2-3 sets"], ["Bench Press — 3-4 sets", "Row — 3-4 sets", "Shoulder Press — 3 sets", "Triceps — 2-3 sets", "Biceps — 2-3 sets"], ["Squat — 3-4 sets", "Romanian Deadlift — 3 sets", "Split Squat — 3 sets", "Leg Curl — 3 sets", "Calves — 3 sets"]];
-    return offsets.map((offset, i) => ({ day: `Day ${i + 1}`, focus: "Muscle-building training", offsetDays: offset, exercises: splits[i % splits.length] }));
-  }
-
-  if (category.includes("home") || category.includes("bodyweight") || category.includes("kettlebell")) {
-    const sessions = [["Squat or Goblet Squat — 3 sets", "Push-Up or Press — 3 sets", "Row or Pull-Up — 3 sets", "Hip Hinge — 3 sets", "Core — 2-3 sets"], ["Split Squat — 3 sets", "Overhead Press — 3 sets", "Row or Pull-Up — 3 sets", "Glute Bridge — 3 sets", "Plank — 2-3 sets"], ["Squat Variation — 3 sets", "Push-Up Variation — 3 sets", "Pull-Up or Row — 3 sets", "Lunge — 3 sets", "Core — 2-3 sets"]];
-    return offsets.map((offset, i) => ({ day: `Day ${i + 1}`, focus: "Home-friendly strength and fitness", offsetDays: offset, exercises: sessions[i % sessions.length] }));
-  }
-
-  return offsets.map((offset, i) => ({ day: `Day ${i + 1}`, focus: "Full-body strength and fitness", offsetDays: offset, exercises: ["Squat or Leg Press — 3 sets", "Bench Press or Push-Up — 3 sets", "Row or Pulldown — 3 sets", "Hip Hinge — 3 sets", "Core or Carry — 2-3 sets"] }));
-}
-
 export default function ImportTemplatePage() {
   const params = useParams<{ slug: string }>();
   const slug = String(params?.slug || "");
   const template = useMemo(() => getSeoTemplateBySlug(slug), [slug]);
   const program = useMemo(() => getProgram(slug), [slug]);
-  const rawDays = slug === "gym-log-founder-special-v2" ? FOUNDER_SPECIAL_V2_WORKOUTS : slug === "gym-log-founder-special" ? FOUNDER_SPECIAL_WORKOUTS : (template?.days ?? (program ? fallbackDays(program) : []));
-  const days = rawDays.map((day) => ({
-    ...day,
-    day: "day" in day ? day.day : day.name,
-  }));
+  const days = useMemo(()=>{if(slug==="gym-log-founder-special-v2")return FOUNDER_SPECIAL_V2_WORKOUTS;if(slug==="gym-log-founder-special")return FOUNDER_SPECIAL_WORKOUTS;if(template)return template.days.map(d=>({...d,day:d.name,guidance:d.notes||""}));if(!program)return [];return getProgramWorkouts(program).map((d,i)=>({...d,offsetDays:"offsetDays" in d&&typeof d.offsetDays==="number"?d.offsetDays:Math.floor(i/Math.max(1,program.days))*7+Math.floor((i%Math.max(1,program.days))*7/Math.max(1,program.days))}));},[slug,program,template]);
   const name = template?.name ?? program?.name ?? "Workout Program";
   const description = template?.shortDescription ?? program?.description ?? "Import this workout program into Gym Log.";
   const [startDate, setStartDate] = useState(() => toDateInputValue(new Date()));
   const [status, setStatus] = useState<string>("");
+  const [format,setFormat]=useState<DefaultWorkoutMode>("structured");
+  const [busy,setBusy]=useState(false);
+  useEffect(()=>{setFormat(loadDefaultWorkoutMode());const start=new URLSearchParams(window.location.search).get("start");if(start&&/^\d{4}-\d{2}-\d{2}$/.test(start))setStartDate(start);},[]);
+  const prepared=useMemo(()=>days.map(day=>{const original=[day.focus,day.exercises.join("\n"),day.guidance||"",`Imported from Gym Log workout program: ${name}`].filter(Boolean).join("\n\n");return {day,original,converted:format==="structured"?structuredProgramImport(day.day,day.exercises,original):null};}),[days,format,name]);
+  const needsReview=prepared.filter(x=>x.converted?.review).length;
 
   function handleImport() {
+    if(busy)return;
     if (!days.length) { setStatus("Program not found. Please return to the workout library."); return; }
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(startDate)||!Number.isFinite(new Date(startDate+"T12:00:00").getTime())){setStatus("Choose a valid start date.");return;}
+    setBusy(true);
     try {
       const existing = loadWorkouts();
       const next = { ...(existing || {}) } as Record<string, any>;
       const now = new Date().toISOString();
       const importedDates: string[] = [];
-      days.forEach((day, dayIndex) => {
+      prepared.forEach(({day,original,converted}, dayIndex) => {
         const date = addDays(startDate, day.offsetDays);
         const current = next[date] && Array.isArray(next[date].entries) ? next[date] : { entries: [] };
         const available = Math.max(0, 3 - current.entries.length);
         if (available === 0) return;
-        const entry = { id: `program_${Date.now()}_${dayIndex}_${Math.random().toString(16).slice(2)}`, title: day.day, notes: `${day.focus}\n\n${day.exercises.join("\n")}\n\nImported from Gym Log workout program: ${name}`, createdAt: now, updatedAt: now };
+        const entry = { id: `program_${Date.now()}_${dayIndex}_${Math.random().toString(16).slice(2)}`, title: day.day, notes: converted?.notes??original, mode:format, ...(converted?{structured:converted.structured}:{}), completedAt:null, createdAt: now, updatedAt: now };
         next[date] = { ...current, entries: [...current.entries, entry].slice(0, 3) };
         importedDates.push(date);
       });
-      saveWorkouts(next);
+      if(!importedDates.length){setStatus("No available workout slots. Choose another start date.");setBusy(false);return;}
+      if(importedDates.length<days.length&&!window.confirm(`Only ${importedDates.length} of ${days.length} sessions fit. Import these and skip full dates?`)){setBusy(false);return;}
       localStorage.setItem("gym-log-workouts", JSON.stringify(next));
       localStorage.removeItem("gym-log-template-import-pending");
       setStatus(`Imported ${importedDates.length} workout day${importedDates.length === 1 ? "" : "s"}. Opening Gym Log…`);
       window.setTimeout(() => { window.location.href = `/?imported=1&start=${encodeURIComponent(startDate)}`; }, 150);
-    } catch { setStatus("Import failed. Please try again."); }
+    } catch { setStatus("Import failed. Please try again."); setBusy(false); }
   }
 
   if (!days.length) {
@@ -117,9 +102,10 @@ export default function ImportTemplatePage() {
             <p className={styles.muted}>We'll place the program into your Gym Log calendar starting on this date.</p>
             <label htmlFor="startDate" className={styles.label}>Program start</label>
             <input id="startDate" className={styles.date} type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+            <fieldset className={styles.format}><legend>Workout format</legend><p className={styles.muted}>Choose how to log this program. Your default is selected; this choice applies only to this import.</p>{([{value:"structured",title:"Structured",desc:"Individual sets, reps, targets and completion checks"},{value:"plain",title:"Notes",desc:"Editable free-form workout text"}] as const).map(option=><label key={option.value} className={styles.formatOption}><input type="radio" name="format" value={option.value} checked={format===option.value} onChange={()=>setFormat(option.value)}/><span><strong>{option.title}</strong><small>{option.desc}</small></span></label>)}{format==="structured"&&<p className={styles.muted}>{needsReview?`${needsReview} session(s) contain instructions or targets that need review. Original instructions are preserved in workout notes.`:"Exercise targets are prefilled where specified. Original program instructions remain in workout notes."} No sets are marked complete.</p>}</fieldset>
             <div className={styles.callout}><span className={styles.check}>✓</span><div><strong>Your existing workouts stay safe.</strong><span>New sessions are added only where there is an open slot.</span></div></div>
-            <button onClick={handleImport} className={styles.primary}>Import into Gym Log <span>→</span></button>
-            {status ? <p className={styles.status}>{status}</p> : null}
+            <button onClick={handleImport} disabled={busy||!startDate} className={styles.primary}>{busy?"Importing…":`Import as ${format==="structured"?"Structured":"Notes"}`} <span>→</span></button>
+            {status ? <p role="status" className={styles.status}>{status}</p> : null}
           </section>
 
           <aside className={styles.card}>

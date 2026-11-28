@@ -9,6 +9,8 @@ import type { Metadata, Viewport } from "next";
 import Analytics from "./components/Analytics";
 import SiteBrandHeader from "./components/SiteBrandHeader";
 import ThemeControl, { ToolTimerProvider } from "./components/ThemeControl";
+import {PROGRAMS} from "./lib/programs";
+const programCount=new Set(PROGRAMS.map(p=>p.slug)).size;
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.gymlogapp.com";
 
@@ -19,7 +21,7 @@ export const metadata: Metadata = {
     template: "%s | Gym Log",
   },
   description:
-    "A simple, fast workout calendar to log workouts, import free workout templates, track progress, and back up your training.",
+    `Track workouts in a calendar, log structured sets or notes, and choose from ${programCount} workout programs to import into Gym Log.`,
   applicationName: "Gym Log",
   keywords: [
     "workout log",
@@ -47,12 +49,12 @@ export const metadata: Metadata = {
     url: "/",
     siteName: "Gym Log",
     title: "Gym Log – Workout Calendar & Gym Tracker",
-    description: "Log workouts on a calendar, import free workout templates, track progress, and back up your training.",
+    description: `Log structured workouts or notes, track progress and import from ${programCount} workout program presets.`,
   },
   twitter: {
     card: "summary",
     title: "Gym Log – Workout Calendar & Gym Tracker",
-    description: "Log workouts on a calendar, import free workout templates, track progress, and back up your training.",
+    description: `Log structured workouts or notes, track progress and import from ${programCount} workout program presets.`,
   },
   robots: { index: true, follow: true },
 };

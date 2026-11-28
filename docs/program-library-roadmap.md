@@ -14,3 +14,6 @@ Goal: 500+ genuinely distinct importable programs. Baseline source audit: 343 un
 2. Enrich existing dedicated and generated programs in small batches, prioritizing distinct original plans and high-value training goals. Label third-party adaptations; never reproduce paid plans or invent official loading rules.
 3. Consolidate SEO templates, preserve URLs and distinguish variants from duplicates. Expand originals only with clear differences in frequency, goal, equipment and experience. Maintain coverage counts and test results here.
 4. Target 500+ verified useful entries, not superficial duplicates. Coordinate atomic main writes with daily blogs and other development tasks.
+
+## Marketing alignment
+- Trainer landing hero, library section, plan inclusions, FAQ and metadata highlight the actual unique main catalog count computed from PROGRAMS. Featured original cards link to real program pages. Consumer welcome page highlights direct calendar import with Notes or Structured choice. Counts grow automatically at deployment; copy distinguishes starter routines/adaptations from fully programmed blocks rather than claiming every entry has full multiweek detail. No pricing, import behavior or program data changes in this marketing pass.

@@ -7,6 +7,7 @@ import { PROGRAMS } from "../lib/programs";
 import { ALL_BLOG_POSTS } from "../blog/blogPosts";
 import "./welcome-homepage.css";
 
+const programCount=new Set(PROGRAMS.map(p=>p.slug)).size;
 const WELCOME_SEEN_DATE_KEY = "gym-log-welcome-seen-date";
 
 function dateKey(d = new Date()) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; }
@@ -42,6 +43,8 @@ export default function WelcomePage() {
       </Link>
 
       <Link href="/trainers/client" className="welcome-today-card" style={{marginTop:14}}><div className="welcome-today-top"><span className="welcome-section-kicker">MY COACHING</span><span className="welcome-open-link">Open coaching →</span></div><div className="welcome-today-workout">Training with a coach?</div><div className="welcome-today-extra">Review assigned workouts, messages and progress.</div></Link>
+
+      <Link href="/workout-programs" className="welcome-today-card welcome-program-library"><div className="welcome-today-top"><span className="welcome-section-kicker">WORKOUT PROGRAM LIBRARY</span><span className="welcome-open-link">Browse programs →</span></div><div className="welcome-library-count">{programCount} <span>workout programs</span></div><h2>Choose a plan. Start training.</h2><p>Find a routine for your goals, schedule and equipment. Pick a start date and import directly into your calendar in Structured or Notes format.</p><div className="welcome-featured-meta"><span>Strength</span><span>Muscle building</span><span>Glutes</span><span>Home workouts</span><span>Beginner</span></div><strong>Explore the program library →</strong></Link>
 
       {latestBlogs.length > 0 && <section aria-label="Latest from the Gym Log blog">
         {latestBlogs.map((post, index) => <Link key={post.slug} href={`/blog/${post.slug}`} className="welcome-blog-card">

@@ -272,3 +272,9 @@ export function saveSettings(settings: Settings) {
     if (settings?.weekStart) saveWeekStart(settings.weekStart);
   } catch {}
 }
+
+// Device-local preference. Existing workouts retain their saved mode.
+export type DefaultWorkoutMode="plain"|"structured";
+const DEFAULT_WORKOUT_MODE_KEY="gym-log-default-workout-mode";
+export function loadDefaultWorkoutMode():DefaultWorkoutMode {try{return typeof window!=="undefined"&&localStorage.getItem(DEFAULT_WORKOUT_MODE_KEY)==="structured"?"structured":"plain";}catch{return "plain";}}
+export function saveDefaultWorkoutMode(mode:DefaultWorkoutMode){try{localStorage.setItem(DEFAULT_WORKOUT_MODE_KEY,mode);}catch{}}

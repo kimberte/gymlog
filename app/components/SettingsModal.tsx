@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
+import {loadDefaultWorkoutMode,saveDefaultWorkoutMode,type DefaultWorkoutMode} from "../lib/storage";
 import CoachingNotificationPreferences from "./CoachingNotificationPreferences";
 import { exportCSV, importCSV } from "../lib/csv";
 import { supabase } from "../lib/supabaseClient";
@@ -49,6 +50,7 @@ export default function SettingsModal({
   lastBackupAt,
 }: Props) {
   const fileRef = useRef<HTMLInputElement | null>(null);
+  const [defaultWorkoutMode,setDefaultWorkoutMode]=useState<DefaultWorkoutMode>(loadDefaultWorkoutMode);
 
   const [closing, setClosing] = useState(false);
 
@@ -1077,6 +1079,7 @@ async function updatePassword() {
 
           <a href="/tools" style={{ display: "inline-block", marginTop: 12, padding: "9px 12px", borderRadius: 10, color: "var(--text)", background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.18)", textDecoration: "none", fontSize: 13, fontWeight: 600 }}>Open workout tools →</a>
 
+          <div style={{marginTop:16,display:"grid",gap:8}}><strong style={{fontSize:13}}>Default workout format</strong><p style={{margin:0,fontSize:12,color:"var(--muted)"}}>Choose how new personal workouts open. You can still change the format per workout. Trainer-assigned workouts always use structured logging.</p><div role="group" aria-label="Default workout format" style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:8}}>{([{value:"plain",title:"Notes",description:"Write workouts freely."},{value:"structured",title:"Structured",description:"Exercises, sets, targets and timers."}] as const).map(x=><button type="button" key={x.value} aria-pressed={defaultWorkoutMode===x.value} onClick={()=>{setDefaultWorkoutMode(x.value);saveDefaultWorkoutMode(x.value)}} style={{textAlign:"left",display:"grid",gap:5,padding:12,borderRadius:10,border:defaultWorkoutMode===x.value?"1px solid var(--accent)":"1px solid var(--border)",background:defaultWorkoutMode===x.value?"rgba(249,115,22,.10)":"var(--surface)",color:"var(--text)",cursor:"pointer"}}><strong>{defaultWorkoutMode===x.value?"✓ ":""}{x.title}</strong><small style={{color:"var(--muted)",fontSize:11,lineHeight:1.4}}>{x.description}</small></button>)}</div></div>
           <div style={{ marginTop: 10, fontSize: 13, opacity: 0.9 }}>
             Week starts on
           </div>

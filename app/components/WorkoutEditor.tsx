@@ -5,9 +5,11 @@ import {
   useRef,
   useState,
 } from "react";
-import { WorkoutEntry, WorkoutMap, getDayEntries } from "../lib/storage";
+import { WorkoutEntry, WorkoutMap, getDayEntries,loadDefaultWorkoutMode } from "../lib/storage";
+import PrescriptionEditor from "./PrescriptionEditor";
+import "../trainers/trainer-dashboard.css";
 import "./WorkoutEditorCompact.css";
-import {prescriptionDraft,actualSetRows,actualLiftText,suggestedActual,defaultActualUnit,validActual,canonicalExercise,blockLabel} from "../lib/structuredCoaching";
+import {prescriptionDraft,actualSetRows,actualLiftText,suggestedActual,defaultActualUnit,validActual,canonicalExercise,blockLabel,readPrescription,writePrescription,validatePrescriptionLines} from "../lib/structuredCoaching";
 import { getSessionUser } from "../lib/backup";
 import { supabase } from "../lib/supabaseClient";
 import { compressImageToWebp } from "../lib/imageCompress";
@@ -74,6 +76,7 @@ function structuredToNotebookText(data: StructuredWorkout, extraNotes?: string):
       reps: String(r?.reps ?? "").trim(),
       weight: String(r?.weight ?? "").trim(),
       completed: Boolean(r?.completed),
+      targetReps:String(r?.targetReps??""),targetLoad:String(r?.targetLoad??""),targetRest:String(r?.targetRest??""),setType:r?.setType,block:r?.block,blockRound:r?.blockRound,
     }))
     .filter((r) => r.name || r.reps || r.weight || r.completed);
 
@@ -102,9 +105,10 @@ function structuredToNotebookText(data: StructuredWorkout, extraNotes?: string):
       else if (repPart) mid = `${repPart}`;
       else if (wtPart) mid = `${wtPart}`;
 
+      if(!mid&&s.targetReps)mid=[s.targetReps,s.targetLoad,s.targetRest&&"Rest "+s.targetRest].filter(Boolean).join(" · ");
       const doneLabel = s.completed ? "Done" : "Not Done";
       const main = mid ? `: ${mid}` : ":";
-      lines.push(`- Set ${idx + 1}${main} (${doneLabel})`);
+      lines.push(`- Set ${idx + 1}${s.setType&&s.setType!=="normal"?" ["+s.setType+"]":""}${main} (${doneLabel})${s.block?" · "+blockLabel(s.block)+" round "+s.blockRound:""}`);
     });
     lines.push("");
   });
@@ -237,12 +241,13 @@ export default function WorkoutEditor({
         media: (e as any)?.media ?? null,
       completedAt: e.completedAt ?? null,
       }));
-    return entries.length ? entries : [{ id: "w1", title: "", notes: "", media: null }];
+    return entries.length ? entries : [{ id: "w1", title: "", notes: "", media: null,mode:demoMode?"plain":loadDefaultWorkoutMode() }];
   }, [workouts, date]);
 
   const [entries, setEntries] = useState<EntryWithMedia[]>(initialEntries);
   const [activeIdx, setActiveIdx] = useState(0);
   const [completionBusy,setCompletionBusy]=useState(false);
+  const [personalPlanning,setPersonalPlanning]=useState<{id:string;replace:boolean;value:string}|null>(null);
   const completionLock=useRef(false);
 
   // Structured editor (stored inside notes string via structuredNotes helpers)
@@ -282,11 +287,7 @@ export default function WorkoutEditor({
             nextExtra[id] = removeStructuredBlock(notes);
           } else {
             // Keep existing mode unless it doesn't exist yet
-            if (!nextModes[id]) nextModes[id] = "notebook";
-            if (nextModes[id] === "structured") {
-              // If someone manually removed the block, fall back
-              nextModes[id] = "notebook";
-            }
+            nextModes[id] = e.mode==="structured"?"structured":"notebook";
             if (nextExtra[id] == null) nextExtra[id] = notes;
             if (!nextStructured[id]) {
               nextStructured[id] = {
@@ -438,7 +439,8 @@ export default function WorkoutEditor({
   const restLeft=restUntil===null?0:Math.max(0,Math.ceil((restUntil-restNow)/1000));
   function beginRest(value:string|undefined){const m=String(value||"").trim().match(/^(\d+(?:\.\d+)?)\s*(s|sec|seconds?|m|min|minutes?)?$/i);if(!m)return;const sec=Math.min(3600,Math.round(Number(m[1])*(m[2]?.toLowerCase().startsWith("m")?60:1)));if(sec>0){const now=Date.now();setRestNow(now);setRestUntil(now+sec*1000);}}
   const coached=activeId.startsWith("trainer_");
-  const activeMode: "notebook" | "structured" = coached?"structured":modeByEntryId[activeId] ?? "notebook";
+  const activeMode: "notebook" | "structured" = coached?"structured":modeByEntryId[activeId] ?? (active?.mode==="structured"?"structured":"notebook");
+  const planOpen=!coached&&personalPlanning?.id===activeId&&activeMode==="structured";
 
   const activeStructured: StructuredWorkout =
     structuredByEntryId[activeId] ?? (coached?prescriptionDraft(active?.title||"",String(active?.trainerPrescription||active?.notes||"").split("\n")):{
@@ -540,6 +542,10 @@ const activeTotalVolume = useMemo(
   }, [workouts, date, activeStructured.rows]);
 
 
+  const plannedRows=activeStructured.rows||[];
+  const canReplacePlan=!!activeStructured.personalPlan?.length&&!active?.completedAt&&plannedRows.every(r=>r.planned&&!r.completed&&!r.skipped&&!r.repsEdited&&!r.weightEdited&&!r.unitEdited&&!r.reps&&!r.weight);
+  const openPersonalPlan=()=>{if(coached)return;setPersonalPlanning({id:activeId,replace:canReplacePlan,value:canReplacePlan?activeStructured.personalPlan!.join("\n"):""});};
+  const applyPersonalPlan=()=>{if(!personalPlanning||personalPlanning.id!==activeId||coached)return;const lines=personalPlanning.value.split("\n").filter(Boolean);if(!validatePrescriptionLines(lines)){toast("Review the exercises, sets and targets before applying.");return;}if(personalPlanning.replace&&!canReplacePlan){toast("Logged results are protected. Add new exercises instead.");return;}const base=personalPlanning.replace?[]:plannedRows;const offset=Math.max(0,...base.map(r=>Number(r.block?.id.slice(1))||0));const adjusted=lines.map(line=>{const x=readPrescription(line);return x.block&&offset?writePrescription({...x,block:{...x.block,id:"G"+(Number(x.block.id.slice(1))+offset)}}):line;});const next=prescriptionDraft(active?.title||"",adjusted);if(base.length+next.rows.length>250){toast("Maximum 250 sets per workout.");return;}updateActiveStructured({rows:[...base,...next.rows],personalPlan:base.length?undefined:adjusted});setPersonalPlanning(null);toast("Workout plan updated. Log your actual results below.");};
   function setActiveMode(nextMode: "notebook" | "structured") {
     if(coached&&nextMode==="notebook")return;
     setModeByEntryId((prev) => ({ ...prev, [activeId]: nextMode }));
@@ -548,7 +554,7 @@ const activeTotalVolume = useMemo(
   function updateActiveStructured(patch: Partial<StructuredWorkout>) {
     setStructuredByEntryId((prev) => ({
       ...prev,
-      [activeId]: { ...activeStructured, ...patch },
+      [activeId]: { ...activeStructured, ...(patch.rows?{personalPlan:undefined}:{}), ...patch },
     }));
   }
 
@@ -572,7 +578,7 @@ function duplicateLastStructuredRow() {
     return;
   }
   const raw=rows[rows.length-1];
-  const last=coached?suggestedActual(raw):defaultActualUnit(raw);
+  const last=(coached||raw.planned)?suggestedActual(raw):defaultActualUnit(raw);
   const nextRows = [...rows, { ...last, block:undefined,blockRound:undefined, completed:false, skipped:false, planned:false, repsEdited:Boolean(last.reps),weightEdited:Boolean(last.weight),unitEdited:Boolean(last.unit) }];
   updateActiveStructured({ rows: nextRows });
 }
@@ -601,7 +607,7 @@ function addNextSetFromLastRow() {
 function toggleRowCompleted(idx: number) {
   const row = (activeStructured.rows || [])[idx] as any;
   if (!row) return;
-  const filled=coached?suggestedActual(row):defaultActualUnit(row);
+  const filled=(coached||row.planned)?suggestedActual(row):defaultActualUnit(row);
   if(!row.completed&&!validActual(filled)){toast("Enter actual reps or seconds and select a unit for any weight.");return;}
   updateActiveStructuredRow(idx,row.completed?{completed:false}:{...filled,completed:true,skipped:false});
   if(!row.completed){if(row.block){const same=activeStructured.rows.filter((r,i)=>i!==idx&&r.block?.id===row.block?.id&&r.blockRound===row.blockRound);if(same.every(r=>r.completed||r.skipped))beginRest(String(row.block.restSeconds)+" sec");}else beginRest(row.targetRest);}
@@ -719,7 +725,7 @@ function exerciseGroupVolume(indices: number[]) {
 }
 
   function removeActiveStructuredRow(idx: number) {
-    const row=activeStructured.rows[idx];if(coached&&row?.planned){updateActiveStructuredRow(idx,{skipped:!row.skipped,completed:false});return;}
+    const row=activeStructured.rows[idx];if(row?.planned){updateActiveStructuredRow(idx,{skipped:!row.skipped,completed:false});return;}
     const nextRows = (activeStructured.rows || []).filter((_, i) => i !== idx);
     updateActiveStructured({ rows: nextRows });
   }
@@ -738,6 +744,8 @@ function exerciseGroupVolume(indices: number[]) {
 
   function handleConvertStructuredToNotebook() {
     if(coached)return;
+    if(activeStructured.rows.length&&!window.confirm("Convert to notes? Structured targets, set checks and group details will be replaced with readable text."))return;
+    setPersonalPlanning(null);
     const parsed = parseStructuredFromNotes(String(active?.notes ?? ""));
     const data = activeStructured;
     const extra = String(extraNotesByEntryId?.[activeId] ?? "");
@@ -796,7 +804,7 @@ function exerciseGroupVolume(indices: number[]) {
       toast("Max 3 workouts per day");
       return;
     }
-    const next: EntryWithMedia = { id: `w_${crypto.randomUUID()}`, title: "", notes: "", media: null };
+    const next: EntryWithMedia = { id: `w_${crypto.randomUUID()}`, title: "", notes: "", media: null,mode:demoMode?"plain":loadDefaultWorkoutMode() };
     setEntries((prev) => [...prev, next]);
     setActiveIdx(entries.length);
     setTimeout(() => notesRef.current?.focus(), 50);
@@ -899,6 +907,7 @@ function exerciseGroupVolume(indices: number[]) {
   }
 
   async function toggleWorkoutComplete() {
+    if(personalPlanning?.id===activeId){toast("Apply or cancel your workout plan first.");return;}
     if(completionLock.current)return;
     if(date>localToday()&&!active?.completedAt){toast("You can mark this workout complete on its scheduled date.");return;}
     if (!active || !hasContent(active)) {
@@ -907,7 +916,7 @@ function exerciseGroupVolume(indices: number[]) {
     }
     let confirmedDraft=activeStructured;
     if(activeMode==="structured"&&!active.completedAt){
-      const candidates=activeStructured.rows.map(row=>coached?suggestedActual(row):defaultActualUnit(row));
+      const candidates=activeStructured.rows.map(row=>(coached||row.planned)?suggestedActual(row):defaultActualUnit(row));
       const ready=candidates.filter(row=>!row.completed&&!row.skipped&&validActual(row)).length;
       const incomplete=candidates.filter(row=>!row.completed&&!row.skipped&&!validActual(row)).length;
       if((ready||incomplete)&&!window.confirm("Confirm "+ready+" additional set(s) using the displayed reps and weights?"+(incomplete?" "+incomplete+" unfinished set(s) will be marked skipped.":"")+" Only confirm sets you actually performed."))return;
@@ -926,6 +935,7 @@ function exerciseGroupVolume(indices: number[]) {
   }
 
   function handleSave() {
+    if(personalPlanning?.id===activeId){toast("Apply or cancel your workout plan first.");return;}
     const buildNotes = (e: EntryWithMedia) => {
       const id = String(e.id);
       const mode = id.startsWith("trainer_")?"structured":modeByEntryId[id] ?? "notebook";
@@ -1482,7 +1492,7 @@ return (
             >
               <button
                 type="button"
-                onClick={() => setActiveMode("notebook")}
+                onClick={() => {if(activeMode==="structured")handleConvertStructuredToNotebook();}}
                 style={{
                   padding: "8px 12px",
                   fontSize: 12,
@@ -1492,15 +1502,13 @@ return (
                   cursor: "pointer",
                 }}
               >
-                Notebook
+                Notes
               </button>
               <button
                 type="button"
                 onClick={() => {
-                  if (!canSwitchToStructured()) {
-                    toast("To start Structured, clear your notebook notes first (one-way).");
-                    return;
-                  }
+                  if(activeMode==="structured")return;
+                  // Preserve the existing free-form notes instead of forcing deletion.
                   // Initialize draft from current title if needed
                   setStructuredByEntryId((prev) => ({
                     ...prev,
@@ -1511,7 +1519,7 @@ return (
                   }));
                   setExtraNotesByEntryId((prev) => ({
                     ...prev,
-                    [activeId]: prev[activeId] ?? "",
+                    [activeId]: String(active?.notes??""),
                   }));
                   setActiveMode("structured");
                 }}
@@ -1521,37 +1529,14 @@ return (
                   border: "none",
                   background: activeMode === "structured" ? "rgba(255,255,255,0.14)" : "transparent",
                   color: "inherit",
-                  cursor: canSwitchToStructured() ? "pointer" : "not-allowed",
-                  opacity: canSwitchToStructured() ? 1 : 0.55,
+                  cursor:"pointer",
                 }}
-                title={
-                  canSwitchToStructured()
-                    ? "Structured list editor"
-                    : "Not available for existing notebook notes (one-way conversion only)"
-                }
+                title="Structured workout editor — keeps existing notes"
               >
                 Structured
               </button>
             </div>
 
-            {activeMode === "structured" && (
-              <button
-                type="button"
-                onClick={handleConvertStructuredToNotebook}
-                style={{
-                  padding: "8px 10px",
-                  fontSize: 12,
-                  borderRadius: 12,
-                  border: "1px solid rgba(255,255,255,0.14)",
-                  background: "rgba(255,255,255,0.06)",
-                  color: "inherit",
-                  cursor: "pointer",
-                }}
-                title="One-way: removes structured data and turns it into notebook text."
-              >
-                Convert to Notebook (one-way)
-              </button>
-            )}
           </div>}
 
           {activeMode === "structured" ? (
@@ -1563,7 +1548,9 @@ return (
     background: "rgba(0,0,0,0.10)",
   }}
 >
-  <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", marginTop: 6 }}>
+  {!coached&&<div className="personal-plan-banner"><div><strong>{canReplacePlan?"Your workout plan":"Build your workout"}</strong><small>Same exercise builder and logging tools used by trainers.</small></div><button type="button" className="personal-plan-button" onClick={openPersonalPlan} disabled={planOpen}>{canReplacePlan?"Edit plan":plannedRows.length?"＋ Plan exercises":"＋ Build workout"}</button></div>}
+  {planOpen&&personalPlanning&&<div className="coach-builder personal-plan-editor"><div className="personal-plan-heading"><strong>{personalPlanning.replace?"Edit your planned workout":"Add planned exercises"}</strong><small>{personalPlanning.replace?"Changes replace unlogged targets only.":"Existing sets and results stay unchanged."}</small></div><PrescriptionEditor value={personalPlanning.value} onChange={value=>setPersonalPlanning(old=>old?{...old,value}:null)}/><div className="coach-builder-actions"><button className="trainer-action" type="button" disabled={!validatePrescriptionLines(personalPlanning.value.split("\n").filter(Boolean))} onClick={applyPersonalPlan}>Apply workout plan</button><button className="trainer-outline-button" type="button" onClick={()=>{if(personalPlanning.value&&!window.confirm("Discard un-applied plan edits?"))return;setPersonalPlanning(null)}}>Cancel</button></div></div>}
+  {!planOpen&&<><div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", marginTop: 6 }}>
     <button
       type="button"
       onClick={addExercisePrompt}
@@ -1577,7 +1564,7 @@ return (
         fontWeight: 600,
       }}
     >
-      + Add exercise
+      {coached?"+ Add exercise":"+ Quick log exercise"}
     </button>
 
     <button
@@ -1620,7 +1607,7 @@ return (
   </div>
 
   <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10 }}>
-    {(()=>{const rows=activeStructured.rows||[];const normal=groupRowsByExercise(rows).map(g=>({...g,indices:g.indices.filter(i=>!rows[i].block)})).filter(g=>g.indices.length);const blocks=new Map<string,number[]>();rows.forEach((r,i)=>{if(r.block)blocks.set(r.block.id,[...(blocks.get(r.block.id)||[]),i]);});const display=[...normal.map(g=>({first:g.indices[0],g,blockIndices:null as number[]|null})),...Array.from(blocks.values()).map(indices=>({first:indices[0],g:null,blockIndices:indices}))].sort((a,b)=>a.first-b.first);return display.map(({g,blockIndices,first})=>{if(blockIndices){const block=rows[first].block!;const rounds=Array.from(new Set(blockIndices.map(i=>rows[i].blockRound||1))).sort((a,b)=>a-b);return <section key={"block-"+block.id} className="structured-exercise-card structured-training-block"><header><strong>{blockLabel(block)}</strong><small>{rounds.length} rounds · {block.restSeconds}s rest after each round</small></header>{rounds.map(round=>{const indices=blockIndices.filter(i=>(rows[i].blockRound||1)===round);return <div key={round} className="structured-block-round"><strong>Round {round} · {indices.filter(i=>rows[i].completed&&!rows[i].skipped).length}/{indices.length} complete</strong>{indices.map(i=>{const r=coached?suggestedActual(rows[i]):defaultActualUnit(rows[i]);return <div key={i} className="structured-block-movement"><div><b>{r.name}</b><small>Target: {[r.targetReps,r.targetLoad,r.note].filter(Boolean).join(" · ")}</small></div><div className="structured-block-inputs"><button type="button" className="structured-set-check" aria-pressed={!!r.completed} aria-label={(r.completed?"Mark incomplete: ":"Mark complete: ")+r.name+", round "+round} onClick={()=>toggleRowCompleted(i)}>{r.completed?"✓":r.skipped?"–":""}</button><label>{/\b(sec|min)$/i.test(r.targetReps||"")?"Seconds":"Reps"}<input inputMode="numeric" value={r.reps||""} onChange={ev=>updateActiveStructuredRow(i,{reps:sanitizeIntInput(ev.target.value),repsEdited:true})}/></label><label>Weight<input inputMode="decimal" value={r.weight||""} onChange={ev=>updateActiveStructuredRow(i,{weight:sanitizeDecimalInput(ev.target.value),weightEdited:true,unit:r.unit||"lb"})}/></label><label>Unit<select value={r.unit||""} onChange={ev=>updateActiveStructuredRow(i,{unit:ev.target.value as StructuredExerciseRow["unit"],unitEdited:true})}>{!r.unit&&<option value="">Unit</option>}<option value="lb">lb</option><option value="kg">kg</option></select></label><button type="button" aria-label={r.skipped?"Restore set":"Skip set"} onClick={()=>removeActiveStructuredRow(i)}>{r.skipped?"↶":"–"}</button></div></div>})}</div>})}</section>;}if(!g)return null;
+    {(()=>{const rows=activeStructured.rows||[];const normal=groupRowsByExercise(rows).map(g=>({...g,indices:g.indices.filter(i=>!rows[i].block)})).filter(g=>g.indices.length);const blocks=new Map<string,number[]>();rows.forEach((r,i)=>{if(r.block)blocks.set(r.block.id,[...(blocks.get(r.block.id)||[]),i]);});const display=[...normal.map(g=>({first:g.indices[0],g,blockIndices:null as number[]|null})),...Array.from(blocks.values()).map(indices=>({first:indices[0],g:null,blockIndices:indices}))].sort((a,b)=>a.first-b.first);return display.map(({g,blockIndices,first})=>{if(blockIndices){const block=rows[first].block!;const rounds=Array.from(new Set(blockIndices.map(i=>rows[i].blockRound||1))).sort((a,b)=>a-b);return <section key={"block-"+block.id} className="structured-exercise-card structured-training-block"><header><strong>{blockLabel(block)}</strong><small>{rounds.length} rounds · {block.restSeconds}s rest after each round</small></header>{rounds.map(round=>{const indices=blockIndices.filter(i=>(rows[i].blockRound||1)===round);return <div key={round} className="structured-block-round"><strong>Round {round} · {indices.filter(i=>rows[i].completed&&!rows[i].skipped).length}/{indices.length} complete</strong>{indices.map(i=>{const r=(coached||rows[i].planned)?suggestedActual(rows[i]):defaultActualUnit(rows[i]);return <div key={i} className="structured-block-movement"><div><b>{r.name}</b><small>Target: {[r.targetReps,r.targetLoad,r.note].filter(Boolean).join(" · ")}</small></div><div className="structured-block-inputs"><button type="button" className="structured-set-check" aria-pressed={!!r.completed} aria-label={(r.completed?"Mark incomplete: ":"Mark complete: ")+r.name+", round "+round} onClick={()=>toggleRowCompleted(i)}>{r.completed?"✓":r.skipped?"–":""}</button><label>{/\b(sec|min)$/i.test(r.targetReps||"")?"Seconds":"Reps"}<input inputMode="numeric" value={r.reps||""} onChange={ev=>updateActiveStructuredRow(i,{reps:sanitizeIntInput(ev.target.value),repsEdited:true})}/></label><label>Weight<input inputMode="decimal" value={r.weight||""} onChange={ev=>updateActiveStructuredRow(i,{weight:sanitizeDecimalInput(ev.target.value),weightEdited:true,unit:r.unit||"lb"})}/></label><label>Unit<select value={r.unit||""} onChange={ev=>updateActiveStructuredRow(i,{unit:ev.target.value as StructuredExerciseRow["unit"],unitEdited:true})}>{!r.unit&&<option value="">Unit</option>}<option value="lb">lb</option><option value="kg">kg</option></select></label><button type="button" aria-label={r.skipped?"Restore set":"Skip set"} onClick={()=>removeActiveStructuredRow(i)}>{r.skipped?"↶":"–"}</button></div></div>})}</div>})}</section>;}if(!g)return null;
       const isCollapsed = Boolean(activeCollapsed[g.key]);
       const vol = exerciseGroupVolume(g.indices);
       const setCount = g.indices.length;
@@ -1703,7 +1690,7 @@ return (
                 </button>
               </div>
 
-              {coached&&!!activeStructured.rows[g.indices[0]]?.alternatives?.length&&<label style={{fontSize:12}}>Coach-approved alternative<select value="" onChange={ev=>{if(ev.target.value)renameExerciseInGroup(g.key,ev.target.value)}}><option value="">Choose substitution</option>{[activeStructured.rows[g.indices[0]].prescribedName,...(activeStructured.rows[g.indices[0]].alternatives||[])].filter(Boolean).map(x=><option key={x}>{x}</option>)}</select></label>}{coached&&(()=>{const r=activeStructured.rows[g.indices[0]];return <small style={{color:"var(--muted)",marginTop:5}}>{r?.prescribedName&&r.prescribedName!==r.name?"Substituted for "+r.prescribedName+" · ":""}Target: {[r?.targetReps,r?.targetLoad,r?.targetRest&&"Rest "+r.targetRest].filter(Boolean).join(" · ")||"Review exercise with coach"}{r?.note?" · "+r.note:""}</small>})()}
+              {!!activeStructured.rows[g.indices[0]]?.alternatives?.length&&<label style={{fontSize:12}}>{coached?"Coach-approved alternative":"Exercise alternative"}<select value="" onChange={ev=>{if(ev.target.value)renameExerciseInGroup(g.key,ev.target.value)}}><option value="">Choose substitution</option>{[activeStructured.rows[g.indices[0]].prescribedName,...(activeStructured.rows[g.indices[0]].alternatives||[])].filter(Boolean).map(x=><option key={x}>{x}</option>)}</select></label>}{(coached||activeStructured.rows[g.indices[0]]?.planned)&&(()=>{const r=activeStructured.rows[g.indices[0]];return <small style={{color:"var(--muted)",marginTop:5}}>{r?.prescribedName&&r.prescribedName!==r.name?"Substituted for "+r.prescribedName+" · ":""}Target: {[r?.targetReps,r?.targetLoad,r?.targetRest&&"Rest "+r.targetRest].filter(Boolean).join(" · ")||(coached?"Review exercise with coach":"No target")}{r?.note?" · "+r.note:""}</small>})()}
               {(() => {
                 const prev = prevStatsByExerciseKey[g.key];
                 const curMax = computeMaxWeightForIndices(activeStructured.rows || [], g.indices).bestNum;
@@ -1768,7 +1755,7 @@ return (
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {g.indices.map((rowIdx, pos) => {
                   const raw = (activeStructured.rows || [])[rowIdx];
-                  const r = coached?suggestedActual(raw):defaultActualUnit(raw);
+                  const r = (coached||raw.planned)?suggestedActual(raw):defaultActualUnit(raw);
                   const done = Boolean(r?.completed);
 
                   return (
@@ -1864,12 +1851,12 @@ return (
                           color: "inherit",
                           cursor: "pointer",
                         }}
-                        title={coached&&r?.planned?(r.skipped?"Restore skipped set":"Skip prescribed set"):"Remove set"}
-                        aria-label={coached&&r?.planned?(r.skipped?"Restore skipped set":"Skip prescribed set"):"Remove set"}
+                        title={r?.planned?(r.skipped?"Restore skipped set":"Skip prescribed set"):"Remove set"}
+                        aria-label={r?.planned?(r.skipped?"Restore skipped set":"Skip prescribed set"):"Remove set"}
                       >
-                        {coached&&r?.planned?(r.skipped?"↶":"–"):"✕"}
+                        {r?.planned?(r.skipped?"↶":"–"):"✕"}
                       </button>
-                      {coached&&r.setType&&<div className="structured-set-target-detail" style={{gridColumn:"2/-1"}}>Target: {[r.targetReps,r.targetLoad,r.targetRest&&"Rest "+r.targetRest,r.targetRpe&&"RPE "+r.targetRpe,r.targetRir&&"RIR "+r.targetRir,r.targetTempo&&"Tempo "+r.targetTempo].filter(Boolean).join(" · ")}{(r.targetRpe||r.targetRir)&&<div style={{display:"flex",gap:8}}>{r.targetRpe&&<label>Actual RPE<input inputMode="decimal" value={r.actualRpe||""} onChange={ev=>updateActiveStructuredRow(rowIdx,{actualRpe:ev.target.value})}/></label>}{r.targetRir&&<label>Actual RIR<input inputMode="numeric" value={r.actualRir||""} onChange={ev=>updateActiveStructuredRow(rowIdx,{actualRir:ev.target.value})}/></label>}</div>}</div>}
+                      {r.setType&&<div className="structured-set-target-detail" style={{gridColumn:"2/-1"}}>Target: {[r.targetReps,r.targetLoad,r.targetRest&&"Rest "+r.targetRest,r.targetRpe&&"RPE "+r.targetRpe,r.targetRir&&"RIR "+r.targetRir,r.targetTempo&&"Tempo "+r.targetTempo].filter(Boolean).join(" · ")}{(r.targetRpe||r.targetRir)&&<div style={{display:"flex",gap:8}}>{r.targetRpe&&<label>Actual RPE<input inputMode="decimal" value={r.actualRpe||""} onChange={ev=>updateActiveStructuredRow(rowIdx,{actualRpe:ev.target.value})}/></label>}{r.targetRir&&<label>Actual RIR<input inputMode="numeric" value={r.actualRir||""} onChange={ev=>updateActiveStructuredRow(rowIdx,{actualRir:ev.target.value})}/></label>}</div>}</div>}
                     </div>
                   );
                 })}
@@ -1879,7 +1866,7 @@ return (
         </div>
       );
     });})()}
-  </div>
+  </div></>}
 
   <div style={{ marginTop: 12 }}>
     <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 6 }}>Notes (optional)</div>

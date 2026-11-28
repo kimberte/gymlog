@@ -31,6 +31,7 @@ export type StructuredExerciseRow = {
 
 export type StructuredWorkout = {
   workoutName: string;
+  personalPlan?: string[];
   time?: string; // optional session time
   sessionNotes?: string; // optional session note
   rows: StructuredExerciseRow[];
@@ -88,6 +89,7 @@ export function compileStructuredBlock(data: StructuredWorkout): string {
 
   const payload: StructuredWorkout = {
     workoutName: cleanName,
+    personalPlan: Array.isArray(data.personalPlan)?data.personalPlan:undefined,
     time: cleanTime || undefined,
     sessionNotes: cleanSessionNotes || undefined,
     rows: cleanedRows,
@@ -195,6 +197,7 @@ export function parseStructuredFromNotes(notes: string): StructuredWorkout | nul
         workoutName: String(decoded.workoutName || ""),
         time: decoded.time ? String(decoded.time) : undefined,
         sessionNotes: decoded.sessionNotes ? String(decoded.sessionNotes) : undefined,
+        personalPlan:Array.isArray(decoded.personalPlan)?decoded.personalPlan.filter((v:unknown)=>typeof v==="string"):undefined,
         rows: rows.map((r: any) => ({
           name: String(r?.name ?? ""),
           sets: r?.sets != null ? String(r.sets) : undefined,
